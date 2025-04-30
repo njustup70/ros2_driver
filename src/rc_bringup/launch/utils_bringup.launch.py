@@ -35,7 +35,7 @@ def generate_launch_description():
         )
     ros_master_exe=ExecuteProcess(
         condition=IfCondition(LaunchConfiguration('use_ros1_bridge')),
-        cmd=["bash","-c","cd ~/docker/docker-build/ros-base-images && sudo docker-compose up"]
+        cmd=["bash","-c","cd ~/ros2_driver/packages/roscore && sudo docker-compose up"]
     )
     ros_bridge_exe=ExecuteProcess(
         condition=IfCondition(LaunchConfiguration('use_ros1_bridge')),
