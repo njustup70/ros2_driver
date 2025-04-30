@@ -24,7 +24,7 @@ def generate_launch_description():
     ld.add_action(DeclareLaunchArgument('image_topic',default_value='/camera/color/image_raw/compressed',description='image topic'))
     get_package_share_directory('rc_bringup')
     #启动rosbag
-    rosbag_root_path='/home/Elaina/docker/ros2-modules/bag_play'
+    rosbag_root_path='/home/Elaina/ros2_driver/bag_play'
     #查找root_path中的第一个文件夹中的db播放
     folders = [d for d in os.listdir(rosbag_root_path) if os.path.isdir(os.path.join(rosbag_root_path, d))]
     if folders:

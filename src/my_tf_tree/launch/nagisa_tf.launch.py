@@ -14,7 +14,7 @@ def generate_launch_description():
 
     # 获取 Xacro 文件路径
     xacro_file = PathJoinSubstitution([
-        '/home/Elaina/docker/ros2-modules/src/my_tf_tree',  # 直接指定项目路径
+        '/home/Elaina/ros2_driver/src/my_tf_tree',  # 直接指定项目路径
         'urdf', 'fishbot_base.urdf.xacro'
     ])
 

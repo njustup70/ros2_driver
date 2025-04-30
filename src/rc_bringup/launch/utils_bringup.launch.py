@@ -40,7 +40,7 @@ def generate_launch_description():
     ros_bridge_exe=ExecuteProcess(
         condition=IfCondition(LaunchConfiguration('use_ros1_bridge')),
         # cmd=["bash","-c","~/docker/ros2-modules/packages/ros-bridge/ros_bridge_run.sh"],
-        cmd=["bash","-c","python3 ~/docker/ros2-modules/packages/ros-bridge/ros_bridge_run.py"],
+        cmd=["bash","-c","python3 ~/ros2_driver/packages/ros-bridge/ros_bridge_run.py"],
         output='screen',
     )
     ros_bag_bash_path=os.path.join(local_path,'scripts/rosbag_record.py')

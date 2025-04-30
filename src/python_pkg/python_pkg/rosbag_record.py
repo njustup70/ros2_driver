@@ -22,7 +22,7 @@ class SmartBagRecorder(Node):
         self.max_folder_num = self.get_parameter('max_folder_num').value
         self.record_images = self.get_parameter('record_images').value
         self.record_nav=self.get_parameter('record_nav').value
-        self.record_dir_root = os.path.abspath(os.path.join( os.path.expanduser('~'),"docker/ros2-modules/rosbag_record"))
+        self.record_dir_root = os.path.abspath(os.path.join( os.path.expanduser('~'),"ros2_driver/rosbag_record"))
         self.bag_path = self.prepare_record_path()
         print(f'\033[95m📁 Recording to: {self.bag_path}\033[0m')
 

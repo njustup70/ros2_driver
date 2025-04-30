@@ -2,7 +2,7 @@
     "name": "ros2driver-container",
     "dockerComposeFile": "docker-compose.yml",
     "service": "ros2driver-service",
-    "workspaceFolder": "/home/Elaina/docker/ros2-modules",
+    "workspaceFolder": "/home/Elaina/ros2_driver",
     "shutdownAction": "stopCompose",
     "customizations": {
         "vscode": {

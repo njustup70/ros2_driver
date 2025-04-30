@@ -3,7 +3,7 @@ from rclpy.node import Node
 from geometry_msgs.msg import Twist
 import os
 import sys
-sys.path.append('/home/Elaina/docker/ros2-modules/src') 
+sys.path.append('/home/Elaina/ros2_driver/src') 
 # print(sys.path)
 from protocol_lib.myserial import AsyncSerial_t
 import struct
