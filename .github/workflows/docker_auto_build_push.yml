@@ -2,7 +2,7 @@ name: Docker镜像信息检查
 
 on:
   push:
-    branches: ["dev1.0"]  #推送到[]分支时触发
+    branches: ["dev1.0","git"]  #推送到[]分支时触发
     paths:
       - '**/Dockerfile*'      # 捕获所有以 Dockerfile 开头的文件，包括 Dockerfile 和 .Dockerfile
       - '**/.dockerfile*'     # 捕获以 .dockerfile 开头的文件
@@ -19,7 +19,7 @@ env:
   #仓库名
   REPO_NAME: elainasuki/rc2025
   # 是否构建arm64架构的镜像
-  BUILD_ARM64: false  # 你可以在这里设置是否构建 arm64
+  BUILD_ARM64: true  # 你可以在这里设置是否构建 arm64
 
 jobs:
   build-and-push:
