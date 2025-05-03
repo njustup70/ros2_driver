@@ -23,6 +23,10 @@ def generate_launch_description():
     ld.add_action(DeclareLaunchArgument('use_realsense',default_value='true',description='Start realsense node if use is True'))
     ld.add_action(DeclareLaunchArgument('use_joy',default_value='true',description='是否启动手柄控制'))
     ld.add_action(DeclareLaunchArgument('use_ms_200',default_value='true',description='是否启动2d雷达'))
+    ld.add_action(DeclareLaunchArgument('record_lidar',default_value='false',description='Record lidar data if use is True'))
+    ld.add_action(DeclareLaunchArgument('record_imu',default_value='true',description='Record imu data if use is True'))
+    ld.add_action(DeclareLaunchArgument('record_images',default_value='false',description='Record images if use is True'))
+    ld.add_action(DeclareLaunchArgument('record_nav',default_value='true',description='Record nav data if use is True'))
     get_package_share_directory('my_driver')
     get_package_share_directory('rc_bringup')
     #启动mid360
