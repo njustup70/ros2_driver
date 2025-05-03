@@ -17,7 +17,7 @@ class SmartBagRecorder(Node):
         self.declare_parameter('record_images', False)
         self.declare_parameter('record_imu', True)
         self.declare_parameter('record_lidar', True)
-        self.declare_parameter('record_nav',False)
+        self.declare_parameter('record_nav',True)
         self.max_size_bytes = int(self.get_parameter('max_size_gb').value * 1024 ** 3)
         self.max_folder_num = self.get_parameter('max_folder_num').value
         self.record_images = self.get_parameter('record_images').value
