@@ -109,14 +109,19 @@ class SmartBagRecorder(Node):
             'geometry_msgs/msg/Twist',
             'geometry_msgs/msg/TwistStamped',
             'geometry_msgs/msg/PoseStamped',
-            'tf2_msgs/msg/TFMessage',
+            # 'tf2_msgs/msg/TFMessage',
             'nav_msgs/msg/Path',
             'nav_msgs/msg/OccupancyGrid'
         ]
         topic_names_and_types = self.get_topic_names_and_types()
         for topic_name, types in topic_names_and_types:
             msg_type_str = types[0]
-            if msg_type_str in nav_types:
+            # if topic_name == '/tf' or topic_name == '/tf_static':
+            #订阅tf话题
+            if topic_name == '/tf':
+                self.subscribe_topic(topic_name, 'tf2_msgs/msg/TFMessage')
+        # 其他导航相关话题
+            elif msg_type_str in nav_types:
                 self.subscribe_topic(topic_name, msg_type_str)
     def timerCallback(self):
         self.check_size_limit()
