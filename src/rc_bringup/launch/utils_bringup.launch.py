@@ -7,7 +7,7 @@ import os
 import sys
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import ExecuteProcess,IncludeLaunchDescription,DeclareLaunchArgument
+from launch.actions import ExecuteProcess,IncludeLaunchDescription,DeclareLaunchArgument, TimerAction
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
@@ -22,6 +22,10 @@ def generate_launch_description():
     ld.add_action(DeclareLaunchArgument('use_ros1_bridge',default_value='true',description='Use ros1_bridge if use is True'))
     ld.add_action(DeclareLaunchArgument('use_fast_lio_tf',default_value='false',description='提供fast_lio的tf树'))
     ld.add_action(DeclareLaunchArgument('use_rosbridge',default_value='true',description='是否开启websocket桥接'))
+    ld.add_action(DeclareLaunchArgument('record_lidar',default_value='false',description='Record lidar data if use is True'))
+    ld.add_action(DeclareLaunchArgument('record_imu',default_value='true',description='Record imu data if use is True'))
+    ld.add_action(DeclareLaunchArgument('record_images',default_value='false',description='Record images if use is True'))
+    ld.add_action(DeclareLaunchArgument('record_nav',default_value='true',description='Record nav data if use is True'))
     # ld.add_action(DeclareLaunchArgument('ros', default_value='5', description='Max number of rosbag files'))
     foxglove_node=ComposableNode(
         package='foxglove_bridge',
@@ -43,13 +47,23 @@ def generate_launch_description():
         cmd=["bash","-c","python3 ~/ros2_driver/packages/ros-bridge/ros_bridge_run.py"],
         output='screen',
     )
-    ros_bag_bash_path=os.path.join(local_path,'scripts/rosbag_record.py')
+    # ros_bag_bash_path=os.path.join(local_path,'scripts/rosbag_record.py')
     #需要condition来判断是否启动rosbag
-    ros_bag_exe=ExecuteProcess(
-        condition=IfCondition(LaunchConfiguration('use_rosbag_record')),
-        cmd=["bash","-c","sleep 5 && python3 {}".format(ros_bag_bash_path)],
-        output='screen',
-        emulate_tty=True,
+    # ros_bag_exe=ExecuteProcess(
+    #     condition=IfCondition(LaunchConfiguration('use_rosbag_record')),
+    #     # cmd=["bash","-c","sleep 5 && python3 {}".format(ros_bag_bash_path)],
+    #     output='screen',
+    #     emulate_tty=True,
+    # )
+    ros_bag_node=  Node(
+                    condition=IfCondition(LaunchConfiguration('use_rosbag_record')),
+                    package='python_pkg',
+                    executable='rosbag_record',
+                    name='rosbag_record'
+                )
+    ros_bag_action=TimerAction(
+        period=5.0,  # Delay in seconds
+        actions=[ros_bag_node]
     )
     #TF树相关
     xacro_file_path=get_package_share_directory('my_tf_tree')+ '/urdf/fishbot_base.urdf.xacro'
@@ -117,7 +131,8 @@ def generate_launch_description():
     )
     ld.add_action(ros_master_exe)
     ld.add_action(ros_bridge_exe)
-    ld.add_action(ros_bag_exe)
+    # ld.add_action(ros_bag_exe)
+    ld.add_action(ros_bag_action)
     ld.add_action(compose_container)
     ld.add_action(websocket_bridge)
     return ld
