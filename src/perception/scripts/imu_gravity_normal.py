@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Imu
@@ -62,7 +63,9 @@ def main(args=None):
         pass
     finally:
         node.destroy_node()
-        rclpy.shutdown()
-
+        # rclpy.shutdown()
+        rclpy.ok()
+        if rclpy.ok():
+            rclpy.shutdown()
 if __name__ == '__main__':
     main()

@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
@@ -23,7 +24,8 @@ class Communicate_t(Node):
                 self.get_parameter('serial_port').value,
                 self.get_parameter('serial_baudrate').value)
         except Exception as e:
-            self.get_logger().error(f"Failed to open serial port: {e}")
+            # self.get_logger().error(f"Failed to open serial port: {e}")
+            print(f"\033[91mFailed to open serial port: {e}\033[0m")
             raise
     def cmd_topic_callback(self, msg:Twist):
         #获得信息发给串口
@@ -45,8 +47,13 @@ class Communicate_t(Node):
 def main(args=None):
     rclpy.init(args=args)
     node=Communicate_t()
-    rclpy.spin(node)
-    node.destroy_node()
-    rclpy.shutdown()
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        node.get_logger().info("Keyboard Interrupt")
+    finally:
+        node.destroy_node()
+        if rclpy.ok():
+            rclpy.shutdown()
 if __name__ == '__main__':
     main()

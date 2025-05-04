@@ -13,10 +13,10 @@ def generate_launch_description():
     joy_driver = Node(
         package='joy',
         executable='joy_node',
-        name='joy_node')
+        name='joy_driver_node')
     joy_teleop = Node(
-        package='python_pkg',
-        executable='joy',
+        package='my_driver',
+        executable='joy.py',
         name='joy_teleop_node',
         parameters=[{
             'joy_topic': LaunchConfiguration('joy_topic'),

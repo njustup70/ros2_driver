@@ -18,8 +18,8 @@ def generate_launch_description():
     ld.add_action(DeclareLaunchArgument("lidar_frame",default_value="livox_frame"))
     ld.add_action(DeclareLaunchArgument("Calibration_file",default_value=param_file_path))
     imu_transform_node=Node(
-        package="python_pkg",
-        executable="imu_transform",
+        package="perception",
+        executable="imu_transform.py",
         name="ImuTransform_node",
         parameters=[{"imu_topic":LaunchConfiguration("imu_topic")},
                     {"imu_transformed_topic":LaunchConfiguration("imu_transformed_topic")},
@@ -31,8 +31,8 @@ def generate_launch_description():
         output="screen"
     )
     mid360_imu_normal=Node(
-        package="python_pkg",
-        executable='imu_gravity_normal',
+        package="perception",
+        executable='imu_gravity_normal.py',
         name='mid360_imu_normal',
         parameters=[
             {"imu_topic":"/livox/imu"},

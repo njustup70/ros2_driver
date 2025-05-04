@@ -75,8 +75,8 @@ def generate_launch_description():
     )
     #启动下位机通信
     communicate_node=Node(
-        package='python_pkg',
-        executable='communicate',
+        package='my_driver',
+        executable='com.py',
         name='communicate',
         output='screen',
         parameters=[

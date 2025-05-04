@@ -132,11 +132,14 @@ def main(args=None):
     rclpy.init(args=args)
     exe=rclpy.executors.MultiThreadedExecutor()
     exe.add_node(SmartBagRecorder())
-    exe.spin()
-    # node = SmartBagRecorder()
-    # rclpy.spin(node)
-    # node.destroy_node()
-    rclpy.shutdown()
+    try:
+        exe.spin()
+    except KeyboardInterrupt:
+        print("Recording stopped by user.")
+    finally:
+        exe.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 if __name__ == '__main__':
     main()
