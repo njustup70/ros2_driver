@@ -55,7 +55,9 @@ def generate_launch_description():
                     condition=IfCondition(LaunchConfiguration('use_rosbag_record')),
                     package='python_pkg',
                     executable='rosbag_record',
-                    name='rosbag_record'
+                    name='rosbag_record',
+                    output='screen',
+                    emulate_tty=True,
                 )
     ros_bag_action=TimerAction(
         period=5.0,  # Delay in seconds
