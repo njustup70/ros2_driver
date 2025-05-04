@@ -62,7 +62,7 @@ def generate_launch_description():
         actions=[ros_bag_node]
     )
     #TF树相关
-    xacro_file_path=get_package_share_directory('my_tf_tree')+ '/urdf/fishbot_base.urdf.xacro'
+    xacro_file_path=get_package_share_directory('my_tf_tree')+ '/urdf/r2.urdf.xacro'
     # 解析 Xacro 文件并生成 URDF
     robot_description = Command([
         FindExecutable(name='xacro'),  # 查找 xacro 可执行文件
