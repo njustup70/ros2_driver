@@ -53,6 +53,6 @@ def generate_launch_description():
   ord = LaunchDescription()
 
   ord.add_action(ordlidar_node)
-  ord.add_action(base_link_to_laser_tf_node)
+  # ord.add_action(base_link_to_laser_tf_node)
 
   return ord
