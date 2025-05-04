@@ -146,8 +146,8 @@ class ImuTransform(Node):
     def publish_static_tf(self):
         transform = TransformStamped()
         transform.header.stamp = self.get_clock().now().to_msg()
-        transform.header.frame_id = self.imu_frame
-        transform.child_frame_id = self.lidar_frame
+        transform.header.frame_id = self.lidar_frame
+        transform.child_frame_id = self.imu_frame
         
         # 设置平移
         transform.transform.translation.x = self.imu_to_lidar[0, 3]
