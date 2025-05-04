@@ -62,7 +62,9 @@ if check_port():
     bridge_process = subprocess.Popen(
         f"bash -c 'source {setup_script} && ros2 run ros1_bridge dynamic_bridge --bridge-all-topics'",
         shell=True,
-        executable="/bin/bash"
+        executable="/bin/bash",
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL
     )
 
 # 等待 Ctrl+C
