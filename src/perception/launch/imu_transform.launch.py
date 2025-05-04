@@ -31,14 +31,11 @@ def generate_launch_description():
     )
     mid360_imu_normal=Node(
         package="python_pkg",
-        executable='imu_transform',
+        executable='imu_gravity_normal',
         name='mid360_imu_normal',
         parameters=[
             {"imu_topic":"/livox/imu"},
-            {"imu_transformed_topic":"/livox/imu/normal"},
-            {"use_grivaty2m":True},
-            {"pub_tf":False},
-            {"Calibration_file":LaunchConfiguration("Calibration_file")}
+            {"output_topic":"/livox/imu/normal"}
         ],
         output="screen"
     )
