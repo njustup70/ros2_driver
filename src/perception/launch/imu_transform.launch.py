@@ -15,7 +15,7 @@ def generate_launch_description():
     ld.add_action(DeclareLaunchArgument("use_grivaty2m",default_value="true"))
     ld.add_action(DeclareLaunchArgument("imu_transformed_topic",default_value="/imu_transformed"))
     ld.add_action(DeclareLaunchArgument("imu_frame",default_value="imu_link"))
-    ld.add_action(DeclareLaunchArgument("lidar_frame",default_value="laser_link"))
+    ld.add_action(DeclareLaunchArgument("lidar_frame",default_value="livox_frame"))
     ld.add_action(DeclareLaunchArgument("Calibration_file",default_value=param_file_path))
     imu_transform_node=Node(
         package="python_pkg",
@@ -24,7 +24,8 @@ def generate_launch_description():
         parameters=[{"imu_topic":LaunchConfiguration("imu_topic")},
                     {"imu_transformed_topic":LaunchConfiguration("imu_transformed_topic")},
                     {"imu_frame":LaunchConfiguration("imu_frame")},
-                    {"lidar_frame":LaunchConfiguration("livox_frame")},
+                    {"lidar_frame":LaunchConfiguration("lidar_frame")},
+                    {"pub_tf":True},
                     {"Calibration_file":LaunchConfiguration("Calibration_file")}
                     ],
         output="screen"
