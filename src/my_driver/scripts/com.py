@@ -24,7 +24,8 @@ class Communicate_t(Node):
                 self.get_parameter('serial_port').value,
                 self.get_parameter('serial_baudrate').value)
         except Exception as e:
-            self.get_logger().error(f"Failed to open serial port: {e}")
+            # self.get_logger().error(f"Failed to open serial port: {e}")
+            print(f"\033[91mFailed to open serial port: {e}\033[0m")
             raise
     def cmd_topic_callback(self, msg:Twist):
         #获得信息发给串口
