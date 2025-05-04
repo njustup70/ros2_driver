@@ -4,7 +4,17 @@
   <xacro:property name="PI" value="3.1415926535897931" />
 
   <!-- base_link -->
-  <link name="base_link" />
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <box size="0.5 0.5 0.2"/>
+      </geometry>
+      <origin xyz="0 0 0.1" rpy="0 0 0"/>
+      <material name="purple">
+        <color rgba="0.5 0 0.5 1"/> <!-- 紫色 -->
+      </material>
+    </visual>
+  </link>
 
   <!-- laser_frame attached to base_link -->
   <link name="laser_frame" />
