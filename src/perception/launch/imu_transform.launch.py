@@ -11,7 +11,7 @@ def generate_launch_description():
     my_path=get_package_share_directory('perception')
     param_file_path=os.path.join(my_path,'config','Initialization_result.txt')
     ld=LaunchDescription()
-    ld.add_action(DeclareLaunchArgument("imu_topic",default_value="/livox/imu"))
+    ld.add_action(DeclareLaunchArgument("imu_topic",default_value="/imu"))
     ld.add_action(DeclareLaunchArgument("use_grivaty2m",default_value="true"))
     ld.add_action(DeclareLaunchArgument("imu_transformed_topic",default_value="/imu_transformed"))
     ld.add_action(DeclareLaunchArgument("imu_frame",default_value="imu_link"))
@@ -24,10 +24,24 @@ def generate_launch_description():
         parameters=[{"imu_topic":LaunchConfiguration("imu_topic")},
                     {"imu_transformed_topic":LaunchConfiguration("imu_transformed_topic")},
                     {"imu_frame":LaunchConfiguration("imu_frame")},
-                    {"lidar_frame":LaunchConfiguration("lidar_frame")},
+                    {"lidar_frame":LaunchConfiguration("livox_frame")},
                     {"Calibration_file":LaunchConfiguration("Calibration_file")}
                     ],
         output="screen"
     )
+    mid360_imu_normal=Node(
+        package="python_pkg",
+        executable='imu_transform',
+        name='mid360_imu_normal',
+        parameters=[
+            {"imu_topic":"/livox/imu"},
+            {"imu_transformed_topic":"/livox/imu/normal"},
+            {"use_grivaty2m":True},
+            {"pub_tf":False},
+            {"Calibration_file":LaunchConfiguration("Calibration_file")}
+        ],
+        output="screen"
+    )
     ld.add_action(imu_transform_node)
+    ld.add_action(mid360_imu_normal)
     return ld
