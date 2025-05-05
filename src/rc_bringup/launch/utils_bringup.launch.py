@@ -80,6 +80,18 @@ def generate_launch_description():
         name='robot_state_publisher',
         parameters=[{'robot_description': robot_description}],
     )
+    map_to_odom_tf_node = ComposableNode(
+        condition=IfCondition(LaunchConfiguration('use_tf_publish')),
+        package='tf2_ros',
+        plugin='tf2_ros::StaticTransformBroadcasterNode',
+        name='map_to_odom_tf_node',
+        parameters=[{
+            'child_frame_id': 'odom',  # 旋转后坐标系
+            'frame_id': 'map',  # 参考坐标系
+            'translation': {'x': 0.0, 'y': 0.0, 'z': 0.0}, 
+            'rotation': {'x':0.0, 'y':0.0, 'z':0.0, 'w':1.0}  # 四元数表示的 90 度旋转（绕 Z 轴）
+        }],
+    )
     # fast lio tf支持
     fast_lio_tf_node=ComposableNode(
         condition=IfCondition(LaunchConfiguration('use_fast_lio_tf')),
@@ -100,7 +112,7 @@ def generate_launch_description():
         name='tf_broadcaster1',
         parameters=[{
             'child_frame_id': 'camera_init',  # 旋转后坐标系
-            'frame_id': 'map',  # 参考坐标系
+            'frame_id': 'odom',  # 参考坐标系
             'translation': {'x': 0.0, 'y': 0.0, 'z': 0.0}, 
             'rotation': {'x':0.0, 'y':0.0, 'z':0.7071, 'w':-0.7071}  # 四元数表示的 90 度旋转（绕 Z 轴）
         }],
@@ -111,7 +123,7 @@ def generate_launch_description():
         name='start_container',
         package='rclcpp_components',
         executable='component_container',
-        composable_node_descriptions=[foxglove_node,robot_state_publisher_node,fast_lio_tf_node,fast_lio_tf_node2],
+        composable_node_descriptions=[foxglove_node,robot_state_publisher_node,fast_lio_tf_node,fast_lio_tf_node2,map_to_odom_tf_node],
         arguments=['--ros-args', '--log-level', 'fatal'],
         output='screen',
         emulate_tty=True,
