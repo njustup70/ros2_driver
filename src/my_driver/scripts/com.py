@@ -19,14 +19,18 @@ class Communicate_t(Node):
             self.get_parameter('cmd_vel_topic').value,
             self.cmd_topic_callback,
             10)
-        try:
-            self.serial=AsyncSerial_t(
+        # try:
+        #     self.serial=AsyncSerial_t(
+        #         self.get_parameter('serial_port').value,
+        #         self.get_parameter('serial_baudrate').value)
+        # except Exception as e:
+        #     # self.get_logger().error(f"Failed to open serial port: {e}")
+        #     print(f"\033[91mFailed to open serial port: {e}\033[0m")
+        #     raise
+        self.serial=AsyncSerial_t(
                 self.get_parameter('serial_port').value,
                 self.get_parameter('serial_baudrate').value)
-        except Exception as e:
-            # self.get_logger().error(f"Failed to open serial port: {e}")
-            print(f"\033[91mFailed to open serial port: {e}\033[0m")
-            raise
+        self.serial.startListening()#监听线程还开启自动重连
     def cmd_topic_callback(self, msg:Twist):
         #获得信息发给串口
         linear_x=msg.linear.x
