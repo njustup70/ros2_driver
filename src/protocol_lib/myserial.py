@@ -13,7 +13,7 @@ serial.startListening(lambda data: serial.write(data))
 import serial
 import asyncio
 import time
-
+import threading
 class AsyncSerial_t:
     def __init__(self, port, baudrate):
         """ 初始化异步串口 """
@@ -24,7 +24,8 @@ class AsyncSerial_t:
         self._wait_time = 0.01
         self._raw_data = b''
         self._connect_lock = asyncio.Lock()
-
+        self._loop=None
+        self._thread=None
     async def _connect_serial(self):
         """尝试连接串口，如果失败则等待重试"""
         while self._serial is None:
@@ -44,7 +45,13 @@ class AsyncSerial_t:
         self._wait_time = wait_time
         if callback:
             self._callback = callback
-        asyncio.create_task(self.__manage_serial())
+        if self._loop is None:
+            self._loop = asyncio.new_event_loop()
+            self._thread = threading.Thread(target=self._run_loop, daemon=True)
+            self._thread.start()
+
+        # 在事件循环中创建任务
+        asyncio.run_coroutine_threadsafe(self.__manage_serial(), self._loop)
 
     async def __manage_serial(self):
         """管理串口连接并启动读循环"""
