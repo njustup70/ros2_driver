@@ -89,7 +89,10 @@ class AsyncSerial_t:
             self._serial.write(input_data)
         else:
             print(f"\033[91m[WARNING] Cannot write, serial not connected.\033[0m")
-
+    def _run_loop(self):
+        """后台线程中运行事件循环"""
+        asyncio.set_event_loop(self._loop)
+        self._loop.run_forever()
 # 示例主函数
 async def main() -> None:
     serial = AsyncSerial_t("COM2", 115200)
