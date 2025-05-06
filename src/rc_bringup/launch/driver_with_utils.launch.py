@@ -79,6 +79,7 @@ def generate_launch_description():
         executable='com.py',
         name='communicate',
         output='screen',
+        emulate_tty=True,
         parameters=[
             {'serial_port': '/dev/serial_x64',}
         ]
