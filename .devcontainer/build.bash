@@ -1,8 +1,12 @@
 #!/bin/bash
 
 # 获取脚本所在目录
-SCRIPT_DIR=$(dirname "$0")
-PARENT_DIR="${SCRIPT_DIR%/*}"
+# 获取脚本所在目录的绝对路径
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+PARENT_DIR=$(dirname "$SCRIPT_DIR")
+
+echo "脚本目录: $SCRIPT_DIR"
+echo "父目录: $PARENT_DIR"
 
 # 设置默认 tag
 TAG="ros2_driver"
@@ -31,5 +35,5 @@ if [[ "$1" == "--github-action" ]]; then
     --push
 else
     echo "本地构建 $IMAGE"
-    docker build -t "$IMAGE" "$PARENT_DIR"
+    docker build -t "$IMAGE" -f "$SCRIPT_DIR/Dockerfile" "$PARENT_DIR"
 fi

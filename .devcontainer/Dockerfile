@@ -50,6 +50,9 @@ RUN apt-get update && apt-get install docker docker-compose ros-humble-usb-cam r
 USER $USERNAME
 RUN pip install pyzmq crcmod
 USER root
+#安装foxglove 转化工具
+COPY ./packages/mcap /usr/local/bin
+RUN chmod +x -R /usr/local/bin
 RUN  echo 'export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH' >> /home/${USERNAME}/.bashrc \
     #&& echo 'source ~/docker/ros2/packages/ros-humble-ros1-bridge/install/setup.bash'>> /home/${USERNAME}/.bashrc \
     && echo 'source /opt/ros/humble/setup.bash' >> /home/$USERNAME/.bashrc \ 
