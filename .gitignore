@@ -11,3 +11,4 @@ metadata.yaml
 *.pyc
 *.cpy
 *.zip
+*.mcap

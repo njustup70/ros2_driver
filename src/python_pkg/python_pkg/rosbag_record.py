@@ -4,6 +4,7 @@ import rclpy
 import rclpy.executors
 from rclpy.node import Node
 from rosbag2_py import SequentialWriter, StorageOptions, ConverterOptions, TopicMetadata
+from rclpy.qos import QoSProfile, QoSDurabilityPolicy, QoSReliabilityPolicy
 from rclpy.serialization import serialize_message
 from rosidl_runtime_py.utilities import get_message
 import shutil
@@ -67,14 +68,17 @@ class SmartBagRecorder(Node):
             except Exception as e:
                 print(f'\033[91m⚠️ Error writing message from {topic_name}: {e}\033[0m')
         return callback
-    def subscribe_topic(self, topic_name, msg_type_str):
+    def subscribe_topic(self, topic_name, msg_type_str,QoS_profile=None):
         if topic_name in self.subscribed_topics:
             return
         try:
             msg_type = get_message(msg_type_str)
             topic_info = TopicMetadata(name=topic_name, type=msg_type_str, serialization_format='cdr')
             self.writer.create_topic(topic_info)
-            sub = self.create_subscription(msg_type, topic_name, self.create_callback(topic_name), 10)
+            if QoS_profile is None:
+                sub = self.create_subscription(msg_type, topic_name, self.create_callback(topic_name), 10)
+            else :
+                sub = self.create_subscription(msg_type, topic_name, self.create_callback(topic_name), QoS_profile)
             self.subscribers.append(sub)
             self.subscribed_topics.add(topic_name)
             print(f'\033[95m✅ Recording topic: {topic_name} [{msg_type_str}]\033[0m')
@@ -121,6 +125,12 @@ class SmartBagRecorder(Node):
             if topic_name == '/tf':
                 self.subscribe_topic(topic_name, 'tf2_msgs/msg/TFMessage')
         # 其他导航相关话题
+            elif topic_name == '/tf_static':
+                #创建qos_profile
+                qos_profile = QoSProfile(depth=10,
+                                         durability=QoSDurabilityPolicy.TRANSIENT_LOCAL,
+                                         reliability=QoSReliabilityPolicy.RELIABLE)
+                self.subscribe_topic(topic_name, 'tf2_msgs/msg/TFMessage', qos_profile)
             elif msg_type_str in nav_types:
                 self.subscribe_topic(topic_name, msg_type_str)
     def timerCallback(self):
