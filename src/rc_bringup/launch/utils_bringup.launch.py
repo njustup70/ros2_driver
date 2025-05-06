@@ -17,7 +17,7 @@ from launch.substitutions import Command, PathJoinSubstitution, FindExecutable
 def generate_launch_description():
     local_path=os.path.join(get_package_share_directory('rc_bringup'))
     ld=LaunchDescription()
-    ld.add_action(DeclareLaunchArgument('use_rosbag_record', default_value='false', description='Record rosbag if use is True'))
+    
     ld.add_action(DeclareLaunchArgument('use_tf_publish',default_value='false',description='Publish tf tree if use is True'))
     ld.add_action(DeclareLaunchArgument('use_ros1_bridge',default_value='true',description='Use ros1_bridge if use is True'))
     ld.add_action(DeclareLaunchArgument('use_fast_lio_tf',default_value='false',description='提供fast_lio的tf树'))
@@ -51,18 +51,7 @@ def generate_launch_description():
     #     output='screen',
     #     emulate_tty=True,
     # )
-    ros_bag_node=  Node(
-                    condition=IfCondition(LaunchConfiguration('use_rosbag_record')),
-                    package='python_pkg',
-                    executable='rosbag_record',
-                    name='rosbag_record',
-                    output='screen',
-                    emulate_tty=True,
-                )
-    ros_bag_action=TimerAction(
-        period=5.0,  # Delay in seconds
-        actions=[ros_bag_node]
-    )
+    
     #TF树相关
     xacro_file_path=get_package_share_directory('my_tf_tree')+ '/urdf/r2.urdf.xacro'
     # 解析 Xacro 文件并生成 URDF
@@ -142,7 +131,7 @@ def generate_launch_description():
     ld.add_action(ros_master_exe)
     ld.add_action(ros_bridge_exe)
     # ld.add_action(ros_bag_exe)
-    ld.add_action(ros_bag_action)
+    # ld.add_action(ros_bag_action)
     ld.add_action(compose_container)
     ld.add_action(websocket_bridge)
     return ld

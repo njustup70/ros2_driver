@@ -5,7 +5,7 @@ import os
 import sys
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import ExecuteProcess,IncludeLaunchDescription,DeclareLaunchArgument
+from launch.actions import ExecuteProcess,IncludeLaunchDescription,DeclareLaunchArgument,TimerAction
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
@@ -90,6 +90,24 @@ def generate_launch_description():
         ),
         condition=IfCondition(LaunchConfiguration('use_ms_200'))
     )
+    ros_bag_node=  Node(
+                    condition=IfCondition(LaunchConfiguration('use_rosbag_record')),
+                    package='python_pkg',
+                    executable='rosbag_record',
+                    name='rosbag_record',
+                    output='screen',
+                    emulate_tty=True,
+                    parameters=[
+                        {'record_lidar': LaunchConfiguration('record_lidar')},
+                        {'record_imu': LaunchConfiguration('record_imu')},
+                        {'record_images': LaunchConfiguration('record_images')},
+                        {'record_nav': LaunchConfiguration('record_nav')}
+                    ]
+                )
+    ros_bag_action=TimerAction(
+        period=5.0,  # Delay in seconds
+        actions=[ros_bag_node]
+    )
     ld.add_action(mid360_launch)
     ld.add_action(extern_imu_launch)
     ld.add_action(imu_transform_launch)
@@ -98,5 +116,6 @@ def generate_launch_description():
     ld.add_action(joy_launch)
     ld.add_action(communicate_node)
     ld.add_action(ms200_launch)
+    ld.add_action(ros_bag_action)
     return ld
      
