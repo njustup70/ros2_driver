@@ -22,9 +22,10 @@ def generate_launch_description():
     ld.add_action(DeclareLaunchArgument('rate',default_value='1',description='rate of rosbag play'))
     ld.add_action(DeclareLaunchArgument('loop',default_value='false',description='loop of rosbag play'))
     ld.add_action(DeclareLaunchArgument('image_topic',default_value='/camera/color/image_raw/compressed',description='image topic'))
-    get_package_share_directory('rc_bringup')
+    package_path=get_package_share_directory('rc_bringup')
     #启动rosbag
     rosbag_root_path='/home/Elaina/ros2_driver/bag_play'
+    qos_file=os.path.join(package_path,'config','ros_bag_play_qos.yaml')
     #查找root_path中的第一个文件夹中的db播放
     folders = [d for d in os.listdir(rosbag_root_path) if os.path.isdir(os.path.join(rosbag_root_path, d))]
     if folders:
@@ -39,12 +40,12 @@ def generate_launch_description():
         print("没有找到文件夹")
     ros_bag_exe=ExecuteProcess(
         # cmd=["bash","-c","ros2 bag play --loop {}".format(rosbag_path)],
-        cmd=["ros2","bag","play","--rate",LaunchConfiguration('rate'),rosbag_path],
+        cmd=["ros2","bag","play","--rate",LaunchConfiguration('rate'),rosbag_path,"--qos-profile-overrides-path",qos_file],
         output='screen',
         condition=LaunchConfigurationEquals('loop', 'false')
     )
     ros_bag_loop_exe=ExecuteProcess(
-        cmd=["ros2","bag","play","--rate",LaunchConfiguration('rate'),"--loop",rosbag_path],
+        cmd=["ros2","bag","play","--rate",LaunchConfiguration('rate'),"--loop",rosbag_path,"--qos-profile-overrides-path",qos_file],
         output='screen',
         condition=IfCondition(LaunchConfiguration('loop'))
     )

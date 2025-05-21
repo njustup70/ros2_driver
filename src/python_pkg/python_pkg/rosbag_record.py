@@ -3,6 +3,7 @@ import time
 import rclpy
 import rclpy.executors
 from rclpy.node import Node
+import rclpy.qos
 from rosbag2_py import SequentialWriter, StorageOptions, ConverterOptions, TopicMetadata
 from rclpy.qos import QoSProfile, QoSDurabilityPolicy, QoSReliabilityPolicy
 from rclpy.serialization import serialize_message
@@ -68,17 +69,20 @@ class SmartBagRecorder(Node):
             except Exception as e:
                 print(f'\033[91m⚠️ Error writing message from {topic_name}: {e}\033[0m')
         return callback
-    def subscribe_topic(self, topic_name, msg_type_str,QoS_profile=None):
+    def subscribe_topic(self, topic_name, msg_type_str,QoS_profile:QoSProfile=None):
         if topic_name in self.subscribed_topics:
             return
         try:
             msg_type = get_message(msg_type_str)
-            topic_info = TopicMetadata(name=topic_name, type=msg_type_str, serialization_format='cdr')
-            self.writer.create_topic(topic_info)
             if QoS_profile is None:
+                topic_info = TopicMetadata(name=topic_name, type=msg_type_str, serialization_format='cdr')
                 sub = self.create_subscription(msg_type, topic_name, self.create_callback(topic_name), 10)
             else :
+                qos_str =QoS_profile.__str__()
+                # topic_info = TopicMetadata(name=topic_name, type=msg_type_str, serialization_format='cdr',offered_qos_profiles=qos_str)
+                topic_info = TopicMetadata(name=topic_name, type=msg_type_str, serialization_format='cdr')
                 sub = self.create_subscription(msg_type, topic_name, self.create_callback(topic_name), QoS_profile)
+            self.writer.create_topic(topic_info)
             self.subscribers.append(sub)
             self.subscribed_topics.add(topic_name)
             print(f'\033[95m✅ Recording topic: {topic_name} [{msg_type_str}]\033[0m')
