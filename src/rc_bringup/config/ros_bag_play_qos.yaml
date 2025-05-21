@@ -1,4 +1,4 @@
 /tf_static:
   reliability: reliable
   durability: transient_local
-  depth: 10
+  history: keep_all
