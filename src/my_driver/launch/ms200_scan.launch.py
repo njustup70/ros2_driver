@@ -38,7 +38,7 @@ def generate_launch_description():
         {'clockwise': False},
         {'motor_speed': 10},
         # 新增加的时间戳调整参数（示例 值0.1秒）
-        {'time_adjustment': 1.0}  # <<< 新增参数行
+        {'time_adjustment': 0.0}  # <<< 新增参数行
       ]
   )
 
