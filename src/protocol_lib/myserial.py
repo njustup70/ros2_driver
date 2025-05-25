@@ -86,7 +86,13 @@ class AsyncSerial_t:
     def write(self, input_data: bytes) -> None:
         """向串口写入数据（阻塞），如果串口可用"""
         if self._serial and self._serial.is_open:
-            self._serial.write(input_data)
+            try:
+                self._serial.write(input_data)
+            except serial.SerialException as e:
+                print(f"\033[91m[WARNING] Serial error during write: {e}\033[0m")
+                self._serial.close()
+                self._serial = None
+
         else:
             print(f"\033[91m[WARNING] Cannot write, serial not connected.\033[0m")
     def _run_loop(self):
