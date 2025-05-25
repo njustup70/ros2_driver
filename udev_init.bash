@@ -2,6 +2,9 @@
 
 # 获取脚本的绝对路径
 SCRIPT_DIR=$(dirname "$(realpath "$0")")
+sudo apt-get install v4l-utils
+#煞笔盲文挤占ch340
+sudo apt-get remove brltty 
 
 # 进入脚本同目录下的 librealsense 目录
 cd "$SCRIPT_DIR/packages/librealsense"
