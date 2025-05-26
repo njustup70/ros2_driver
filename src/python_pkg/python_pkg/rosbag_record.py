@@ -97,7 +97,7 @@ class SmartBagRecorder(Node):
         if self.get_parameter('record_imu').value:
             needed_types.append('sensor_msgs/msg/Imu')
         if self.get_parameter('record_lidar').value:
-            needed_types.append('sensor_msgs/msg/LidarScan')
+            needed_types.append('sensor_msgs/msg/LaserScan')
             needed_types.append('sensor_msgs/msg/PointCloud2')
         for topic_name, types in topic_names_and_types:
             msg_type_str = types[0]
