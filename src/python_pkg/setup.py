@@ -21,9 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'image_bridge= python_pkg.image_bridge:main',
-            'imu_transform= python_pkg.imu_transform:main',
-            'joy= python_pkg.joy:main',
-            'communicate= python_pkg.com:main',
+            'rosbag_record= python_pkg.rosbag_record:main',
         ],
     },
 )

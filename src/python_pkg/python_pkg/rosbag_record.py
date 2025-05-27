@@ -3,7 +3,9 @@ import time
 import rclpy
 import rclpy.executors
 from rclpy.node import Node
+import rclpy.qos
 from rosbag2_py import SequentialWriter, StorageOptions, ConverterOptions, TopicMetadata
+from rclpy.qos import QoSProfile, QoSDurabilityPolicy, QoSReliabilityPolicy
 from rclpy.serialization import serialize_message
 from rosidl_runtime_py.utilities import get_message
 import shutil
@@ -17,12 +19,12 @@ class SmartBagRecorder(Node):
         self.declare_parameter('record_images', False)
         self.declare_parameter('record_imu', True)
         self.declare_parameter('record_lidar', True)
-        self.declare_parameter('record_nav',False)
+        self.declare_parameter('record_nav',True)
         self.max_size_bytes = int(self.get_parameter('max_size_gb').value * 1024 ** 3)
         self.max_folder_num = self.get_parameter('max_folder_num').value
         self.record_images = self.get_parameter('record_images').value
         self.record_nav=self.get_parameter('record_nav').value
-        self.record_dir_root = os.path.abspath(os.path.join( os.path.expanduser('~'),"docker/ros2-modules/rosbag_record"))
+        self.record_dir_root = os.path.abspath(os.path.join( os.path.expanduser('~'),"ros2_driver/rosbag_record"))
         self.bag_path = self.prepare_record_path()
         print(f'\033[95m📁 Recording to: {self.bag_path}\033[0m')
 
@@ -67,14 +69,20 @@ class SmartBagRecorder(Node):
             except Exception as e:
                 print(f'\033[91m⚠️ Error writing message from {topic_name}: {e}\033[0m')
         return callback
-    def subscribe_topic(self, topic_name, msg_type_str):
+    def subscribe_topic(self, topic_name, msg_type_str,QoS_profile:QoSProfile=None):
         if topic_name in self.subscribed_topics:
             return
         try:
             msg_type = get_message(msg_type_str)
-            topic_info = TopicMetadata(name=topic_name, type=msg_type_str, serialization_format='cdr')
+            if QoS_profile is None:
+                topic_info = TopicMetadata(name=topic_name, type=msg_type_str, serialization_format='cdr')
+                sub = self.create_subscription(msg_type, topic_name, self.create_callback(topic_name), 10)
+            else :
+                qos_str =QoS_profile.__str__()
+                # topic_info = TopicMetadata(name=topic_name, type=msg_type_str, serialization_format='cdr',offered_qos_profiles=qos_str)
+                topic_info = TopicMetadata(name=topic_name, type=msg_type_str, serialization_format='cdr')
+                sub = self.create_subscription(msg_type, topic_name, self.create_callback(topic_name), QoS_profile)
             self.writer.create_topic(topic_info)
-            sub = self.create_subscription(msg_type, topic_name, self.create_callback(topic_name), 10)
             self.subscribers.append(sub)
             self.subscribed_topics.add(topic_name)
             print(f'\033[95m✅ Recording topic: {topic_name} [{msg_type_str}]\033[0m')
@@ -89,7 +97,7 @@ class SmartBagRecorder(Node):
         if self.get_parameter('record_imu').value:
             needed_types.append('sensor_msgs/msg/Imu')
         if self.get_parameter('record_lidar').value:
-            needed_types.append('sensor_msgs/msg/LidarScan')
+            needed_types.append('sensor_msgs/msg/LaserScan')
             needed_types.append('sensor_msgs/msg/PointCloud2')
         for topic_name, types in topic_names_and_types:
             msg_type_str = types[0]
@@ -109,14 +117,25 @@ class SmartBagRecorder(Node):
             'geometry_msgs/msg/Twist',
             'geometry_msgs/msg/TwistStamped',
             'geometry_msgs/msg/PoseStamped',
-            'tf2_msgs/msg/TFMessage',
+            # 'tf2_msgs/msg/TFMessage',
             'nav_msgs/msg/Path',
             'nav_msgs/msg/OccupancyGrid'
         ]
         topic_names_and_types = self.get_topic_names_and_types()
         for topic_name, types in topic_names_and_types:
             msg_type_str = types[0]
-            if msg_type_str in nav_types:
+            # if topic_name == '/tf' or topic_name == '/tf_static':
+            #订阅tf话题
+            if topic_name == '/tf':
+                self.subscribe_topic(topic_name, 'tf2_msgs/msg/TFMessage')
+        # 其他导航相关话题
+            elif topic_name == '/tf_static':
+                #创建qos_profile
+                qos_profile = QoSProfile(depth=10,
+                                         durability=QoSDurabilityPolicy.TRANSIENT_LOCAL,
+                                         reliability=QoSReliabilityPolicy.RELIABLE)
+                self.subscribe_topic(topic_name, 'tf2_msgs/msg/TFMessage', qos_profile)
+            elif msg_type_str in nav_types:
                 self.subscribe_topic(topic_name, msg_type_str)
     def timerCallback(self):
         self.check_size_limit()
@@ -127,11 +146,14 @@ def main(args=None):
     rclpy.init(args=args)
     exe=rclpy.executors.MultiThreadedExecutor()
     exe.add_node(SmartBagRecorder())
-    exe.spin()
-    # node = SmartBagRecorder()
-    # rclpy.spin(node)
-    # node.destroy_node()
-    rclpy.shutdown()
+    try:
+        exe.spin()
+    except KeyboardInterrupt:
+        print("Recording stopped by user.")
+    finally:
+        exe.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 if __name__ == '__main__':
     main()
