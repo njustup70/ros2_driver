@@ -37,7 +37,7 @@ RUN sudo apt-get update \
 #添加ms200驱动
 COPY  --chown=${USERNAME}:${USER_GID} ./packages/ms200_ros/oradar_ros /home/${USERNAME}/packages/ros_ws/src/oradar_ros 
 COPY --chown=${USERNAME}:${USER_GID} ./packages/nagisa_imu /home/${USERNAME}/packages/ros_ws/src/nagisa_imu 
-RUN . /opt/ros/${ROS_DISTRO}/setup.sh && pip3 install pyserial && cd ./ros_ws && colcon build \
+RUN . /opt/ros/${ROS_DISTRO}/setup.sh && cd ./ros_ws && colcon build \
     && echo 'source ~/packages/ros_ws/install/setup.bash' >> /home/$USERNAME/.bashrc
 #添加轮趣imu驱动
 COPY --chown=${USERNAME}:${USER_GID} ./packages/wheel_imu /home/${USERNAME}/packages/ros_ws/src/wheel_imu
@@ -48,11 +48,10 @@ USER root
 #增加docker 嵌套支持与usb_cam支持
 RUN apt-get update && apt-get install docker docker-compose ros-${ROS_DISTRO}-usb-cam ros-${ROS_DISTRO}-rosbridge-suite   ros-${ROS_DISTRO}-imu-tools  -y
 USER $USERNAME
-RUN pip install pyzmq crcmod
+
+RUN pip3 install pyzmq crcmod pyserial --break-system-packages
 USER root
-#安装foxglove 转化工具
-COPY ./packages/mcap /usr/local/bin
-RUN chmod +x -R /usr/local/bin
+
 RUN  echo 'export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH' >> /home/${USERNAME}/.bashrc \
     #&& echo 'source ~/docker/ros2/packages/ros-jazzy-ros1-bridge/install/setup.bash'>> /home/${USERNAME}/.bashrc \
     && echo 'source /opt/ros/jazzy/setup.bash' >> /home/$USERNAME/.bashrc \ 
