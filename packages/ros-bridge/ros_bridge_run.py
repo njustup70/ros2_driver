@@ -6,7 +6,7 @@ import sys
 import platform
 from pathlib import Path
 import shutil
-
+ros_distro = os.environ.get("ROS_DISTRO")
 # Ctrl+C 快速退出
 def signal_handler(sig, frame):
     print("Exiting...")
@@ -50,12 +50,17 @@ if not check_port():
 # 判断架构
 arch = platform.machine()
 if arch == "x86_64":
-    print("x86")
-    setup_script = SCRIPT_DIR / "x86" / "local_setup.bash"
+    print("x86"+ros_distro)
+    if ros_distro=="humble":
+        setup_script = SCRIPT_DIR / "x86" / "local_setup.bash"
+    elif ros_distro=="jazzy":
+        setup_script=SCRIPT_DIR/"x86_jazzy"/"local_setup.bash"
 else:
     print("arm")
-    setup_script = SCRIPT_DIR / "arm" / "local_setup.bash"
-
+    if ros_distro=="humble":
+        setup_script = SCRIPT_DIR / "arm" / "local_setup.bash"
+    elif ros_distro=="jazzy":
+        print(f"\033[1;31m 暂时不支持jazzy的arm64版本 \033[0m")
 # source local_setup.bash 并运行 dynamic_bridge
 # 为了让环境变量生效，我们在同一个 bash shell 中运行 ros2
 if check_port():
