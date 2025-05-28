@@ -20,6 +20,8 @@ RUN sudo apt-get update && sudo apt-get install -y \
     ros-${ROS_DISTRO}-backward-ros \
     ros-${ROS_DISTRO}-tf2-geometry-msgs \
     ros-${ROS_DISTRO}-ament-index-cpp \
+    ros-${ROS_DISTRO}-xacro \
+    ros-${ROS_DISTRO}-joy \
     libdw-dev
 RUN mkdir -p ./orbbec_ws/src/ && cd ./orbbec_ws/src/ && \
     git config --global http.sslVerify false && git config --global http.postBuffer 524288000 && \
@@ -59,6 +61,6 @@ RUN  echo 'export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH' >> /home/${US
     && echo 'source /opt/ros/jazzy/setup.bash' >> /home/$USERNAME/.bashrc \ 
     && echo 'source ~/ros2_driver/install/setup.bash' >> /home/$USERNAME/.bashrc \  
     && echo 'bass source ~/ros2_driver/install/setup.bash' >> /home/$USERNAME/.config/fish/config.fish \
-    && echo "export ROS_LOCALHOST_ONLY=1" >> /home/$USERNAME/.bashrc \
-    && echo "export ROS_LOCALHOST_ONLY=1" >> /home/$USERNAME/.config/fish/config.fish 
+    && echo "export ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST" >> /home/$USERNAME/.bashrc \
+    && echo "export ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST" >> /home/$USERNAME/.config/fish/config.fish 
 CMD ["/bin/bash"]
