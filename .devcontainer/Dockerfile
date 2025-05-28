@@ -18,6 +18,8 @@ RUN sudo apt-get update && sudo apt-get install -y \
     ros-${ROS_DISTRO}-diagnostic-msgs \
     ros-${ROS_DISTRO}-statistics-msgs \
     ros-${ROS_DISTRO}-backward-ros \
+    ros-${ROS_DISTRO}-tf2-geometry-msgs \
+    ros-${ROS_DISTRO}-ament-index-cpp \
     libdw-dev
 RUN mkdir -p ./orbbec_ws/src/ && cd ./orbbec_ws/src/ && \
     git config --global http.sslVerify false && git config --global http.postBuffer 524288000 && \
