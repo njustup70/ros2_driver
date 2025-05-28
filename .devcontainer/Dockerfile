@@ -48,7 +48,7 @@ RUN . /opt/ros/${ROS_DISTRO}/setup.sh && cd ./ros_ws && colcon build --packages-
 #添加bashrc配置
 USER root
 #增加docker 嵌套支持与usb_cam支持
-RUN apt-get update && apt-get install docker docker-compose ros-${ROS_DISTRO}-usb-cam ros-${ROS_DISTRO}-rosbridge-suite   ros-${ROS_DISTRO}-imu-tools  -y
+RUN apt-get update && apt-get install docker.io docker-compose ros-${ROS_DISTRO}-usb-cam ros-${ROS_DISTRO}-rosbridge-suite   ros-${ROS_DISTRO}-imu-tools  -y
 USER $USERNAME
 
 RUN pip3 install pyzmq crcmod pyserial --break-system-packages
