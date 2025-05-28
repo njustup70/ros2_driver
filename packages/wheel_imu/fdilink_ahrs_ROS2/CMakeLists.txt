@@ -31,7 +31,7 @@ find_package(serial REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
-
+find_package(ament_index_cpp REQUIRED)
 
 
 if(BUILD_TESTING)
@@ -54,14 +54,14 @@ include_directories(
 
 
 add_executable(ahrs_driver_node src/ahrs_driver.cpp src/crc_table.cpp)
-ament_target_dependencies(ahrs_driver_node rclcpp rclpy  std_msgs  sensor_msgs  serial tf2_ros tf2 nav_msgs geometry_msgs)
+ament_target_dependencies(ahrs_driver_node rclcpp rclpy  std_msgs  sensor_msgs  serial tf2_ros tf2 nav_msgs geometry_msgs ament_index_cpp)
 
 
 add_executable(imu_tf_node src/imu_tf.cpp)
-ament_target_dependencies(imu_tf_node rclcpp rclpy std_msgs sensor_msgs serial tf2_ros tf2 tf2_geometry_msgs)
+ament_target_dependencies(imu_tf_node rclcpp rclpy std_msgs sensor_msgs serial tf2_ros tf2 tf2_geometry_msgs ament_index_cpp)
 
 add_executable(ahrs_driver_ed_node src/ahrs_driver_ed.cpp src/crc_table.cpp)
-ament_target_dependencies(ahrs_driver_ed_node rclcpp rclpy std_msgs sensor_msgs serial tf2_ros tf2 nav_msgs geometry_msgs)
+ament_target_dependencies(ahrs_driver_ed_node rclcpp rclpy std_msgs sensor_msgs serial tf2_ros tf2 nav_msgs geometry_msgs ament_index_cpp)
 # find_package(Boost 1.55.0 REQUIRED COMPONENTS system filesystem)
 # include_directories(ahrs_driver_node ${Boost_INCLOUDE_DIRS})
 # link_directories(ahrs_driver_node ${Boost_LIBRARY_DIRS})
