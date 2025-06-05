@@ -38,13 +38,14 @@ class Communicate_t(Node):
         angular_z=msg.angular.z
         # data_header=b'0xFE'
         # 头部数据16进制FE
-        data_header=b'\xFE'
-        # 浮点准化成大端4字节
-        linear_x=struct.pack('>f',linear_x)
-        linear_y=struct.pack('>f',linear_y)
-        angular_z=struct.pack('>f',angular_z)
+        data_header=b'\xFA'
+        data_tail=b'\xFB'
+        # 浮点准化成小端4字节
+        linear_x=struct.pack('<f',linear_x)
+        linear_y=struct.pack('<f',linear_y)
+        angular_z=struct.pack('<f',angular_z)
         # 拼接数据
-        data= data_header+linear_x+linear_y+angular_z
+        data= data_header+linear_x+linear_y+angular_z+data_tail
         self.serial.write(data)
         # self.get_logger().info(f"Sending data to serial: {data.strip()}")
         # self.subscriptions= self.       
