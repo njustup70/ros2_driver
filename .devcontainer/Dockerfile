@@ -43,6 +43,9 @@ RUN . /opt/ros/humble/setup.sh && pip3 install pyserial && cd ./ros_ws && colcon
 COPY --chown=${USERNAME}:${USER_GID} ./packages/wheel_imu /home/${USERNAME}/packages/ros_ws/src/wheel_imu
 RUN . /opt/ros/humble/setup.sh && cd ./ros_ws && colcon build --packages-select  serial \
     && . ./install/setup.sh && colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release 
+#添加HIPNUC imu驱动
+COPY --chown=${USERNAME}:${USER_GID} ./packages/hipnuc_imu /home/${USERNAME}/packages/ros_ws/src/hipnuc_imu
+RUN . /opt/ros/humble/setup.sh && cd ./ros_ws && colcon build
 #添加bashrc配置
 USER root
 #增加docker 嵌套支持与usb_cam支持
