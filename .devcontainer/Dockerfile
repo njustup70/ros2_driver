@@ -7,6 +7,11 @@ ARG USER_GID=$USER_UID
 ARG ROS_DISTRO=humble
 #添加orbbec深度相机驱动
 WORKDIR /home/$USERNAME/packages
+# 更新ROS 2 GPG密钥
+RUN apt-key del F42ED6FBAB17C654 || true
+RUN curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | gpg --dearmor -o /usr/share/keyrings/ros-archive-keyring.gpg
+RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" > /etc/apt/sources.list.d/ros2.list
+
 #基础依赖包和功能包
 RUN sudo apt-get update && sudo apt-get install -y \
     libgflags-dev \
