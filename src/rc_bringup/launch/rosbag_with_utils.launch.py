@@ -18,7 +18,7 @@ def generate_launch_description():
     ld=LaunchDescription()
     ld.add_action(DeclareLaunchArgument('use_rosbag_record', default_value='false', description='Record rosbag if use is True'))
     ld.add_action(DeclareLaunchArgument('use_tf_publish',default_value='true',description='Publish tf tree if use is True'))
-    ld.add_action(DeclareLaunchArgument('use_fast_lio_tf',default_value='true',description='提供fast_lio的tf树'))
+    ld.add_action(DeclareLaunchArgument('use_fast_lio_tf',default_value='false',description='提供fast_lio的tf树'))
     ld.add_action(DeclareLaunchArgument('rate',default_value='1',description='rate of rosbag play'))
     ld.add_action(DeclareLaunchArgument('loop',default_value='false',description='loop of rosbag play'))
     ld.add_action(DeclareLaunchArgument('image_topic',default_value='/camera/color/image_raw/compressed',description='image topic'))
