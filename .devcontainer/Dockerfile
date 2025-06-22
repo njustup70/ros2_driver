@@ -1,4 +1,4 @@
-FROM elainasuki/ros:ros2-humble-full-v3
+FROM elainasuki/ros:ros2-humble-full
 # 定义用户和用户组
 ARG USERNAME=Elaina
 ARG USER_UID=1000
