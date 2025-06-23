@@ -5,8 +5,9 @@ from ament_index_python.packages import get_package_share_directory
 import os
 
 def generate_launch_description():
-    config={"serial_port":"/dev/ttyUSB0",
-            "baud_rate":115200,
+    config={"serial_port":"/dev/ch040_imu",
+            # "baud_rate":115200,
+            "baud_rate":921600,
             "frame_id":"imu_link",
             "imu_topic":"/ch040imu/data",
             }
