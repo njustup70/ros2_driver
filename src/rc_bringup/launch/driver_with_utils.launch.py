@@ -18,7 +18,8 @@ def generate_launch_description():
     ld.add_action(DeclareLaunchArgument('use_rosbag_record', default_value='true', description='Record rosbag if use is True'))
     ld.add_action(DeclareLaunchArgument('use_tf_publish',default_value='true',description='Publish tf tree if use is True'))
     ld.add_action(DeclareLaunchArgument('use_mid360',default_value='true',description='Start mid360 node if use is True'))
-    ld.add_action(DeclareLaunchArgument('use_extern_imu',default_value='true',description='Start extern imu node if use is True'))
+    ld.add_action(DeclareLaunchArgument('use_extern_imu',default_value='false',description='Start extern imu node if use is True'))
+    ld.add_action(DeclareLaunchArgument('use_ch040_imu',default_value='true',description='Start ch040 imu node if use is True'))
     ld.add_action(DeclareLaunchArgument('use_imu_transform',default_value='true',description='Start imu transform node if use is True'))
     ld.add_action(DeclareLaunchArgument('use_realsense',default_value='true',description='Start realsense node if use is True'))
     ld.add_action(DeclareLaunchArgument('use_joy',default_value='true',description='是否启动手柄控制'))
@@ -38,6 +39,12 @@ def generate_launch_description():
             'use_rviz': 'false',  #不启动rviz
         }.items(),
         condition=IfCondition(LaunchConfiguration('use_mid360'))
+    )
+    ch030_imu_launch=IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(get_package_share_directory('my_driver'),'launch','ch040_imu.launch')
+        ),
+        condition=IfCondition(LaunchConfiguration('use_ch040_imu'))
     )
     #启动外接imu
     extern_imu_launch=IncludeLaunchDescription(
@@ -111,6 +118,7 @@ def generate_launch_description():
     )
     ld.add_action(mid360_launch)
     ld.add_action(extern_imu_launch)
+    ld.add_action(ch030_imu_launch)
     ld.add_action(imu_transform_launch)
     ld.add_action(realsense_launch)
     ld.add_action(utils_launch)
