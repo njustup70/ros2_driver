@@ -39,17 +39,26 @@ class Communicate_t(Node):
         angular_z=msg.angular.z
         # data_header=b'0xFE'
         # 头部数据16进制FE
-        data_header=b'\xFA'
-        data_tail=b'\xFB'
+        data_header=b'\x10'
+        # data_tail=b'\xFB'
         # 浮点准化成小端4字节
         linear_x=struct.pack('<f',linear_x)
         linear_y=struct.pack('<f',linear_y)
         angular_z=struct.pack('<f',angular_z)
         # 拼接数据
-        data= data_header+linear_x+linear_y+angular_z+data_tail
-        self.serial.write(data)
+        data= data_header+linear_x+linear_y+angular_z
+        self.serial.write(self.ValidationData(data))
         # self.get_logger().info(f"Sending data to serial: {data.strip()}")
-        # self.subscriptions= self.       
+        # self.subscriptions= self.
+    def ValidationData(self,data:bytes):
+        #帧头为中间data16进制之和
+        #帧尾为中间data16按位异或
+        head= bytes(sum(data) & 0xFF)  # 保留最低 8 位（1 byte）
+        xor=0
+        for byte in data:
+            xor ^= byte
+        tail=bytes([xor])
+        return head+data+tail
 def main(args=None):
     rclpy.init(args=args)
     node=Communicate_t()
