@@ -13,7 +13,7 @@ class JoyTeleopNode(Node):
         self.declare_parameter('angular_scale',math.pi)
         self.pub_cmd_vel = self.create_publisher(Twist, self.get_parameter('cmd_vel_topic').value, 10)
         self.sub_joy = self.create_subscription(Joy, self.get_parameter('joy_topic').value, self.joy_callback, 10)
-
+        self.timer= self.create_timer(0.02, self.timerpublish)  # 定时器用于定期检查Joy消息
         self.emergency_stop = False
 
         # 速度缩放参数
@@ -49,14 +49,19 @@ class JoyTeleopNode(Node):
             twist.linear.y = 0.0
             twist.angular.z = 0.0
         #比较是否不变,不变就不发步
-        
-        if self.last_twist.linear.x != twist.linear.x or \
-           self.last_twist.linear.y != twist.linear.y or \
-           self.last_twist.angular.z != twist.angular.z:
             # 发布速度命令
             # self.get_logger().info(f"Publishing Twist: {twist}")
-            self.pub_cmd_vel.publish(twist)
+            # self.pub_cmd_vel.publish(twist)
         self.last_twist = twist
+    def timerpublish(self):
+        # 定时发布速度命令，保持通信
+        if not self.emergency_stop:
+            twist = Twist()
+            twist.linear.x = 0.0
+            twist.linear.y = 0.0
+            twist.angular.z = 0.0
+            self.pub_cmd_vel.publish(twist)
+            self.get_logger().info("Publishing zero Twist to maintain connection.")
 def main(args=None):
     rclpy.init(args=args)
     node = JoyTeleopNode()
