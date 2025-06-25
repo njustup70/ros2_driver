@@ -61,7 +61,7 @@ class JoyTeleopNode(Node):
             twist.linear.y = 0.0
             twist.angular.z = 0.0
             self.pub_cmd_vel.publish(twist)
-            self.get_logger().info("Publishing zero Twist to maintain connection.")
+            # self.get_logger().info("Publishing zero Twist to maintain connection.")
 def main(args=None):
     rclpy.init(args=args)
     node = JoyTeleopNode()
