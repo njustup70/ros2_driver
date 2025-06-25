@@ -88,7 +88,9 @@ def generate_launch_description():
         output='screen',
         emulate_tty=True,
         parameters=[
-            {'serial_port': '/dev/serial_ch340',}
+            {'serial_port': '/dev/serial_ch340',
+             'serial_baudrate':230400,
+             }
         ]
     )
     #启动ms200

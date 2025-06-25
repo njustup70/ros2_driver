@@ -22,6 +22,7 @@ class JoyTeleopNode(Node):
 
         self.get_logger().info("Joystick Teleop Node started.")
         self.last_twist= Twist()
+        self.twist= Twist()
     def joy_callback(self, msg: Joy):
         # B键一般是按钮1（不同手柄可能不同，需根据实际情况调整）
         b_button = msg.buttons[1]
@@ -29,38 +30,34 @@ class JoyTeleopNode(Node):
         if b_button:
             self.emergency_stop = True
             self.get_logger().warn("Emergency Stop Activated!")
-            twist = Twist()
-            twist.linear.x = 0.0
-            twist.linear.y = 0.0
-            twist.angular.z = 0.0
-            self.pub_cmd_vel.publish(twist)
+            self.twist = Twist()
+            self.twist.linear.x = 0.0
+            self.twist.linear.y = 0.0
+            self.twist.angular.z = 0.0
+            # self.pub_cmd_vel.publish(twist)
         else:
             self.emergency_stop = False
-        twist = Twist()
+        self.twist = Twist()
 
         if not self.emergency_stop:
             # 左摇杆：axes[0] 为左右（y轴），axes[1] 为前后（x轴）
-            twist.linear.x = msg.axes[1] * self.linear_scale
-            twist.linear.y = msg.axes[0] * self.linear_scale
+            self.twist.linear.x = msg.axes[1] * self.linear_scale
+            self.twist.linear.y = msg.axes[0] * self.linear_scale
             # 右摇杆：axes[3] 为左右（控制yaw）
-            twist.angular.z = msg.axes[3] * self.angular_scale
+            self.twist.angular.z = msg.axes[3] * self.angular_scale
         else:
-            twist.linear.x = 0.0
-            twist.linear.y = 0.0
-            twist.angular.z = 0.0
+            self.twist.linear.x = 0.0
+            self.twist.linear.y = 0.0
+            self.twist.angular.z = 0.0
         #比较是否不变,不变就不发步
             # 发布速度命令
             # self.get_logger().info(f"Publishing Twist: {twist}")
             # self.pub_cmd_vel.publish(twist)
-        self.last_twist = twist
+        # self.last_twist = twist
     def timerpublish(self):
         # 定时发布速度命令，保持通信
         if not self.emergency_stop:
-            twist = Twist()
-            twist.linear.x = 0.0
-            twist.linear.y = 0.0
-            twist.angular.z = 0.0
-            self.pub_cmd_vel.publish(twist)
+            self.pub_cmd_vel.publish(self.twist)
             # self.get_logger().info("Publishing zero Twist to maintain connection.")
 def main(args=None):
     rclpy.init(args=args)
