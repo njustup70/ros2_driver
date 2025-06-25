@@ -42,7 +42,7 @@ def generate_launch_description():
     )
     ch030_imu_launch=IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(get_package_share_directory('my_driver'),'launch','ch040_imu.launch')
+            os.path.join(get_package_share_directory('my_driver'),'launch','ch040_imu.launch.py')
         ),
         condition=IfCondition(LaunchConfiguration('use_ch040_imu'))
     )
