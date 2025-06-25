@@ -4,6 +4,7 @@ from rclpy.node import Node
 from geometry_msgs.msg import Twist
 import os
 import sys
+import numpy as np
 sys.path.append('/home/Elaina/ros2_driver/src') 
 # print(sys.path)
 from protocol_lib.myserial import AsyncSerial_t
@@ -12,13 +13,15 @@ class Communicate_t(Node):
     def __init__(self):
         super().__init__('communicate_t')
         self.declare_parameter('cmd_vel_topic', '/cmd_vel')
-        self.declare_parameter('serial_port', '/dev/ttyACM0')
+        self.declare_parameter('serial_port', '/dev/serial_ch340')
         self.declare_parameter('serial_baudrate', 115200)
         self.sub=self.create_subscription(
             Twist,
             self.get_parameter('cmd_vel_topic').value,
             self.cmd_topic_callback,
             10)
+        # self.tim=self.create_timer(0.01, self.timer_callback)
+        
         # try:
         #     self.serial=AsyncSerial_t(
         #         self.get_parameter('serial_port').value,
@@ -53,11 +56,12 @@ class Communicate_t(Node):
     def ValidationData(self,data:bytes):
         #帧头为中间data16进制之和
         #帧尾为中间data16按位异或
-        head= bytes(sum(data) & 0xFF)  # 保留最低 8 位（1 byte）
-        xor=0
+        head=np.uint8(0)
         for byte in data:
-            xor ^= byte
-        tail=bytes([xor])
+            head += np.uint8(byte)
+        head=bytes([head])
+        tail=head
+        # print(f"head: {head}, tail: {tail}")
         return head+data+tail
 def main(args=None):
     rclpy.init(args=args)
