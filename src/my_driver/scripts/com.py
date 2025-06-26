@@ -5,6 +5,8 @@ from geometry_msgs.msg import Twist
 import os
 import sys
 import numpy as np
+import time
+from threading import Thread, Event
 sys.path.append('/home/Elaina/ros2_driver/src') 
 # print(sys.path)
 from protocol_lib.myserial import AsyncSerial_t
@@ -20,22 +22,19 @@ class Communicate_t(Node):
             self.get_parameter('cmd_vel_topic').value,
             self.cmd_topic_callback,
             10)
-        # self.tim=self.create_timer(0.01, self.timer_callback)
-        
-        # try:
-        #     self.serial=AsyncSerial_t(
-        #         self.get_parameter('serial_port').value,
-        #         self.get_parameter('serial_baudrate').value)
-        # except Exception as e:
-        #     # self.get_logger().error(f"Failed to open serial port: {e}")
-        #     print(f"\033[91mFailed to open serial port: {e}\033[0m")
-        #     raise
         self.serial=AsyncSerial_t(
                 self.get_parameter('serial_port').value,
                 self.get_parameter('serial_baudrate').value)
         self.serial.startListening()#监听线程还开启自动重连
+        self.last_msg_time = time.time()
+        self.watchdog_timeout = 0.5 #0.5秒超时
+        self.stop_event = Event()
+        self.watchdog_thread = Thread(target=self.watchdog_loop)
+        self.watchdog_thread.daemon = True
+        self.watchdog_thread.start()
         # self.serial.startListening(lambda data:print(data))#监听线程还开启自动重连
     def cmd_topic_callback(self, msg:Twist):
+        self.last_msg_time = time.time()
         #获得信息发给串口
         linear_x=msg.linear.x
         linear_y=msg.linear.y
@@ -51,8 +50,6 @@ class Communicate_t(Node):
         # 拼接数据
         data= data_header+linear_x+linear_y+angular_z
         self.serial.write(self.ValidationData(data))
-        # self.get_logger().info(f"Sending data to serial: {data.strip()}")
-        # self.subscriptions= self.
     def ValidationData(self,data:bytes):
         #帧头为中间data16进制之和
         #帧尾为中间data16按位异或
@@ -63,6 +60,22 @@ class Communicate_t(Node):
         tail=head
         # print(f"head: {head}, tail: {tail}")
         return head+data+tail
+    def watchdog_loop(self):
+        """看门狗线程循环，定期检查是否超时"""
+        while not self.stop_event.is_set():
+            current_time = time.time()
+            # 检查是否超时
+            if current_time - self.last_msg_time > self.watchdog_timeout:
+                # 超时则发送零速度
+                zero_twist = Twist()
+                zero_twist.linear.x = 0.0
+                zero_twist.linear.y = 0.0
+                zero_twist.angular.z = 0.0
+                self.cmd_topic_callback(zero_twist)
+                self.get_logger().debug('Watchdog timeout, sent zero velocity')
+            # 短暂休眠避免CPU占用过高
+            time.sleep(0.05)
+
 def main(args=None):
     rclpy.init(args=args)
     node=Communicate_t()
