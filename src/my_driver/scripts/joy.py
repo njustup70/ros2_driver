@@ -41,10 +41,16 @@ class JoyTeleopNode(Node):
 
         if not self.emergency_stop:
             # 左摇杆：axes[0] 为左右（y轴），axes[1] 为前后（x轴）
-            self.twist.linear.x = msg.axes[1] * self.linear_scale
+            self.twist.linear.x = msg.axes[1] * self.linear_scale 
             self.twist.linear.y = msg.axes[0] * self.linear_scale
             # 右摇杆：axes[3] 为左右（控制yaw）
             self.twist.angular.z = msg.axes[3] * self.angular_scale
+            if(abs(self.twist.linear.x) <0.05):
+                self.twist.linear.x = 0.0
+            if(abs(self.twist.linear.y) <0.05):
+                self.twist.linear.y = 0.0
+            if(abs(self.twist.angular.z) < 0.05):
+                self.twist.angular.z = 0.0
         else:
             self.twist.linear.x = 0.0
             self.twist.linear.y = 0.0
@@ -53,12 +59,16 @@ class JoyTeleopNode(Node):
             # 发布速度命令
             # self.get_logger().info(f"Publishing Twist: {twist}")
             # self.pub_cmd_vel.publish(twist)
-        # self.last_twist = twist
+        self.last_twist = self.twist
     def timerpublish(self):
         # 定时发布速度命令，保持通信
         if not self.emergency_stop:
+            if self.twist.linear.x != 0.0 or self.twist.linear.y != 0.0 or self.twist.angular.z != 0.0:
+                self.pub_cmd_vel.publish(self.twist)            
+        else:
+            # 如果处于紧急停止状态，发布零速度命令
             self.pub_cmd_vel.publish(self.twist)
-            # self.get_logger().info("Publishing zero Twist to maintain connection.")
+            
 def main(args=None):
     rclpy.init(args=args)
     node = JoyTeleopNode()
