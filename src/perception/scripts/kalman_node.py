@@ -76,7 +76,7 @@ class KalmanNode(Node):
         # 控制输入和测量缓存
         self.cmd_vel = np.zeros(3)  # 控制输入[vx, vy, vyaw]
         self.odom = np.zeros(5)     # [x, y, yaw,z,w]
-        self.odom[4]=1
+        # self.odom[4]=1
         self.imu_data = [0.0,0.0,0.0]
         # self.imu_data = np.zeros(3) # [ax, ay, ayaw]
         
@@ -200,8 +200,10 @@ class KalmanNode(Node):
         # tf_pub.transform.rotation.z = math.sin(self.kf.x[2, 0] / 2.0)
         # tf_pub.transform.rotation.w = math.cos(self.kf.x[2, 0] / 2.0)
         # if tf_pub.transform.rotation
-        if np.isnan(tf_pub.transform.rotation.z) or np.isnan(tf_pub.transform.rotation.w) :
-            return
+        if tf_pub.transform.rotation.z==0.0 and tf_pub.transform.rotation.w==0.0:
+            # self.get_logger().warn("Quaternion is zero, setting to default")
+            tf_pub.transform.rotation.z = 0.0
+            tf_pub.transform.rotation.w = 1.0
         self.tf_broadcaster.sendTransform(tf_pub)
         
         # 这里可以添加发布融合后状态的代码

@@ -127,7 +127,7 @@ def generate_launch_description():
         output='screen',
         parameters=[
             {'imu_topic': '/livox/imu/normal'},
-            {'publish_tf_name': 'base_link_imu'},
+            {'publish_tf_name': 'base_filter_link'},
             {'hz': 100}
         ])
     ld.add_action(kalman_filter_node)
