@@ -15,7 +15,7 @@ class KalmanNode(Node):
         super().__init__('kalman_node')
         self.get_logger().info("Kalman滤波器节点已启动")
         self.declare_parameter('imu_topic', '/livox/imu/normal')
-        self.declare_parameter('publish_tf_name', 'base_link_imu')
+        self.declare_parameter('publish_tf_name', 'base_link')
         self.declare_parameter('hz',100)
         self.declare_parameter('kalman_model',0)
         
@@ -91,7 +91,7 @@ class KalmanNode(Node):
         self.kf.update(z, H=self.H_cmd, R=self.R_cmd)
     def tf_timer_callback(self):
         try:
-            transform_temp = self.tf_buffer.lookup_transform('odom', 'base_link',time=Time())
+            transform_temp = self.tf_buffer.lookup_transform('laser_map', 'lio_base_link',time=Time())
         except Exception as e:
             # self.get_logger().error(f"TF lookup failed: {e}")
             return

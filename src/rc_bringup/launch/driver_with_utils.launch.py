@@ -65,7 +65,8 @@ def generate_launch_description():
             os.path.join(get_package_share_directory('rc_bringup'),'launch','utils_bringup.launch.py')
         ),
         launch_arguments={
-            "xacro_file": os.path.join(get_package_share_directory('my_tf_tree'),'urdf','laser_base.xacro'),
+            # "xacro_file": os.path.join(get_package_share_directory('my_tf_tree'),'urdf','laser_base.xacro'),
+            "xacro_file": os.path.join(get_package_share_directory('my_tf_tree'),'urdf','r2.urdf.xacro'),
         }.items()
     )
     #启动realsense
@@ -127,7 +128,7 @@ def generate_launch_description():
         output='screen',
         parameters=[
             {'imu_topic': '/livox/imu/normal'},
-            {'publish_tf_name': 'base_filter_link'},
+            {'publish_tf_name': 'base_link'},
             {'hz': 100}
         ])
     #再开启新的xacro发布
@@ -159,7 +160,7 @@ def generate_launch_description():
         arguments=['0','0','0.18','0','0','0','odom','odom_transform']  # 发布静态变换
     )
     ld.add_action(map_to_odom_tf_node)
-    ld.add_action(robot_state_publisher_node)
+    # ld.add_action(robot_state_publisher_node)
     ld.add_action(kalman_filter_node)
     ld.add_action(mid360_launch)
     ld.add_action(extern_imu_launch)
