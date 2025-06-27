@@ -65,7 +65,7 @@ def generate_launch_description():
             os.path.join(get_package_share_directory('rc_bringup'),'launch','utils_bringup.launch.py')
         ),
         launch_arguments={
-            "xacro_file": os.path.join(get_package_share_directory('my_tf_tree'),'urdf','filter_base.xacro'),
+            "xacro_file": os.path.join(get_package_share_directory('my_tf_tree'),'urdf','laser_base.xacro'),
         }.items()
     )
     #启动realsense
@@ -130,6 +130,22 @@ def generate_launch_description():
             {'publish_tf_name': 'base_filter_link'},
             {'hz': 100}
         ])
+    #再开启新的xacro发布
+    xacro_file_path=PathJoinSubstitution(
+        [get_package_share_directory('my_tf_tree'), 'urdf', 'filter_base.xacro']
+    )
+    robot_description = Command([
+        FindExecutable(name='xacro'),  # 查找 xacro 可执行文件
+        ' ',
+        xacro_file_path,  # 使用 xacro 文件路径
+    ])
+    robot_state_publisher_node = Node(
+        package='robot_state_publisher',
+        executable='robot_state_publisher',
+        name='robot_state_publisher',
+        parameters=[{'robot_description': robot_description}],
+    )
+    ld.add_action(robot_state_publisher_node)
     ld.add_action(kalman_filter_node)
     ld.add_action(mid360_launch)
     ld.add_action(extern_imu_launch)
