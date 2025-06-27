@@ -145,6 +145,20 @@ def generate_launch_description():
         name='robot_state_publisher',
         parameters=[{'robot_description': robot_description}],
     )
+    map_to_odom_tf_node = Node(
+        condition=IfCondition(LaunchConfiguration('use_tf_publish')),
+        package='tf2_ros',
+        executable="static_transform_publisher",
+        name='odom_transform',
+        # parameters=[{
+        #     'child_frame_id': 'odom_transform',  # 旋转后坐标系
+        #     'frame_id': 'map',  # 参考坐标系
+        #     'translation': {'x': 1.0, 'y': 1.0, 'z': 0.0}, 
+        #     'rotation': {'x':0.0, 'y':0.0, 'z':0.0, 'w':1.0}  # 四元数表示的 90 度旋转（绕 Z 轴）
+        # }],
+        arguments=['0','0','0.18','0','0','0','odom','odom_transform']  # 发布静态变换
+    )
+    ld.add_action(map_to_odom_tf_node)
     ld.add_action(robot_state_publisher_node)
     ld.add_action(kalman_filter_node)
     ld.add_action(mid360_launch)

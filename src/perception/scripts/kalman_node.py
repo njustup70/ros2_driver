@@ -180,7 +180,7 @@ class KalmanNode(Node):
         """发布融合后的状态"""
         tf_pub=TransformStamped()
         tf_pub.header.stamp = self.get_clock().now().to_msg()
-        tf_pub.header.frame_id = 'odom'
+        tf_pub.header.frame_id = 'odom_transform'
         tf_pub.child_frame_id = self.get_parameter('publish_tf_name').value
         tf_pub.transform.translation.x = self.kf.x[0, 0]
         tf_pub.transform.translation.y = self.kf.x[1, 0]
