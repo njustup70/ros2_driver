@@ -62,7 +62,7 @@ class KalmanNode(Node):
         self.kf.P = np.diag([0.1, 0.1, 0.01,0.01, 0.5, 0.5, 0.1, 1.0, 1.0])
         
         # 控制输入和测量缓存
-        self.R_cmd=np.diag([0.02,0.02,0.01])  # 控制输入噪声协方差
+        self.R_cmd=np.diag([0.5,0.5,0.5])  # 控制输入噪声协方差
         self.H_cmd=np.zeros((3, 9))
         self.H_cmd[[0,1,2],[4,5,6]] = 1.0  # 控制输入 [vx, vy, vyaw] -> [vx, vy, omega]
         self.cmd_vel = np.zeros(3)  # 控制输入[vx, vy, vyaw]

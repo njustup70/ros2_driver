@@ -10,6 +10,7 @@ from threading import Thread, Event
 sys.path.append('/home/Elaina/ros2_driver/src') 
 # print(sys.path)
 from protocol_lib.myserial import AsyncSerial_t
+from rclpy.time import Time
 import struct
 from tf2_ros import TransformListener,Buffer
 class Communicate_t(Node):
@@ -82,12 +83,13 @@ class Communicate_t(Node):
     def tf_timer_callback(self):
         """定时器回调 - 将自身的tf转发给stm32"""
         try:
-            transform=self.buffer.lookup_transform('map', 'base_link', 0)
+            transform=self.buffer.lookup_transform('map', 'base_link', time=Time())
         except Exception as e:
+            # print(f"TF lookup failed: {e}")
             return
         #右手系转化到左手系
         x= transform.transform.translation.x
-        y= -transform.transform.translation.y
+        y= -(8-transform.transform.translation.y)
         #从w 和 z中计算yaw角
         z= transform.transform.rotation.z
         w= transform.transform.rotation.w
