@@ -21,6 +21,7 @@ def generate_launch_description():
     ld.add_action(DeclareLaunchArgument('use_tf_publish',default_value='false',description='Publish tf tree if use is True'))
     ld.add_action(DeclareLaunchArgument('use_ros1_bridge',default_value='true',description='Use ros1_bridge if use is True'))
     ld.add_action(DeclareLaunchArgument('use_fast_lio_tf',default_value='false',description='提供fast_lio的tf树'))
+    ld.add_action(DeclareLaunchArgument('xacro_file',default_value=os.path.join(get_package_share_directory('my_tf_tree'),'urdf','r2.urdf.xacro'),description='xacro file path'))
     ld.add_action(DeclareLaunchArgument('use_rosbridge',default_value='true',description='是否开启websocket桥接'))
     # ld.add_action(DeclareLaunchArgument('ros', default_value='5', description='Max number of rosbag files'))
     foxglove_node=ComposableNode(
@@ -53,7 +54,7 @@ def generate_launch_description():
     # )
     
     #TF树相关
-    xacro_file_path=get_package_share_directory('my_tf_tree')+ '/urdf/r2.urdf.xacro'
+    xacro_file_path=LaunchConfiguration('xacro_file') # 获取 xacro 文件路径
     # 解析 Xacro 文件并生成 URDF
     robot_description = Command([
         FindExecutable(name='xacro'),  # 查找 xacro 可执行文件

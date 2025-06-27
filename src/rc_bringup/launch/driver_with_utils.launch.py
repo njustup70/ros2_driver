@@ -64,7 +64,9 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             os.path.join(get_package_share_directory('rc_bringup'),'launch','utils_bringup.launch.py')
         ),
-        
+        launch_arguments={
+            "xacro_file": os.path.join(get_package_share_directory('my_tf_tree'),'urdf','filter_base.xacro'),
+        }.items()
     )
     #启动realsense
     realsense_launch=IncludeLaunchDescription(
@@ -118,6 +120,17 @@ def generate_launch_description():
         period=5.0,  # Delay in seconds
         actions=[ros_bag_node]
     )
+    kalman_filter_node=Node(
+        package='perception',
+        executable='kalman_node.py',
+        name='kalman_node',
+        output='screen',
+        parameters=[
+            {'imu_topic': '/livox/imu/normal'},
+            {'publish_tf_name': 'base_link_imu'},
+            {'hz': 100}
+        ])
+    ld.add_action(kalman_filter_node)
     ld.add_action(mid360_launch)
     ld.add_action(extern_imu_launch)
     ld.add_action(ch030_imu_launch)
