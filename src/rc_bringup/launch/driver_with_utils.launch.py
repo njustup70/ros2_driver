@@ -157,7 +157,7 @@ def generate_launch_description():
         #     'translation': {'x': 1.0, 'y': 1.0, 'z': 0.0}, 
         #     'rotation': {'x':0.0, 'y':0.0, 'z':0.0, 'w':1.0}  # 四元数表示的 90 度旋转（绕 Z 轴）
         # }],
-        arguments=['0','0','0.18','0','0','0','odom','odom_transform']  # 发布静态变换
+        arguments=['0.2','6.5','0','0','0','0','odom','odom_transform']  # 发布静态变换
     )
     ld.add_action(map_to_odom_tf_node)
     # ld.add_action(robot_state_publisher_node)

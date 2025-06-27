@@ -103,7 +103,7 @@ def generate_launch_description():
         parameters=[{
             'child_frame_id': 'odom',  # 旋转后坐标系
             'frame_id': 'map',  # 参考坐标系
-            'translation': {'x': 1.0, 'y': 1.0, 'z': 0.0}, 
+            'translation': {'x': 0.0, 'y': 0.0, 'z': 0.0}, 
             'rotation': {'x':0.0, 'y':0.0, 'z':0.0, 'w':1.0}  # 四元数表示的 90 度旋转（绕 Z 轴）
         }],
     )
