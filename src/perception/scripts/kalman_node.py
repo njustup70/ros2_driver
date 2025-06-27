@@ -35,18 +35,6 @@ class KalmanNode(Node):
         # 状态向量: {s} [px, py, theta, vx, vy, omega,ax,ay] 直接使用theta会有突变问题
         # 状态向量: {s} [px, py, z,w, vx, vy, omega,ax,ay]
         dt = self.dt
-        # self.F = np.array([
-        #     [1, 0, 0, dt, 0, 0, 0, 0],
-        #     [0, 1, 0, 0, dt, 0, 0, 0],
-        #     [0, 0, 1, 0, 0, dt, 0, 0],
-        #     [0, 0, 0, 1, 0, 0, dt, 0],
-        #     [0, 0, 0, 0, 1, 0, 0, dt],
-        #     [0, 0, 0, 0, 0, 1, 0, 0],
-        #     [0, 0, 0, 0, 0, 0, 1, 0],
-        #     [0, 0, 0, 0, 0, 0, 0, 1],
-        # ])
-        # self.kf.F = np.copy(self.F)
-        
         # 控制输入向量：{b}[vx,vy,vyaw]
         # 输入向量为命令输入
         self.B= np.zeros((9, 3))
@@ -74,6 +62,9 @@ class KalmanNode(Node):
         self.kf.P = np.diag([0.1, 0.1, 0.01,0.01, 0.5, 0.5, 0.1, 1.0, 1.0])
         
         # 控制输入和测量缓存
+        self.R_cmd=np.diag([0.02,0.02,0.01])  # 控制输入噪声协方差
+        self.H_cmd=np.zeros((3, 9))
+        self.H_cmd[[0,1,2],[4,5,6]] = 1.0  # 控制输入 [vx, vy, vyaw] -> [vx, vy, omega]
         self.cmd_vel = np.zeros(3)  # 控制输入[vx, vy, vyaw]
         self.odom = np.zeros(5)     # [x, y, yaw,z,w]
         # self.odom[4]=1
@@ -96,7 +87,8 @@ class KalmanNode(Node):
         self.cmd_vel[0] = msg.linear.x
         self.cmd_vel[1] = msg.linear.y
         self.cmd_vel[2] = msg.angular.z
-        
+        z=np.array([self.cmd_vel[0], self.cmd_vel[1], self.cmd_vel[2]]).reshape(-1, 1)  # 简化后
+        self.kf.update(z, H=self.H_cmd, R=self.R_cmd)
     def tf_timer_callback(self):
         try:
             transform_temp = self.tf_buffer.lookup_transform('odom', 'base_link',time=Time())
