@@ -81,7 +81,7 @@ class KalmanNode(Node):
         self.tf_timer=self.create_timer(1.0/300.0, self.tf_timer_callback)
         self.timer = self.create_timer(self.dt, self.timer_callback)
         self.tf_broadcaster = TransformBroadcaster(self)
-
+        self.active=False
     def cmd_vel_callback(self, msg: Twist):
         """处理速度指令"""
         self.cmd_vel[0] = msg.linear.x
@@ -95,6 +95,8 @@ class KalmanNode(Node):
         except Exception as e:
             # self.get_logger().error(f"TF lookup failed: {e}")
             return
+        #启动激活状态
+        self.active=True
         # 提取位置信息
         translation = transform_temp.transform.translation
         rotation = transform_temp.transform.rotation
@@ -127,6 +129,8 @@ class KalmanNode(Node):
         z = np.array([self.imu_data[2], self.imu_data[0], self.imu_data[1]]).reshape(-1, 1)  # 简化后
         self.kf.update(z, H=self.H_imu, R=self.R_imu)
     def timer_callback(self):
+        if self.active is False:
+            return
         """定时器回调 - 执行预测步骤"""
         # print("Timer callback triggered")
         current_time = self.get_clock().now()
