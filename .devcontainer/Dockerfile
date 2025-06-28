@@ -67,3 +67,4 @@ RUN  echo 'export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH' >> /home/${US
     && echo "export ROS_LOCALHOST_ONLY=1" >> /home/$USERNAME/.bashrc \
     && echo "export ROS_LOCALHOST_ONLY=1" >> /home/$USERNAME/.config/fish/config.fish 
 CMD ["/bin/bash"]
+
