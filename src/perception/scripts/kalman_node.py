@@ -90,6 +90,9 @@ class KalmanNode(Node):
         z=np.array([self.cmd_vel[0], self.cmd_vel[1], self.cmd_vel[2]]).reshape(-1, 1)  # 简化后
         self.kf.update(z, H=self.H_cmd, R=self.R_cmd)
     def tf_timer_callback(self):
+        if self.tf_buffer.can_transform('laser_map', 'lio_base_link', Time()) == False:
+            # self.get_logger().warn("TF not available yet")
+            return
         try:
             transform_temp = self.tf_buffer.lookup_transform('laser_map', 'lio_base_link',time=Time())
         except Exception as e:
