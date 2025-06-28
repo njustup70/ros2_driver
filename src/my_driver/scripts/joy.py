@@ -3,7 +3,12 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Joy
 from geometry_msgs.msg import Twist
-import math
+from std_msgs.msg import String
+import math,os
+import termios
+import tty
+import sys
+import json
 class JoyTeleopNode(Node):
     def __init__(self):
         super().__init__('joy_teleop_node')
@@ -13,6 +18,7 @@ class JoyTeleopNode(Node):
         self.declare_parameter('angular_scale',math.pi)
         self.pub_cmd_vel = self.create_publisher(Twist, self.get_parameter('cmd_vel_topic').value, 10)
         self.sub_joy = self.create_subscription(Joy, self.get_parameter('joy_topic').value, self.joy_callback, 10)
+        self.state_pub=self.create_publisher(String,"robot_state",10)
         self.timer= self.create_timer(0.02, self.timerpublish)  # 定时器用于定期检查Joy消息
         self.emergency_stop = False
 
@@ -23,10 +29,13 @@ class JoyTeleopNode(Node):
         self.get_logger().info("Joystick Teleop Node started.")
         self.last_twist= Twist()
         self.twist= Twist()
+        self.a_button_pressed = False  # 用于跟踪A键状态
+        self.keyboard_a_pressed = False  # 用于跟踪键盘A键状态
+        self.is_interactive = os.isatty(sys.stdin.fileno())
     def joy_callback(self, msg: Joy):
         # B键一般是按钮1（不同手柄可能不同，需根据实际情况调整）
         b_button = msg.buttons[1]
-
+        self.a_button_pressed = msg.buttons[0]  # A键一般是按钮0
         if b_button:
             self.emergency_stop = True
             self.get_logger().warn("Emergency Stop Activated!")
@@ -68,7 +77,24 @@ class JoyTeleopNode(Node):
         else:
             # 如果处于紧急停止状态，发布零速度命令
             self.pub_cmd_vel.publish(self.twist)
-            
+        #看键盘是否按下A键
+        if  self.is_interactive:
+            tty.setraw(sys.stdin.fileno())
+            key = sys.stdin.read(1)
+            if key == 'a' or key == 'A':
+                self.keyboard_a_pressed = True
+            else:
+                self.keyboard_a_pressed = False
+        else:
+            self.keyboard_a_pressed = False
+        # else:
+            # self.keyboard_a_pressed = False
+        if self.keyboard_a_pressed or self.a_button_pressed:
+            json_msg= {
+                "nav_state":"IDLE"
+            }
+            json_str = json.dumps(json_msg)
+            self.state_pub.publish(String(data=json_str))
 def main(args=None):
     rclpy.init(args=args)
     node = JoyTeleopNode()

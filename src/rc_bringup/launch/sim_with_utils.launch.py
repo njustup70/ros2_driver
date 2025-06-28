@@ -16,19 +16,20 @@ def generate_launch_description():
     ld=LaunchDescription()
     ld.add_action(DeclareLaunchArgument('use_tf_publish',default_value='false',description='Publish tf tree if use is True'))
     ld.add_action(DeclareLaunchArgument('use_ros1_bridge',default_value='false',description='Use ros1_bridge if use is True'))
-    utils_launch=IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(get_package_share_directory('rc_bringup'),'launch','utils_bringup.launch.py')
-        ),
-        
+    fox_glove=Node(
+        package='foxglove_bridge',
+        executable='foxglove_bridge'
     )
-    joy_launch=IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(get_package_share_directory('my_driver'),'launch','joy.launch.py')
-        ),
-        condition=IfCondition(LaunchConfiguration('use_joy'))
+    joy_driver = Node(
+        package='joy',
+        executable='joy_node',
+        name='joy_driver_node')
+    bridge_node=Node(
+        package='ros_tcp_endpoint',
+        executable='default_server_endpoint',
+        output='screen'
     )
-    
-    ld.add_action(utils_launch)
-    ld.add_action(joy_launch)
+    ld.add_action(joy_driver)
+    ld.add_action(bridge_node)
+    ld.add_action(fox_glove)
     return ld
