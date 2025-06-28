@@ -53,9 +53,12 @@ RUN apt-get update && apt-get install docker docker-compose ros-humble-usb-cam r
 USER $USERNAME
 RUN pip install pyzmq crcmod
 USER root
-#安装foxglove 转化工具
-COPY ./packages/mcap /usr/local/bin
-RUN chmod +x -R /usr/local/bin
+# #安装foxglove 转化工具
+# COPY ./packages/mcap /usr/local/bin
+# RUN chmod +x -R /usr/local/bin
+#增加仿真支持
+COPY ./packages/ROS-TCP-Endpoint-ROS2v0.7.0 /home/${USERNAME}/packages/ros_ws/src/ROS-TCP-Endpoint-ROS2v0.7.0
+RUN . /opt/ros/humble/setup.sh && cd ./ros_ws && colcon build
 RUN  echo 'export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH' >> /home/${USERNAME}/.bashrc \
     #&& echo 'source ~/docker/ros2/packages/ros-humble-ros1-bridge/install/setup.bash'>> /home/${USERNAME}/.bashrc \
     && echo 'source /opt/ros/humble/setup.bash' >> /home/$USERNAME/.bashrc \ 
@@ -64,3 +67,4 @@ RUN  echo 'export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH' >> /home/${US
     && echo "export ROS_LOCALHOST_ONLY=1" >> /home/$USERNAME/.bashrc \
     && echo "export ROS_LOCALHOST_ONLY=1" >> /home/$USERNAME/.config/fish/config.fish 
 CMD ["/bin/bash"]
+
