@@ -15,15 +15,9 @@ from launch.substitutions import Command, PathJoinSubstitution, FindExecutable
 
 def generate_launch_description():
     ld=LaunchDescription()
-    ld.add_action(DeclareLaunchArgument('use_rosbag_record', default_value='true', description='Record rosbag if use is True'))
-    ld.add_action(DeclareLaunchArgument('use_tf_publish',default_value='true',description='Publish tf tree if use is True'))
-    ld.add_action(DeclareLaunchArgument('use_mid360',default_value='true',description='Start mid360 node if use is True'))
     ld.add_action(DeclareLaunchArgument('use_extern_imu',default_value='false',description='Start extern imu node if use is True'))
     ld.add_action(DeclareLaunchArgument('use_ch040_imu',default_value='true',description='Start ch040 imu node if use is True'))
     ld.add_action(DeclareLaunchArgument('use_imu_transform',default_value='true',description='Start imu transform node if use is True'))
-    ld.add_action(DeclareLaunchArgument('use_realsense',default_value='true',description='Start realsense node if use is True'))
-    ld.add_action(DeclareLaunchArgument('use_joy',default_value='true',description='是否启动手柄控制'))
-    ld.add_action(DeclareLaunchArgument('use_ms_200',default_value='true',description='是否启动2d雷达'))
     ld.add_action(DeclareLaunchArgument('record_lidar',default_value='false',description='Record lidar data if use is True'))
     ld.add_action(DeclareLaunchArgument('record_imu',default_value='true',description='Record imu data if use is True'))
     ld.add_action(DeclareLaunchArgument('record_images',default_value='false',description='Record images if use is True'))
@@ -38,7 +32,6 @@ def generate_launch_description():
         launch_arguments={
             'use_rviz': 'false',  #不启动rviz
         }.items(),
-        condition=IfCondition(LaunchConfiguration('use_mid360'))
     )
     ch030_imu_launch=IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -46,12 +39,6 @@ def generate_launch_description():
         ),
         condition=IfCondition(LaunchConfiguration('use_ch040_imu'))
     )
-    #启动外接imu
-    extern_imu_launch=IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(get_package_share_directory('my_driver'),'launch','wheel_imu.launch.py')
-        ),
-        condition=IfCondition(LaunchConfiguration('use_extern_imu')))
     #启动imu转换
     imu_transform_launch=IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -69,19 +56,11 @@ def generate_launch_description():
             "xacro_file": os.path.join(get_package_share_directory('my_tf_tree'),'urdf','r2.urdf.xacro'),
         }.items()
     )
-    #启动realsense
-    realsense_launch=IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(get_package_share_directory('my_driver'),'launch','realsense_bringup.launch.py')
-        ),
-        condition=IfCondition(LaunchConfiguration('use_realsense'))
-    )
     #启动手柄
     joy_launch=IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(get_package_share_directory('my_driver'),'launch','joy.launch.py')
         ),
-        condition=IfCondition(LaunchConfiguration('use_joy'))
     )
     #启动下位机通信
     communicate_node=Node(
@@ -101,7 +80,6 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             os.path.join(get_package_share_directory('my_driver'),'launch','ms200_scan.launch.py')
         ),
-        condition=IfCondition(LaunchConfiguration('use_ms_200'))
     )
     ros_bag_node=  Node(
                     condition=IfCondition(LaunchConfiguration('use_rosbag_record')),
@@ -147,7 +125,6 @@ def generate_launch_description():
         parameters=[{'robot_description': robot_description}],
     )
     map_to_odom_tf_node = Node(
-        condition=IfCondition(LaunchConfiguration('use_tf_publish')),
         package='tf2_ros',
         executable="static_transform_publisher",
         name='odom_transform',
@@ -163,10 +140,8 @@ def generate_launch_description():
     # ld.add_action(robot_state_publisher_node)
     ld.add_action(kalman_filter_node)
     ld.add_action(mid360_launch)
-    ld.add_action(extern_imu_launch)
     ld.add_action(ch030_imu_launch)
     ld.add_action(imu_transform_launch)
-    ld.add_action(realsense_launch)
     ld.add_action(utils_launch)
     ld.add_action(joy_launch)
     ld.add_action(communicate_node)
