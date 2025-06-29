@@ -82,7 +82,7 @@ def generate_launch_description():
         ),
     )
     ros_bag_node=  Node(
-                    condition=IfCondition(LaunchConfiguration('use_rosbag_record')),
+                    # condition=IfCondition(LaunchConfiguration('use_rosbag_record')),
                     package='python_pkg',
                     executable='rosbag_record',
                     name='rosbag_record',
@@ -110,20 +110,7 @@ def generate_launch_description():
             {'hz': 100}
         ])
     #再开启新的xacro发布
-    xacro_file_path=PathJoinSubstitution(
-        [get_package_share_directory('my_tf_tree'), 'urdf', 'filter_base.xacro']
-    )
-    robot_description = Command([
-        FindExecutable(name='xacro'),  # 查找 xacro 可执行文件
-        ' ',
-        xacro_file_path,  # 使用 xacro 文件路径
-    ])
-    robot_state_publisher_node = Node(
-        package='robot_state_publisher',
-        executable='robot_state_publisher',
-        name='robot_state_publisher',
-        parameters=[{'robot_description': robot_description}],
-    )
+    
     map_to_odom_tf_node = Node(
         package='tf2_ros',
         executable="static_transform_publisher",
@@ -137,7 +124,6 @@ def generate_launch_description():
         arguments=['0.2','6.5','0','0','0','0','odom','odom_transform']  # 发布静态变换
     )
     ld.add_action(map_to_odom_tf_node)
-    # ld.add_action(robot_state_publisher_node)
     ld.add_action(kalman_filter_node)
     ld.add_action(mid360_launch)
     ld.add_action(ch030_imu_launch)
