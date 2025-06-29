@@ -25,7 +25,7 @@ def generate_launch_description():
                     {"imu_transformed_topic":LaunchConfiguration("imu_transformed_topic")},
                     {"imu_frame":LaunchConfiguration("imu_frame")},
                     {"lidar_frame":LaunchConfiguration("lidar_frame")},
-                    {"pub_tf":True},
+                    {"pub_tf":False},
                     {"Calibration_file":LaunchConfiguration("Calibration_file")}
                     ],
         output="screen"

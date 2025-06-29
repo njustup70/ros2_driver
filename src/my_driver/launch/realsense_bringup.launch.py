@@ -34,5 +34,5 @@ def generate_launch_description():
         actions=[image_publish_node]
     )
     launchDescription.add_action(realsense_bringup)
-    launchDescription.add_action(delayed_image_publish_node)
+    # launchDescription.add_action(delayed_image_publish_node)
     return launchDescription

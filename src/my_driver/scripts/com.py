@@ -10,7 +10,9 @@ from threading import Thread, Event
 sys.path.append('/home/Elaina/ros2_driver/src') 
 # print(sys.path)
 from protocol_lib.myserial import AsyncSerial_t
+from rclpy.time import Time
 import struct
+from tf2_ros import TransformListener,Buffer
 class Communicate_t(Node):
     def __init__(self):
         super().__init__('communicate_t')
@@ -32,6 +34,9 @@ class Communicate_t(Node):
         self.watchdog_thread = Thread(target=self.watchdog_loop)
         self.watchdog_thread.daemon = True
         self.watchdog_thread.start()
+        self.buffer= Buffer()
+        self.tf_listener = TransformListener(self.buffer, self)
+        self.tf_timer= self.create_timer(0.02, self.tf_timer_callback)  # 50Hz 定时器
         # self.serial.startListening(lambda data:print(data))#监听线程还开启自动重连
     def cmd_topic_callback(self, msg:Twist):
         self.last_msg_time = time.time()
@@ -75,6 +80,27 @@ class Communicate_t(Node):
                 self.get_logger().debug('Watchdog timeout, sent zero velocity')
             # 短暂休眠避免CPU占用过高
             time.sleep(0.05)
+    def tf_timer_callback(self):
+        """定时器回调 - 将自身的tf转发给stm32"""
+        try:
+            transform=self.buffer.lookup_transform('map', 'base_link', time=Time())
+        except Exception as e:
+            # print(f"TF lookup failed: {e}")
+            return
+        #右手系转化到左手系
+        x= transform.transform.translation.x
+        y= -(8-transform.transform.translation.y)
+        #从w 和 z中计算yaw角
+        z= transform.transform.rotation.z
+        w= transform.transform.rotation.w
+        yaw = np.arctan2(2.0 * (w * z), 1.0 - 2.0 * (z * z))
+        header=b'\x20'
+        x=struct.pack('<f',x)
+        y=struct.pack('<f',y)
+        yaw=struct.pack('<f',yaw)
+        # 拼接数据
+        data= header+x+y+yaw
+        self.serial.write(self.ValidationData(data))
 
 def main(args=None):
     rclpy.init(args=args)
