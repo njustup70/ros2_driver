@@ -196,9 +196,13 @@ class KalmanNode(Node):
         tf_pub.transform.rotation.y = 0.0
         tf_pub.transform.rotation.z=self.kf.x[2, 0]  # 使用z
         tf_pub.transform.rotation.w=self.kf.x[3, 0]  # 使用w
-        # tf_pub.transform.rotation.z = math.sin(self.kf.x[2, 0] / 2.0)
-        # tf_pub.transform.rotation.w = math.cos(self.kf.x[2, 0] / 2.0)
+        z= self.kf.x[2, 0]  # 获取当前yaw角
+        w= self.kf.x[3, 0]  # 获取当前w角
         # if tf_pub.transform.rotation
+        #增加四元数归一化
+        norm= math.sqrt(z**2 + w**2)
+        tf_pub.transform.rotation.z /= norm
+        tf_pub.transform.rotation.w /= norm
         if tf_pub.transform.rotation.z==0.0 and tf_pub.transform.rotation.w==0.0:
             # self.get_logger().warn("Quaternion is zero, setting to default")
             tf_pub.transform.rotation.z = 0.0
