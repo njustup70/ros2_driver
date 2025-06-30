@@ -29,7 +29,7 @@ class AsyncSerial_t:
     async def _connect_serial(self):
         """尝试连接串口，如果失败则等待重试"""
         while True:
-            if self._serial is None or not self._serial.is_open:
+            if self._serial is None:
                 try:
                     self._serial = serial.Serial(self.port, self.baudrate, timeout=0)
                     print(f"\033[92m[INFO] Serial connected: {self.port}\033[0m")
@@ -51,13 +51,9 @@ class AsyncSerial_t:
             self._thread = threading.Thread(target=self._run_loop, daemon=True)
             self._thread.start()
 
-        # 在事件循环中创建任务
-        asyncio.run_coroutine_threadsafe(self.__manage_serial(), self._loop)
-
-    async def __manage_serial(self):
-        """管理串口连接并启动读循环"""
-        await self._connect_serial()
-        asyncio.create_task(self.__read())
+        # 在后台循环里跑串口连接管理 和 读循环
+        asyncio.run_coroutine_threadsafe(self._connect_serial(), self._loop)
+        asyncio.run_coroutine_threadsafe(self.__read(), self._loop)
 
     async def __read(self):
         """异步读取串口数据并调用回调"""
@@ -66,7 +62,7 @@ class AsyncSerial_t:
             if not self._serial or not self._serial.is_open:
                 print(f"\033[91m[WARNING] Serial disconnected, retrying...\033[0m")
                 self._serial = None
-                await self._connect_serial()
+                # await self._connect_serial()
                 continue
 
             try:
@@ -75,10 +71,14 @@ class AsyncSerial_t:
                     self._raw_data = data
                     if self._callback:
                         self._callback(data)
-            except serial.SerialException as e:
-                print(f"\033[91m[WARNING] Serial error during read: {e}\033[0m")
-                self._serial.close()
+            except Exception as e:
+                try:
+                    if self._serial:
+                        self._serial.close()
+                except Exception:
+                    pass
                 self._serial = None
+                await asyncio.sleep(1)
 
     def getRawData(self) -> bytes:
         """获取串口接收的原始数据"""
@@ -89,9 +89,13 @@ class AsyncSerial_t:
         if self._serial and self._serial.is_open:
             try:
                 self._serial.write(input_data)
-            except serial.SerialException as e:
+            except Exception as e:
                 print(f"\033[91m[WARNING] Serial error during write: {e}\033[0m")
-                self._serial.close()
+                try:
+                    if self._serial:
+                        self._serial.close()
+                except Exception:
+                    pass
                 self._serial = None
 
         else:
@@ -102,8 +106,10 @@ class AsyncSerial_t:
         self._loop.run_forever()
 # 示例主函数
 async def main() -> None:
-    serial = AsyncSerial_t("COM2", 115200)
-    serial.startListening(lambda data: serial.write(data))
+    # serial = AsyncSerial_t("/dev/COM2", 115200)
+    serial = AsyncSerial_t("/dev/serial_ch340", 230400)
+    # serial.startListening(lambda data: serial.write(data))
+    serial.startListening(lambda data: print(f"Received: {data.decode()}"))
     while True:
         data = await asyncio.to_thread(input, "Please input data: ")
         serial.write(data.encode())

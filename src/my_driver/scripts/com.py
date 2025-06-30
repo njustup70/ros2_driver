@@ -2,8 +2,7 @@
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
-import os
-import sys
+import sys,json,os
 import numpy as np
 import time
 from threading import Thread, Event
@@ -13,6 +12,7 @@ from protocol_lib.myserial import AsyncSerial_t
 from rclpy.time import Time
 import struct
 from tf2_ros import TransformListener,Buffer
+from std_msgs.msg import String
 class Communicate_t(Node):
     def __init__(self):
         super().__init__('communicate_t')
@@ -27,7 +27,7 @@ class Communicate_t(Node):
         self.serial=AsyncSerial_t(
                 self.get_parameter('serial_port').value,
                 self.get_parameter('serial_baudrate').value)
-        self.serial.startListening()#监听线程还开启自动重连
+        
         self.last_msg_time = time.time()
         self.watchdog_timeout = 0.5 #0.5秒超时
         self.stop_event = Event()
@@ -37,7 +37,9 @@ class Communicate_t(Node):
         self.buffer= Buffer()
         self.tf_listener = TransformListener(self.buffer, self)
         self.tf_timer= self.create_timer(0.02, self.tf_timer_callback)  # 50Hz 定时器
-        # self.serial.startListening(lambda data:print(data))#监听线程还开启自动重连
+        self.serial.startListening(self.data_callback)#监听线程还开启自动重连
+        self.robot_state_pub = self.create_publisher(String, 'robot_state', 10)
+        #self.serial.startListening()#监听线程还开启自动重连
     def cmd_topic_callback(self, msg:Twist):
         self.last_msg_time = time.time()
         #获得信息发给串口
@@ -80,6 +82,17 @@ class Communicate_t(Node):
                 self.get_logger().debug('Watchdog timeout, sent zero velocity')
             # 短暂休眠避免CPU占用过高
             time.sleep(0.05)
+    def data_callback(self, data:bytes):
+        """串口数据回调函数"""
+        # print(f"Received data: {data}")
+        # 这里可以添加对接收到数据的处理逻辑
+        # 例如解析数据，更新状态等   
+        if data==b'\x34\x33\x00\x20': #如果是0x34 0x33 0x0 0x20
+            json_data={
+                "nav_state":"IDLE"
+            }
+            self.robot_state_pub.publish(String(data=json.dumps(json_data)))
+        # print([hex(b) for b in data])
     def tf_timer_callback(self):
         """定时器回调 - 将自身的tf转发给stm32"""
         try:
