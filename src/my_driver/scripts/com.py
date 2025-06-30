@@ -80,7 +80,7 @@ class Communicate_t(Node):
                 zero_twist.linear.x = 0.0
                 zero_twist.linear.y = 0.0
                 zero_twist.angular.z = 0.0
-                # self.cmd_topic_callback(zero_twist)
+                self.cmd_topic_callback(zero_twist)
                 self.get_logger().debug('Watchdog timeout, sent zero velocity')
             # 短暂休眠避免CPU占用过高
             time.sleep(0.05)
