@@ -72,9 +72,13 @@ class AsyncSerial_t:
                     if self._callback:
                         self._callback(data)
             except serial.SerialException as e:
-                print(f"\033[91m[WARNING] Serial error during read: {e}\033[0m")
-                self._serial.close()
+                try:
+                    if self._serial:
+                        self._serial.close()
+                except Exception:
+                    pass
                 self._serial = None
+                await asyncio.sleep(1)
 
     def getRawData(self) -> bytes:
         """获取串口接收的原始数据"""
@@ -87,7 +91,11 @@ class AsyncSerial_t:
                 self._serial.write(input_data)
             except serial.SerialException as e:
                 print(f"\033[91m[WARNING] Serial error during write: {e}\033[0m")
-                self._serial.close()
+                try:
+                    if self._serial:
+                        self._serial.close()
+                except Exception:
+                    pass
                 self._serial = None
 
         else:
