@@ -38,6 +38,7 @@ class Communicate_t(Node):
         self.serial.startListening(self.data_callback)#监听线程还开启自动重连
         self.robot_state_pub = self.create_publisher(String, 'robot_state', 10)
         self.robot_state_sub = self.create_subscription(String,'robot_state',self.robot_state_callback,1)
+        self.aligned_state = False  # 用于跟踪对齐状态
         #self.serial.startListening()#监听线程还开启自动重连
     def cmd_topic_callback(self, msg:Twist):
         self.last_msg_time = time.time()
@@ -101,13 +102,16 @@ class Communicate_t(Node):
             if nav_state ==  'ALIGNED':
                 print("Received nav_state: ALIGNED")
                 # 发送对齐完成信号
-                data:bytes=b'\x23'
-                # print(f"Sending data: {[hex(b) for b in data]}")
-                data_all:bytes=data+data
-                # print(f"Sending data: {[hex(b) for b in data_all]}")
-                self.serial.write(self.ValidationData(data_all))  
+                self.aligned_state = True
+            elif nav_state == 'IDLE':
+                self.aligned_state = False
     def tf_timer_callback(self):
         """定时器回调 - 将自身的tf转发给stm32"""
+        if self.aligned_state:
+            for i in range(10):
+                data:bytes=b'\x23\x23'
+                self.serial.write(self.ValidationData(data))
+                time.sleep(0.02)  # 20ms间隔
         try:
             transform=self.buffer.lookup_transform('map', 'base_link', time=Time())
         except Exception as e:
