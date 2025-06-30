@@ -101,8 +101,10 @@ class AsyncSerial_t:
         self._loop.run_forever()
 # 示例主函数
 async def main() -> None:
-    serial = AsyncSerial_t("COM2", 115200)
-    serial.startListening(lambda data: serial.write(data))
+    # serial = AsyncSerial_t("/dev/COM2", 115200)
+    serial = AsyncSerial_t("/dev/serial_ch340", 230400)
+    # serial.startListening(lambda data: serial.write(data))
+    serial.startListening(lambda data: print(f"Received: {data.decode()}"))
     while True:
         data = await asyncio.to_thread(input, "Please input data: ")
         serial.write(data.encode())
