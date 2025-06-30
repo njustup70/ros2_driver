@@ -63,6 +63,7 @@ class AsyncSerial_t:
                 print(f"\033[91m[WARNING] Serial disconnected, retrying...\033[0m")
                 self._serial = None
                 # await self._connect_serial()
+                await asyncio.sleep(1)
                 continue
 
             try:
@@ -100,6 +101,7 @@ class AsyncSerial_t:
 
         else:
             print(f"\033[91m[WARNING] Cannot write, serial not connected.\033[0m")
+            time.sleep(1)
     def _run_loop(self):
         """后台线程中运行事件循环"""
         asyncio.set_event_loop(self._loop)
