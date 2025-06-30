@@ -18,7 +18,7 @@ class Communicate_t(Node):
         super().__init__('communicate_t')
         self.declare_parameter('cmd_vel_topic', '/cmd_vel')
         self.declare_parameter('serial_port', '/dev/serial_ch340')
-        self.declare_parameter('serial_baudrate', 115200)
+        self.declare_parameter('serial_baudrate', 230400)
         self.sub=self.create_subscription(
             Twist,
             self.get_parameter('cmd_vel_topic').value,
@@ -101,7 +101,7 @@ class Communicate_t(Node):
             if nav_state ==  'ALIGNED':
                 # print("Received nav_state: ALIGNED")
                 # 发送对齐完成信号
-                data=b'\0x22'
+                data=b'\0x23'
                 data_all=data+data
                 self.serial.write(self.ValidationData(data_all))  
     def tf_timer_callback(self):
