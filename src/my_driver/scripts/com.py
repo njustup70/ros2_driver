@@ -39,7 +39,7 @@ class Communicate_t(Node):
         self.tf_timer= self.create_timer(0.02, self.tf_timer_callback)  # 50Hz 定时器
         self.serial.startListening(self.data_callback)#监听线程还开启自动重连
         self.robot_state_pub = self.create_publisher(String, 'robot_state', 10)
-        self.robot_state_sub = self.create_subscription(String,'robot_state',1,callback=self.robot_state_callback)
+        self.robot_state_sub = self.create_subscription(String,'robot_state',self.robot_state_callback,1)
         #self.serial.startListening()#监听线程还开启自动重连
     def cmd_topic_callback(self, msg:Twist):
         self.last_msg_time = time.time()
