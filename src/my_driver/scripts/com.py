@@ -27,7 +27,7 @@ class Communicate_t(Node):
         self.serial=AsyncSerial_t(
                 self.get_parameter('serial_port').value,
                 self.get_parameter('serial_baudrate').value)
-        self.serial.startListening()#监听线程还开启自动重连
+        
         self.last_msg_time = time.time()
         self.watchdog_timeout = 0.5 #0.5秒超时
         self.stop_event = Event()
@@ -37,7 +37,8 @@ class Communicate_t(Node):
         self.buffer= Buffer()
         self.tf_listener = TransformListener(self.buffer, self)
         self.tf_timer= self.create_timer(0.02, self.tf_timer_callback)  # 50Hz 定时器
-        # self.serial.startListening(lambda data:print(data))#监听线程还开启自动重连
+        self.serial.startListening(lambda data:print(data))#监听线程还开启自动重连
+        #self.serial.startListening()#监听线程还开启自动重连
     def cmd_topic_callback(self, msg:Twist):
         self.last_msg_time = time.time()
         #获得信息发给串口
