@@ -28,14 +28,13 @@ class AsyncSerial_t:
         self._thread=None
     async def _connect_serial(self):
         """尝试连接串口，如果失败则等待重试"""
-        while True:
-            if self._serial is None or not self._serial.is_open:
-                try:
-                    self._serial = serial.Serial(self.port, self.baudrate, timeout=0)
-                    print(f"\033[92m[INFO] Serial connected: {self.port}\033[0m")
-                except serial.SerialException as e:
-                    print(f"\033[91m[WARNING] Could not connect to serial port {self.port}: {e}\033[0m")
-            await asyncio.sleep(1)
+        while self._serial is None:
+            try:
+                self._serial = serial.Serial(self.port, self.baudrate, timeout=0)
+                print(f"\033[92m[INFO] Serial connected: {self.port}\033[0m")
+            except serial.SerialException as e:
+                print(f"\033[91m[WARNING] Could not connect to serial port {self.port}: {e}\033[0m")
+                await asyncio.sleep(1)
 
     def __del__(self):
         if self._serial and self._serial.is_open:
