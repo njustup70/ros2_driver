@@ -19,10 +19,10 @@ class Communicate_t(Node):
         self.declare_parameter('cmd_vel_topic', '/cmd_vel')
         self.declare_parameter('serial_port', '/dev/serial_ch340')
         self.declare_parameter('serial_baudrate', 230400)
-        # self.sub=self.create_subscription(
-            # self.get_parameter('cmd_vel_topic').value,
-            # self.cmd_topic_callback,
-            # 10)
+        self.sub=self.create_subscription(
+            self.get_parameter('cmd_vel_topic').value,
+            self.cmd_topic_callback,
+            10)
         self.serial=AsyncSerial_t(
                 self.get_parameter('serial_port').value,
                 self.get_parameter('serial_baudrate').value)
