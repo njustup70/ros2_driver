@@ -19,11 +19,10 @@ class Communicate_t(Node):
         self.declare_parameter('cmd_vel_topic', '/cmd_vel')
         self.declare_parameter('serial_port', '/dev/serial_ch340')
         self.declare_parameter('serial_baudrate', 230400)
-        self.sub=self.create_subscription(
-            Twist,
-            self.get_parameter('cmd_vel_topic').value,
-            self.cmd_topic_callback,
-            10)
+        # self.sub=self.create_subscription(
+            # self.get_parameter('cmd_vel_topic').value,
+            # self.cmd_topic_callback,
+            # 10)
         self.serial=AsyncSerial_t(
                 self.get_parameter('serial_port').value,
                 self.get_parameter('serial_baudrate').value)
@@ -61,12 +60,14 @@ class Communicate_t(Node):
     def ValidationData(self,data:bytes):
         #帧头为中间data16进制之和
         #帧尾为中间data16按位异或
+        assert isinstance(data, bytes), "Data must be of type bytes"
         head=np.uint8(0)
         for byte in data:
             head += np.uint8(byte)
         head=bytes([head])
         tail=head
         # print(f"head: {head}, tail: {tail}")
+        # print(f"Sending data: {[hex(b) for b in data]}")
         return head+data+tail
     def watchdog_loop(self):
         """看门狗线程循环，定期检查是否超时"""
@@ -79,7 +80,7 @@ class Communicate_t(Node):
                 zero_twist.linear.x = 0.0
                 zero_twist.linear.y = 0.0
                 zero_twist.angular.z = 0.0
-                self.cmd_topic_callback(zero_twist)
+                # self.cmd_topic_callback(zero_twist)
                 self.get_logger().debug('Watchdog timeout, sent zero velocity')
             # 短暂休眠避免CPU占用过高
             time.sleep(0.05)
@@ -99,10 +100,12 @@ class Communicate_t(Node):
         if 'nav_state' in data:
             nav_state = data['nav_state']
             if nav_state ==  'ALIGNED':
-                # print("Received nav_state: ALIGNED")
+                print("Received nav_state: ALIGNED")
                 # 发送对齐完成信号
-                data=b'\0x23'
-                data_all=data+data
+                data:bytes=b'\x23'
+                # print(f"Sending data: {[hex(b) for b in data]}")
+                data_all:bytes=data+data
+                # print(f"Sending data: {[hex(b) for b in data_all]}")
                 self.serial.write(self.ValidationData(data_all))  
     def tf_timer_callback(self):
         """定时器回调 - 将自身的tf转发给stm32"""
