@@ -39,6 +39,7 @@ class Communicate_t(Node):
         self.tf_timer= self.create_timer(0.02, self.tf_timer_callback)  # 50Hz 定时器
         self.serial.startListening(self.data_callback)#监听线程还开启自动重连
         self.robot_state_pub = self.create_publisher(String, 'robot_state', 10)
+        self.robot_state_sub = self.create_subscription(String,'robot_state',1,callback=self.robot_state_callback)
         #self.serial.startListening()#监听线程还开启自动重连
     def cmd_topic_callback(self, msg:Twist):
         self.last_msg_time = time.time()
@@ -93,6 +94,16 @@ class Communicate_t(Node):
             }
             self.robot_state_pub.publish(String(data=json.dumps(json_data)))
         # print([hex(b) for b in data])
+    def robot_state_callback(self, msg: String):
+        data= json.loads(msg.data)
+        if 'nav_state' in data:
+            nav_state = data['nav_state']
+            if nav_state ==  'ALIGNED':
+                # print("Received nav_state: ALIGNED")
+                # 发送对齐完成信号
+                data=b'\0x22'
+                data_all=data+data
+                self.serial.write(self.ValidationData(data_all))  
     def tf_timer_callback(self):
         """定时器回调 - 将自身的tf转发给stm32"""
         try:
