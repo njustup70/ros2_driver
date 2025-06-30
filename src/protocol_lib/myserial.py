@@ -28,13 +28,14 @@ class AsyncSerial_t:
         self._thread=None
     async def _connect_serial(self):
         """尝试连接串口，如果失败则等待重试"""
-        while self._serial is None:
-            try:
-                self._serial = serial.Serial(self.port, self.baudrate, timeout=0)
-                print(f"\033[92m[INFO] Serial connected: {self.port}\033[0m")
-            except serial.SerialException as e:
-                print(f"\033[91m[WARNING] Could not connect to serial port {self.port}: {e}\033[0m")
-                await asyncio.sleep(1)
+        while True:
+            if self._serial is None:
+                try:
+                    self._serial = serial.Serial(self.port, self.baudrate, timeout=0)
+                    print(f"\033[92m[INFO] Serial connected: {self.port}\033[0m")
+                except serial.SerialException as e:
+                    print(f"\033[91m[WARNING] Could not connect to serial port {self.port}: {e}\033[0m")
+            await asyncio.sleep(1)
 
     def __del__(self):
         if self._serial and self._serial.is_open:
@@ -50,13 +51,9 @@ class AsyncSerial_t:
             self._thread = threading.Thread(target=self._run_loop, daemon=True)
             self._thread.start()
 
-        # 在事件循环中创建任务
-        asyncio.run_coroutine_threadsafe(self.__manage_serial(), self._loop)
-
-    async def __manage_serial(self):
-        """管理串口连接并启动读循环"""
-        await self._connect_serial()
-        asyncio.create_task(self.__read())
+        # 在后台循环里跑串口连接管理 和 读循环
+        asyncio.run_coroutine_threadsafe(self._connect_serial(), self._loop)
+        asyncio.run_coroutine_threadsafe(self.__read(), self._loop)
 
     async def __read(self):
         """异步读取串口数据并调用回调"""
@@ -65,7 +62,7 @@ class AsyncSerial_t:
             if not self._serial or not self._serial.is_open:
                 print(f"\033[91m[WARNING] Serial disconnected, retrying...\033[0m")
                 self._serial = None
-                await self._connect_serial()
+                # await self._connect_serial()
                 continue
 
             try:
