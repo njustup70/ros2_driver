@@ -71,7 +71,7 @@ class AsyncSerial_t:
                     self._raw_data = data
                     if self._callback:
                         self._callback(data)
-            except serial.SerialException as e:
+            except Exception as e:
                 try:
                     if self._serial:
                         self._serial.close()
@@ -89,7 +89,7 @@ class AsyncSerial_t:
         if self._serial and self._serial.is_open:
             try:
                 self._serial.write(input_data)
-            except serial.SerialException as e:
+            except Exception as e:
                 print(f"\033[91m[WARNING] Serial error during write: {e}\033[0m")
                 try:
                     if self._serial:
