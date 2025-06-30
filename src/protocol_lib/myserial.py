@@ -63,6 +63,7 @@ class AsyncSerial_t:
                 print(f"\033[91m[WARNING] Serial disconnected, retrying...\033[0m")
                 self._serial = None
                 # await self._connect_serial()
+                await asyncio.sleep(1)
                 continue
 
             try:
@@ -100,20 +101,27 @@ class AsyncSerial_t:
 
         else:
             print(f"\033[91m[WARNING] Cannot write, serial not connected.\033[0m")
+            time.sleep(1)
     def _run_loop(self):
         """后台线程中运行事件循环"""
         asyncio.set_event_loop(self._loop)
         self._loop.run_forever()
 # 示例主函数
-async def main() -> None:
+async def main_async() -> None:
     # serial = AsyncSerial_t("/dev/COM2", 115200)
-    serial = AsyncSerial_t("/dev/serial_ch340", 230400)
+    serial = AsyncSerial_t("/dev/ttyUSB0", 230400)
     # serial.startListening(lambda data: serial.write(data))
     serial.startListening(lambda data: print(f"Received: {data.decode()}"))
     while True:
         data = await asyncio.to_thread(input, "Please input data: ")
         serial.write(data.encode())
         await asyncio.sleep(0.05)
-
+def main():
+    serial = AsyncSerial_t("/dev/ttyUSB0", 230400)
+    serial.startListening(lambda data: print(f"Received: {data.decode()}"))
+    while True:
+        serial.write(b"Hello from AsyncSerial_t!\n")
+        time.sleep(1)
 if __name__ == '__main__':
-    asyncio.run(main())
+    # asyncio.run(main())
+    main()

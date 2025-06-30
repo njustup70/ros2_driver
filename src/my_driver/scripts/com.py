@@ -18,12 +18,10 @@ class Communicate_t(Node):
         super().__init__('communicate_t')
         self.declare_parameter('cmd_vel_topic', '/cmd_vel')
         self.declare_parameter('serial_port', '/dev/serial_ch340')
-        self.declare_parameter('serial_baudrate', 115200)
-        self.sub=self.create_subscription(
-            Twist,
-            self.get_parameter('cmd_vel_topic').value,
-            self.cmd_topic_callback,
-            10)
+        self.declare_parameter('serial_baudrate', 230400)
+        self.sub=self.create_subscription(Twist,
+        self.get_parameter('cmd_vel_topic').value,
+        self.cmd_topic_callback,10)
         self.serial=AsyncSerial_t(
                 self.get_parameter('serial_port').value,
                 self.get_parameter('serial_baudrate').value)
@@ -39,7 +37,8 @@ class Communicate_t(Node):
         self.tf_timer= self.create_timer(0.02, self.tf_timer_callback)  # 50Hz 定时器
         self.serial.startListening(self.data_callback)#监听线程还开启自动重连
         self.robot_state_pub = self.create_publisher(String, 'robot_state', 10)
-        self.robot_state_sub = self.create_subscription(String,'robot_state',1,callback=self.robot_state_callback)
+        self.robot_state_sub = self.create_subscription(String,'robot_state',self.robot_state_callback,1)
+        self.aligned_state = False  # 用于跟踪对齐状态
         #self.serial.startListening()#监听线程还开启自动重连
     def cmd_topic_callback(self, msg:Twist):
         self.last_msg_time = time.time()
@@ -61,12 +60,14 @@ class Communicate_t(Node):
     def ValidationData(self,data:bytes):
         #帧头为中间data16进制之和
         #帧尾为中间data16按位异或
+        assert isinstance(data, bytes), "Data must be of type bytes"
         head=np.uint8(0)
         for byte in data:
             head += np.uint8(byte)
         head=bytes([head])
         tail=head
         # print(f"head: {head}, tail: {tail}")
+        # print(f"Sending data: {[hex(b) for b in data]}")
         return head+data+tail
     def watchdog_loop(self):
         """看门狗线程循环，定期检查是否超时"""
@@ -99,13 +100,18 @@ class Communicate_t(Node):
         if 'nav_state' in data:
             nav_state = data['nav_state']
             if nav_state ==  'ALIGNED':
-                # print("Received nav_state: ALIGNED")
+                print("Received nav_state: ALIGNED")
                 # 发送对齐完成信号
-                data=b'\0x22'
-                data_all=data+data
-                self.serial.write(self.ValidationData(data_all))  
+                self.aligned_state = True
+            elif nav_state == 'IDLE':
+                self.aligned_state = False
     def tf_timer_callback(self):
         """定时器回调 - 将自身的tf转发给stm32"""
+        if self.aligned_state:
+            for i in range(10):
+                data:bytes=b'\x23\x23'
+                self.serial.write(self.ValidationData(data))
+                time.sleep(0.02)  # 20ms间隔
         try:
             transform=self.buffer.lookup_transform('map', 'base_link', time=Time())
         except Exception as e:
