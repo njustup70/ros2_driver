@@ -105,7 +105,7 @@ class AsyncSerial_t:
         asyncio.set_event_loop(self._loop)
         self._loop.run_forever()
 # 示例主函数
-async def main() -> None:
+async def main_async() -> None:
     # serial = AsyncSerial_t("/dev/COM2", 115200)
     serial = AsyncSerial_t("/dev/serial_ch340", 230400)
     # serial.startListening(lambda data: serial.write(data))
@@ -114,6 +114,12 @@ async def main() -> None:
         data = await asyncio.to_thread(input, "Please input data: ")
         serial.write(data.encode())
         await asyncio.sleep(0.05)
-
+def main():
+    serial = AsyncSerial_t("/dev/serial_ch340", 230400)
+    serial.startListening(lambda data: print(f"Received: {data.decode()}"))
+    while True:
+        serial.write(b"Hello from AsyncSerial_t!\n")
+        time.sleep(1)
 if __name__ == '__main__':
-    asyncio.run(main())
+    # asyncio.run(main())
+    main()
