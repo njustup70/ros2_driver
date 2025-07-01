@@ -68,12 +68,19 @@ class JoyTeleopNode(Node):
             # 发布速度命令
             # self.get_logger().info(f"Publishing Twist: {twist}")
             # self.pub_cmd_vel.publish(twist)
-        self.last_twist = self.twist
+        # self.last_twist = self.twist
     def timerpublish(self):
         # 定时发布速度命令，保持通信
         if not self.emergency_stop:
+            # self.last_twist= self.twist
+            #如果一样就不发
+            if (self.twist.linear.x == self.last_twist.linear.x and
+                self.twist.linear.y == self.last_twist.linear.y and
+                self.twist.angular.z == self.last_twist.angular.z):
+                return
             if self.twist.linear.x != 0.0 or self.twist.linear.y != 0.0 or self.twist.angular.z != 0.0:
-                self.pub_cmd_vel.publish(self.twist)            
+                self.pub_cmd_vel.publish(self.twist)   
+            self.last_twist  = self.twist       
         else:
             # 如果处于紧急停止状态，发布零速度命令
             self.pub_cmd_vel.publish(self.twist)
