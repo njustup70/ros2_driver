@@ -107,22 +107,54 @@ def generate_launch_description():
         parameters=[
             {'imu_topic': '/livox/imu/normal'},
             {'publish_tf_name': 'base_link'},
-            {'hz': 100}
+            {'hz': 100},
+            {'map_frame': 'camera_init'},
+            {'base_frame': 'body'}
         ])
-    #再开启新的xacro发
-    map_to_odom_tf_node = Node(
+    odom_to_transform = ComposableNode(
         package='tf2_ros',
-        executable="static_transform_publisher",
-        name='odom_transform',
-        # parameters=[{
-        #     'child_frame_id': 'odom_transform',  # 旋转后坐标系
-        #     'frame_id': 'map',  # 参考坐标系
-        #     'translation': {'x': 1.0, 'y': 1.0, 'z': 0.0}, 
-        #     'rotation': {'x':0.0, 'y':0.0, 'z':0.0, 'w':1.0}  # 四元数表示的 90 度旋转（绕 Z 轴）
-        # }],
-        arguments=['0.2','6.5','0','0','0','0','odom','odom_transform']  # 发布静态变换
+        plugin='tf2_ros::StaticTransformBroadcasterNode',
+        name='tf_broadcaster1',
+        parameters=[{
+            'child_frame_id': 'odom_transform',  # 旋转后坐标系
+            'frame_id': 'odom',  # 参考坐标系
+            'translation': {'x': 0.2, 'y': 6.5, 'z': 0.0}, 
+            'rotation': {'x':0.0, 'y':0.0, 'z':0.0, 'w':1.0}  # 四元数表示的 90 度旋转（绕 Z 轴）
+        }],
     )
-    ld.add_action(map_to_odom_tf_node)
+    map_to_camera = ComposableNode(
+        package='tf2_ros',
+        plugin='tf2_ros::StaticTransformBroadcasterNode',
+        name='tf_broadcaster1',
+        parameters=[{
+            'child_frame_id': 'camera_init',  # 旋转后坐标系
+            'frame_id': 'map',  # 参考坐标系
+            'translation': {'x': 0.0, 'y': 0.0, 'z': 0.0}, 
+            'rotation': {'x':0.0, 'y':0.0, 'z':0.7071, 'w':-0.7071}  # 四元数表示的 90 度旋转（绕 Z 轴）
+        }],
+    )
+    map_to_odom_tf = ComposableNode(
+        package='tf2_ros',
+        plugin='tf2_ros::StaticTransformBroadcasterNode',
+        name='map_to_odom_tf_node',
+        parameters=[{
+            'child_frame_id': 'odom',  # 旋转后坐标系
+            'frame_id': 'map',  # 参考坐标系
+            'translation': {'x': 0.0, 'y': 0.0, 'z': 0.0}, 
+            'rotation': {'x':0.0, 'y':0.0, 'z':0.0, 'w':1.0}  # 四元数表示的 90 度旋转（绕 Z 轴）
+        }],
+    )
+    compose_node=ComposableNodeContainer(
+        namespace='',
+        name='start_container',
+        package='rclcpp_components',
+        executable='component_container',
+        composable_node_descriptions=[map_to_odom_tf, odom_to_transform, map_to_camera],
+        arguments=['--ros-args', '--log-level', 'fatal'],
+        output='screen',
+        emulate_tty=True,
+    )
+    ld.add_action(compose_node)
     ld.add_action(kalman_filter_node)
     ld.add_action(mid360_launch)
     ld.add_action(ch030_imu_launch)
