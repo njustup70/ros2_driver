@@ -18,7 +18,8 @@ class KalmanNode(Node):
         self.declare_parameter('publish_tf_name', 'base_link')
         self.declare_parameter('hz',100)
         self.declare_parameter('kalman_model',0)
-        
+        self.declare_parameter('map_frame', 'laser_map') # 被监听的tf 地图坐标
+        self.declare_parameter('base_frame', 'lio_base_link') # 被监听的tf 基座坐标
         # 时间参数
         self.dt = 1.0/self.get_parameter('hz').value
         self.last_time = self.get_clock().now()
@@ -90,11 +91,13 @@ class KalmanNode(Node):
         z=np.array([self.cmd_vel[0], self.cmd_vel[1], self.cmd_vel[2]]).reshape(-1, 1)  # 简化后
         self.kf.update(z, H=self.H_cmd, R=self.R_cmd)
     def tf_timer_callback(self):
-        if self.tf_buffer.can_transform('laser_map', 'lio_base_link', Time()) == False:
+        map_tf = self.get_parameter('map_frame').value
+        base_tf = self.get_parameter('base_frame').value
+        if self.tf_buffer.can_transform(map_tf,base_tf, Time()) == False:
             # self.get_logger().warn("TF not available yet")
             return
         try:
-            transform_temp = self.tf_buffer.lookup_transform('laser_map', 'lio_base_link',time=Time())
+            transform_temp = self.tf_buffer.lookup_transform(map_tf, base_tf,time=Time())
         except Exception as e:
             # self.get_logger().error(f"TF lookup failed: {e}")
             return
