@@ -79,7 +79,7 @@ class KalmanNode(Node):
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
         # 创建定时器
-        self.tf_timer=self.create_timer(1.0/300.0, self.tf_timer_callback)
+        self.tf_timer=self.create_timer(1.0/200.0, self.tf_timer_callback)
         self.timer = self.create_timer(self.dt, self.timer_callback)
         self.tf_broadcaster = TransformBroadcaster(self)
         self.active=False
@@ -225,12 +225,15 @@ class KalmanNode(Node):
         return yaw    
 def main(args=None):
     import rclpy
-    from rclpy.executors import SingleThreadedExecutor
+    from rclpy.executors import MultiThreadedExecutor
+
 
     rclpy.init(args=args)
     node = KalmanNode()
+    exe=MultiThreadedExecutor()
+    exe.add_node(node)
     try:
-        rclpy.spin(node)
+        exe.spin()
     except KeyboardInterrupt:
         node.get_logger().info("Keyboard Interrupt")
     finally:
