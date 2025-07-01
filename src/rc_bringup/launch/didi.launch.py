@@ -16,7 +16,6 @@ from launch.substitutions import Command, PathJoinSubstitution, FindExecutable
 def generate_launch_description():
     ld=LaunchDescription()
     ld.add_action(DeclareLaunchArgument('use_extern_imu',default_value='false',description='Start extern imu node if use is True'))
-    ld.add_action(DeclareLaunchArgument('use_ch040_imu',default_value='true',description='Start ch040 imu node if use is True'))
     ld.add_action(DeclareLaunchArgument('use_imu_transform',default_value='true',description='Start imu transform node if use is True'))
     ld.add_action(DeclareLaunchArgument('record_lidar',default_value='false',description='Record lidar data if use is True'))
     ld.add_action(DeclareLaunchArgument('record_imu',default_value='true',description='Record imu data if use is True'))
@@ -33,12 +32,6 @@ def generate_launch_description():
             'use_rviz': 'false',  #不启动rviz
         }.items(),
     )
-    ch030_imu_launch=IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(get_package_share_directory('my_driver'),'launch','ch040_imu.launch.py')
-        ),
-        condition=IfCondition(LaunchConfiguration('use_ch040_imu'))
-    )
     #启动imu转换
     imu_transform_launch=IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -51,10 +44,6 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             os.path.join(get_package_share_directory('rc_bringup'),'launch','utils_bringup.launch.py')
         ),
-        launch_arguments={
-            # "xacro_file": os.path.join(get_package_share_directory('my_tf_tree'),'urdf','laser_base.xacro'),
-            "xacro_file": os.path.join(get_package_share_directory('my_tf_tree'),'urdf','dd.urdf.xacro'),
-        }.items()
     )
     #启动手柄
     joy_launch=IncludeLaunchDescription(
@@ -111,6 +100,20 @@ def generate_launch_description():
             {'map_frame': 'camera_init'},
             {'base_frame': 'body'}
         ])
+    xacro_file_path:str= os.path.join(get_package_share_directory('my_tf_tree'),'urdf','dd.urdf.xacro')
+    robot_description = Command([
+        FindExecutable(name='xacro'),  # 查找 xacro 可执行文件
+        ' ',  # 确保命令和路径之间有空格
+        xacro_file_path  # 传入 xacro 文件路径
+    ])
+
+    # 机器人状态发布节点
+    robot_state_publisher_node = ComposableNode(
+        package='robot_state_publisher',
+        plugin='robot_state_publisher::RobotStatePublisher',
+        name='robot_state_publisher',
+        parameters=[{'robot_description': robot_description}],
+    )
     odom_to_transform = ComposableNode(
         package='tf2_ros',
         plugin='tf2_ros::StaticTransformBroadcasterNode',
@@ -149,7 +152,7 @@ def generate_launch_description():
         name='start_container',
         package='rclcpp_components',
         executable='component_container',
-        composable_node_descriptions=[map_to_odom_tf, odom_to_transform, map_to_camera],
+        composable_node_descriptions=[map_to_odom_tf, odom_to_transform, map_to_camera,robot_state_publisher_node],
         arguments=['--ros-args', '--log-level', 'fatal'],
         output='screen',
         emulate_tty=True,
@@ -157,7 +160,6 @@ def generate_launch_description():
     ld.add_action(compose_node)
     ld.add_action(kalman_filter_node)
     ld.add_action(mid360_launch)
-    ld.add_action(ch030_imu_launch)
     ld.add_action(imu_transform_launch)
     ld.add_action(utils_launch)
     ld.add_action(joy_launch)
