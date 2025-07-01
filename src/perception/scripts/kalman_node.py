@@ -18,8 +18,8 @@ class KalmanNode(Node):
         self.declare_parameter('publish_tf_name', 'base_link')
         self.declare_parameter('hz',100)
         self.declare_parameter('kalman_model',0)
-        self.declare_parameter('map_frame', 'laser_map') # 被监听的tf 地图坐标
-        self.declare_parameter('base_frame', 'lio_base_link') # 被监听的tf 基座坐标
+        self.declare_parameter('map_frame', 'camera_init') # 被监听的tf 地图坐标
+        self.declare_parameter('base_frame', 'body') # 被监听的tf 基座坐标
         self.declare_parameter('tf_hz',10.0) #被监听的tf频率
         # 时间参数
         self.dt = 1.0/self.get_parameter('hz').value
@@ -52,13 +52,13 @@ class KalmanNode(Node):
         self.H_tf = np.zeros((4, 9))
         self.H_tf[[0,1,2,3],[0,1,2,3]] = 1.0  # TF测量 [px, py, z,w] -> [px, py, z ,w]
         # 过程噪声协方差矩阵
-        self.kf.Q = np.diag([0.001, 0.001, 0.006,0.006, 0.01, 0.01, 0.01,0.5, 0.5])
+        self.kf.Q = np.diag([0.0005, 0.0005, 0.006,0.006, 0.2, 0.2, 0.05,0.8, 0.8])
         # 测量噪声协方差矩阵
-        self.R = np.diag([0.001, 0.001, 0.08, 0.4, 0.4, 0.01 ,0.001, 0.001])
+        # self.R = np.diag([0.001, 0.001, 0.08, 0.4, 0.4, 0.01 ,0.001, 0.001])
         
         # 测量噪声协方差矩阵（根据传感器精度调整）
-        self.R_tf = np.diag([0.08, 0.08, 0.04,0.04])  # TF测量噪声（x,y,z,w）
-        self.R_imu = np.diag([1.0, 1.0, 1.0])    # IMU测量噪声（ax,ay,ayaw）
+        self.R_tf = np.diag([0.001, 0.001, 0.006,0.006])  # TF测量噪声（x,y,z,w）
+        self.R_imu = np.diag([0.01, 0.01, 0.01])    # IMU测量噪声（ax,ay,ayaw）
         
         # 初始估计误差协方差
         self.kf.P = np.diag([0.1, 0.1, 0.01,0.01, 0.5, 0.5, 0.1, 1.0, 1.0])
@@ -76,12 +76,13 @@ class KalmanNode(Node):
         # 创建订阅者
         self.create_subscription(Twist, '/cmd_vel', self.cmd_vel_callback, 1)
         # self.create_subscription(TFMessage, '/tf', self.tf_callback, 1)
-        self.create_subscription(Imu, self.get_parameter('imu_topic').value, self.imu_callback, 1)
+        # self.create_subscription(Imu, self.get_parameter('imu_topic').value, self.imu_callback, 1)
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
         # 创建定时器
         self.tf_timer=self.create_timer(1.0/self.get_parameter('tf_hz').value, self.tf_timer_callback)
         self.timer = self.create_timer(self.dt, self.timer_callback)
+        self.vel_pub= self.create_publisher(Twist, '/vel_predict', 1)
         self.tf_broadcaster = TransformBroadcaster(self)
         self.active=False
     def cmd_vel_callback(self, msg: Twist):
@@ -185,7 +186,11 @@ class KalmanNode(Node):
         # self.ef.update(self.kf.x[0, 0])
         # self.ef.update(self.kf.x[1, 0])
         self.publish_fused_state()
-                        
+        vel= Twist()
+        vel.linear.x = self.kf.x[4, 0]  # vx
+        vel.linear.y = self.kf.x[5, 0]  # vy
+        vel.angular.z = self.kf.x[6, 0]  # omega
+        self.vel_pub.publish(vel)  # 发布预测速度                
         
     def publish_fused_state(self):
         """发布融合后的状态"""
