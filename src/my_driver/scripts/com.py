@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+'''
+串口改成队列发送
+'''
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
@@ -40,6 +43,8 @@ class Communicate_t(Node):
         self.robot_state_sub = self.create_subscription(String,'robot_state',self.robot_state_callback,1)
         self.aligned_state = False  # 用于跟踪对齐状态
         #self.serial.startListening()#监听线程还开启自动重连
+        self.serial_queue = []  # 用于存储串口数据
+        self.serial_publish_timer = self.create_timer(0.002, self.publish_serial_data)  #500hz 定时器
     def cmd_topic_callback(self, msg:Twist):
         self.last_msg_time = time.time()
         #获得信息发给串口
@@ -56,7 +61,8 @@ class Communicate_t(Node):
         angular_z=struct.pack('<f',angular_z)
         # 拼接数据
         data= data_header+linear_x+linear_y+angular_z
-        self.serial.write(self.ValidationData(data))
+        # self.serial.write(self.ValidationData(data))
+        self.queue_add_data(data)  # 将数据添加到队列中
     def ValidationData(self,data:bytes):
         #帧头为中间data16进制之和
         #帧尾为中间data16按位异或
@@ -103,8 +109,9 @@ class Communicate_t(Node):
                 print("Received nav_state: ALIGNED")
                 # 发送对齐完成信号
                 self.aligned_state = True
-            elif nav_state == 'IDLE':
-                self.aligned_state = False
+                for i in range(10):
+                    data:bytes=b'\x23\x23'
+                    self.queue_add_data(data)  # 将数据添加到队列中
     def tf_timer_callback(self):
         """定时器回调 - 将自身的tf转发给stm32"""
         if self.aligned_state:
@@ -130,8 +137,21 @@ class Communicate_t(Node):
         yaw=struct.pack('<f',yaw)
         # 拼接数据
         data= header+x+y+yaw
-        self.serial.write(self.ValidationData(data))
-
+        # self.serial.write(self.ValidationData(data))
+        self.queue_add_data(data)  # 将数据添加到队列中
+    def queue_add_data(self, data: bytes):
+        '''将数据添加到串口队列中'''
+        assert isinstance(data, bytes), "Data must be of type bytes"
+        if len(self.serial_queue) >20: # 队列长度限制为5
+            self.serial_queue.pop(0)
+            print("Serial queue is full, removing oldest data")
+        self.serial_queue.append(data)
+    
+    def publish_serial_data(self):
+        """定时发布串口数据"""
+        if self.serial_queue:
+            data = self.serial_queue.pop(0)
+            self.serial.write(self.ValidationData(data))
 def main(args=None):
     rclpy.init(args=args)
     node=Communicate_t()
