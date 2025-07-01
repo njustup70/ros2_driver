@@ -20,6 +20,7 @@ class KalmanNode(Node):
         self.declare_parameter('kalman_model',0)
         self.declare_parameter('map_frame', 'laser_map') # 被监听的tf 地图坐标
         self.declare_parameter('base_frame', 'lio_base_link') # 被监听的tf 基座坐标
+        self.declare_parameter('tf_hz',10.0) #被监听的tf频率
         # 时间参数
         self.dt = 1.0/self.get_parameter('hz').value
         self.last_time = self.get_clock().now()
@@ -51,12 +52,12 @@ class KalmanNode(Node):
         self.H_tf = np.zeros((4, 9))
         self.H_tf[[0,1,2,3],[0,1,2,3]] = 1.0  # TF测量 [px, py, z,w] -> [px, py, z ,w]
         # 过程噪声协方差矩阵
-        self.kf.Q = np.diag([0.001, 0.001, 0.006,0.006, 0.01, 0.01, 0.01,0.01, 0.01])
+        self.kf.Q = np.diag([0.001, 0.001, 0.006,0.006, 0.01, 0.01, 0.01,0.5, 0.5])
         # 测量噪声协方差矩阵
         self.R = np.diag([0.001, 0.001, 0.08, 0.4, 0.4, 0.01 ,0.001, 0.001])
         
         # 测量噪声协方差矩阵（根据传感器精度调整）
-        self.R_tf = np.diag([1.0, 1.0, 0.2,0.2])  # TF测量噪声（x,y,z,w）
+        self.R_tf = np.diag([0.08, 0.08, 0.04,0.04])  # TF测量噪声（x,y,z,w）
         self.R_imu = np.diag([1.0, 1.0, 1.0])    # IMU测量噪声（ax,ay,ayaw）
         
         # 初始估计误差协方差
@@ -79,7 +80,7 @@ class KalmanNode(Node):
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
         # 创建定时器
-        self.tf_timer=self.create_timer(1.0/200.0, self.tf_timer_callback)
+        self.tf_timer=self.create_timer(1.0/self.get_parameter('tf_hz').value, self.tf_timer_callback)
         self.timer = self.create_timer(self.dt, self.timer_callback)
         self.tf_broadcaster = TransformBroadcaster(self)
         self.active=False
