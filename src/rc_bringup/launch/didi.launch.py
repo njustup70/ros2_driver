@@ -15,15 +15,9 @@ from launch.substitutions import Command, PathJoinSubstitution, FindExecutable
 
 def generate_launch_description():
     ld=LaunchDescription()
-    ld.add_action(DeclareLaunchArgument('use_rosbag_record', default_value='true', description='Record rosbag if use is True'))
-    ld.add_action(DeclareLaunchArgument('use_tf_publish',default_value='true',description='Publish tf tree if use is True'))
-    ld.add_action(DeclareLaunchArgument('use_mid360',default_value='true',description='Start mid360 node if use is True'))
     ld.add_action(DeclareLaunchArgument('use_extern_imu',default_value='false',description='Start extern imu node if use is True'))
     ld.add_action(DeclareLaunchArgument('use_ch040_imu',default_value='true',description='Start ch040 imu node if use is True'))
     ld.add_action(DeclareLaunchArgument('use_imu_transform',default_value='true',description='Start imu transform node if use is True'))
-    ld.add_action(DeclareLaunchArgument('use_realsense',default_value='true',description='Start realsense node if use is True'))
-    ld.add_action(DeclareLaunchArgument('use_joy',default_value='true',description='是否启动手柄控制'))
-    ld.add_action(DeclareLaunchArgument('use_ms_200',default_value='true',description='是否启动2d雷达'))
     ld.add_action(DeclareLaunchArgument('record_lidar',default_value='false',description='Record lidar data if use is True'))
     ld.add_action(DeclareLaunchArgument('record_imu',default_value='true',description='Record imu data if use is True'))
     ld.add_action(DeclareLaunchArgument('record_images',default_value='false',description='Record images if use is True'))
@@ -33,12 +27,11 @@ def generate_launch_description():
     #启动mid360
     mid360_launch=IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(get_package_share_directory('my_driver'),'launch','mid360_bringup.launch.py')
+            os.path.join(get_package_share_directory('my_driver'),'launch','mid360_dd.launch.py')
         ),
         launch_arguments={
             'use_rviz': 'false',  #不启动rviz
         }.items(),
-        condition=IfCondition(LaunchConfiguration('use_mid360'))
     )
     ch030_imu_launch=IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -46,12 +39,6 @@ def generate_launch_description():
         ),
         condition=IfCondition(LaunchConfiguration('use_ch040_imu'))
     )
-    #启动外接imu
-    extern_imu_launch=IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(get_package_share_directory('my_driver'),'launch','wheel_imu.launch.py')
-        ),
-        condition=IfCondition(LaunchConfiguration('use_extern_imu')))
     #启动imu转换
     imu_transform_launch=IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -69,19 +56,11 @@ def generate_launch_description():
             "xacro_file": os.path.join(get_package_share_directory('my_tf_tree'),'urdf','dd.urdf.xacro'),
         }.items()
     )
-    #启动realsense
-    realsense_launch=IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(get_package_share_directory('my_driver'),'launch','realsense_bringup.launch.py')
-        ),
-        condition=IfCondition(LaunchConfiguration('use_realsense'))
-    )
     #启动手柄
     joy_launch=IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(get_package_share_directory('my_driver'),'launch','joy.launch.py')
         ),
-        condition=IfCondition(LaunchConfiguration('use_joy'))
     )
     #启动下位机通信
     communicate_node=Node(
@@ -101,10 +80,9 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             os.path.join(get_package_share_directory('my_driver'),'launch','ms200_scan.launch.py')
         ),
-        condition=IfCondition(LaunchConfiguration('use_ms_200'))
     )
     ros_bag_node=  Node(
-                    condition=IfCondition(LaunchConfiguration('use_rosbag_record')),
+                    # condition=IfCondition(LaunchConfiguration('use_rosbag_record')),
                     package='python_pkg',
                     executable='rosbag_record',
                     name='rosbag_record',
@@ -131,23 +109,8 @@ def generate_launch_description():
             {'publish_tf_name': 'base_link'},
             {'hz': 100}
         ])
-    #再开启新的xacro发布
-    xacro_file_path=PathJoinSubstitution(
-        [get_package_share_directory('my_tf_tree'), 'urdf', 'dd.fb.xacro']
-    )
-    robot_description = Command([
-        FindExecutable(name='xacro'),  # 查找 xacro 可执行文件
-        ' ',
-        xacro_file_path,  # 使用 xacro 文件路径
-    ])
-    robot_state_publisher_node = Node(
-        package='robot_state_publisher',
-        executable='robot_state_publisher',
-        name='robot_state_publisher',
-        parameters=[{'robot_description': robot_description}],
-    )
+    #再开启新的xacro发
     map_to_odom_tf_node = Node(
-        condition=IfCondition(LaunchConfiguration('use_tf_publish')),
         package='tf2_ros',
         executable="static_transform_publisher",
         name='odom_transform',
@@ -160,13 +123,10 @@ def generate_launch_description():
         arguments=['0.2','6.5','0','0','0','0','odom','odom_transform']  # 发布静态变换
     )
     ld.add_action(map_to_odom_tf_node)
-    # ld.add_action(robot_state_publisher_node)
     ld.add_action(kalman_filter_node)
     ld.add_action(mid360_launch)
-    ld.add_action(extern_imu_launch)
     ld.add_action(ch030_imu_launch)
     ld.add_action(imu_transform_launch)
-    ld.add_action(realsense_launch)
     ld.add_action(utils_launch)
     ld.add_action(joy_launch)
     ld.add_action(communicate_node)
