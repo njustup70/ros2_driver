@@ -108,7 +108,7 @@ def generate_launch_description():
             {'imu_topic': '/livox/imu/normal'},
             {'publish_tf_name': 'base_link'},
             {'hz': 100},
-            {'map_frame': 'map'},
+            {'map_frame': 'camera_init'},
             {'base_frame': 'body'}
         ])
     #再开启新的xacro发布
