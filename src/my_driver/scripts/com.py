@@ -151,7 +151,7 @@ class Communicate_t(Node):
         """定时发布串口数据"""
         if self.serial_queue:
             data = self.serial_queue.pop(0)
-        self.serial.write(self.ValidationData(data))
+            self.serial.write(self.ValidationData(data))
 def main(args=None):
     rclpy.init(args=args)
     node=Communicate_t()
