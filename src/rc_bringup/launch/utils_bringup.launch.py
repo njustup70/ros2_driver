@@ -70,7 +70,7 @@ def generate_launch_description():
         name='robot_state_publisher',
         parameters=[{'robot_description': robot_description}],
     )
-    # fast lio tf支持
+    # fast lio tf支持(不需要)
     fast_lio_tf_node=ComposableNode(
         condition=IfCondition(LaunchConfiguration('use_fast_lio_tf')),
         package='tf2_ros',
@@ -114,7 +114,7 @@ def generate_launch_description():
         name='start_container',
         package='rclcpp_components',
         executable='component_container',
-        composable_node_descriptions=[foxglove_node,robot_state_publisher_node,fast_lio_tf_node,fast_lio_tf_node2,map_to_odom_tf_node],
+        composable_node_descriptions=[foxglove_node,robot_state_publisher_node,fast_lio_tf_node2,map_to_odom_tf_node],
         arguments=['--ros-args', '--log-level', 'fatal'],
         output='screen',
         emulate_tty=True,
