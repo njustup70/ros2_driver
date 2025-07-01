@@ -109,6 +109,10 @@ class Communicate_t(Node):
                 print("Received nav_state: ALIGNED")
                 # 发送对齐完成信号
                 self.aligned_state = True
+            else:
+                self.aligned_state = False  # 如果不是对齐状态，重置对齐状态
+            if self.aligned_state :
+                self.aligned_state = False  # 重置对齐状态
                 for i in range(10):
                     data:bytes=b'\x23\x23'
                     self.queue_add_data(data)  # 将数据添加到队列中
