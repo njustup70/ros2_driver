@@ -58,7 +58,7 @@ class KalmanNode(Node):
         self.odom = np.zeros(5)     # [x, y, yaw, z, w]
         
         # 创建订阅者（移除IMU订阅）
-        self.create_subscription(Twist, '/cmd_vel', self.cmd_vel_callback, 1)
+        # self.create_subscription(Twist, '/cmd_vel', self.cmd_vel_callback, 1)
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
         
