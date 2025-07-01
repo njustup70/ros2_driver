@@ -17,6 +17,7 @@ def generate_launch_description():
     ld=LaunchDescription()
     ld.add_action(DeclareLaunchArgument('use_rosbag_record', default_value='true', description='Record rosbag if use is True'))
     ld.add_action(DeclareLaunchArgument('use_tf_publish',default_value='true',description='Publish tf tree if use is True'))
+    ld.add_action(DeclareLaunchArgument('use_pointlio_tf',default_value='true',description='是否使用point的树（选择是否补充body到baselink）'))
     ld.add_action(DeclareLaunchArgument('use_mid360',default_value='true',description='Start mid360 node if use is True'))
     ld.add_action(DeclareLaunchArgument('use_extern_imu',default_value='false',description='Start extern imu node if use is True'))
     ld.add_action(DeclareLaunchArgument('use_ch040_imu',default_value='true',description='Start ch040 imu node if use is True'))
@@ -159,7 +160,15 @@ def generate_launch_description():
         # }],
         arguments=['0.2','6.5','0','0','0','0','odom','odom_transform']  # 发布静态变换
     )
+    body_to_baselink_tf_node = Node(
+        condition=IfCondition(LaunchConfiguration('use_pointlio_tf')),
+        package='tf2_ros',
+        executable="static_transform_publisher",
+        name='body_transform',
+        arguments=['0','0','0','0','0','0','body','base_link']  # 发布静态变换
+    )
     ld.add_action(map_to_odom_tf_node)
+    ld.add_action(body_to_baselink_tf_node)
     # ld.add_action(robot_state_publisher_node)
     ld.add_action(kalman_filter_node)
     ld.add_action(mid360_launch)
