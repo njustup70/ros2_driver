@@ -25,20 +25,23 @@ class Communicate_t(Node):
         self.sub=self.create_subscription(Twist,
         self.get_parameter('cmd_vel_topic').value,
         self.cmd_topic_callback,10)
+        # 初始化串口通信
         self.serial=AsyncSerial_t(
                 self.get_parameter('serial_port').value,
                 self.get_parameter('serial_baudrate').value)
-        
+        self.serial.startListening(self.data_callback,wait_time=0.01)#监听线程还开启自动重连
+        # 看门狗相关变量
         self.last_msg_time = time.time()
         self.watchdog_timeout = 0.5 #0.5秒超时
         self.stop_event = Event()
         self.watchdog_thread = Thread(target=self.watchdog_loop)
         self.watchdog_thread.daemon = True
         self.watchdog_thread.start()
+        # tf相关
         self.buffer= Buffer()
         self.tf_listener = TransformListener(self.buffer, self)
         self.tf_timer= self.create_timer(0.02, self.tf_timer_callback)  # 50Hz 定时器
-        self.serial.startListening(self.data_callback)#监听线程还开启自动重连
+        # ros2状态相关
         self.robot_state_pub = self.create_publisher(String, 'robot_state', 10)
         self.robot_state_sub = self.create_subscription(String,'robot_state',self.robot_state_callback,1)
         self.aligned_state = False  # 用于跟踪对齐状态
@@ -46,6 +49,9 @@ class Communicate_t(Node):
         self.serial_queue = []  # 用于存储串口数据
         self.serial_publish_timer = self.create_timer(0.002, self.publish_serial_data)  #500hz 定时器
     def cmd_topic_callback(self, msg:Twist):
+        '''
+        速度指令发送
+        '''
         self.last_msg_time = time.time()
         #获得信息发给串口
         linear_x=msg.linear.x
@@ -64,6 +70,7 @@ class Communicate_t(Node):
         # self.serial.write(self.ValidationData(data))
         self.queue_add_data(data)  # 将数据添加到队列中
     def ValidationData(self,data:bytes):
+        """验证数据格式，添加帧头和帧尾"""
         #帧头为中间data16进制之和
         #帧尾为中间data16按位异或
         assert isinstance(data, bytes), "Data must be of type bytes"
@@ -102,6 +109,11 @@ class Communicate_t(Node):
             self.robot_state_pub.publish(String(data=json.dumps(json_data)))
         # print([hex(b) for b in data])
     def robot_state_callback(self, msg: String):
+        """导航和机器人其他状态回调函数
+
+        Args:
+            msg (String): _description_
+        """
         data= json.loads(msg.data)
         if 'nav_state' in data:
             nav_state = data['nav_state']
@@ -109,6 +121,10 @@ class Communicate_t(Node):
                 print("Received nav_state: ALIGNED")
                 # 发送对齐完成信号
                 self.aligned_state = True
+            else:
+                self.aligned_state = False  # 如果不是对齐状态，重置对齐状态
+            if self.aligned_state :
+                self.aligned_state = False  # 重置对齐状态
                 for i in range(10):
                     data:bytes=b'\x23\x23'
                     self.queue_add_data(data)  # 将数据添加到队列中
