@@ -25,7 +25,7 @@ class bag_play_node(Node):
         if self.get_parameter('filter_debug').value:
             self.whitelist=['/tf']
             self.typewhitelist=['std_msgs/msg/String','geometry_msgs/msg/Twist']
-            self.blacklist.append('/vel_predict')
+            self.blacklist+=['/vel_predict','/sick/vel']
         if len(self.whitelist)==0 or len(self.typewhitelist)==0:
             print(f'\033[95m 不启动白名单] \033[0m')
             self.active_whitelist=False
