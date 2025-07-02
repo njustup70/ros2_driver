@@ -60,7 +60,7 @@ class SickCommunicate_t(Node):
             if self.tf_last.x != 0.0 or self.tf_last.y != 0.0:
                 dt = timestamp - self.last_timestamp
                 twist_msg.linear.x = (tf_data.x - self.tf_last.x) / dt
-                twist_msg.linear.y = (tf_data.y - self.tf_last.y) / dt
+                twist_msg.linear.y = -(tf_data.y - self.tf_last.y) / dt
                 #增加过零点
                 dyaw= (tf_data.yaw - self.tf_last.yaw)
                 if dyaw >math.pi :
@@ -79,8 +79,10 @@ class SickCommunicate_t(Node):
                 #大端
                 # value = int.from_bytes(data[i:i+2], byteorder='big', signed=True)
                 value:np.int16=struct.unpack('>h', data[i:i+2])[0]  # 使用大端字节序解析
-                laser_data.append(value)
+                # laser_data.append(value)
                 assert -32768 <= value <= 32767, "Laser data out of range"
+                real_value= (value* 0.2167 + 63.1689) / 1000.0
+                laser_data.append(real_value)
             #增加到json
             laser_data_json = json.dumps(laser_data)
             laser_data_msg = String(data=laser_data_json)

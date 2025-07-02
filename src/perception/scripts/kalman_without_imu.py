@@ -3,12 +3,13 @@ import numpy as np
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
 from tf2_msgs.msg import TFMessage
-import math
+import math,json
 from rclpy.time import Time
 from geometry_msgs.msg import TransformStamped
 from tf2_ros import TransformBroadcaster, TransformListener, Buffer
 from EFK import FlexibleKalmanFilter, MovingAverageFilter, ExponentialMovingAverageFilter
-
+from std_msgs.msg import String
+from SiLocator import SiLocator, SickData, Vec3, SICK_NUMS
 class KalmanNode(Node):
     def __init__(self):
         super().__init__('kalman_node')
@@ -20,7 +21,8 @@ class KalmanNode(Node):
         self.declare_parameter('map_frame', 'camera_init')  # 被监听的tf地图坐标
         self.declare_parameter('base_frame', 'body')       # 被监听的tf基座坐标
         self.declare_parameter('tf_hz', 10.0)              # 被监听的tf频率
-        
+        self.declare_parameter('vel_topic','/sick/vel')   #轮式里程计速度
+        self.declare_parameter('sick_topic', '/sick/lidar')  #激光雷达点数据
         # 时间参数
         self.dt = 1.0 / self.get_parameter('hz').value
         self.last_time = self.get_clock().now()
@@ -51,12 +53,17 @@ class KalmanNode(Node):
         self.kf.P = np.diag([0.1, 0.1, 0.01, 0.01, 0.5, 0.5, 0.1])
         
         # 控制输入缓存
-        self.R_cmd = np.diag([0.5, 0.5, 0.5])  # 控制输入噪声协方差
+        self.R_cmd = np.diag([0.01, 0.01, 0.02])  # 控制输入噪声协方差
         self.H_cmd = np.zeros((3, 7))
         self.H_cmd[[0, 1, 2], [4, 5, 6]] = 1.0  # 控制输入 [vx, vy, vyaw] -> [vx, vy, omega]
         self.cmd_vel = np.zeros(3)  # 控制输入[vx, vy, vyaw]
         self.odom = np.zeros(5)     # [x, y, yaw, z, w]
-        
+        #sick 相关
+        self.my_locator = SiLocator()
+        self.odom_tf=Vec3(0.0, 0.0, 0.0)  # 初始化odom坐标
+        self.silo_tf= Vec3(0.0, 0.0, 0.0)  # 初始化silo坐标
+        self.chas_tf= Vec3(0.0, 0.0, 0.0)  # 初始化chassis坐标
+        self.laser_array = np.zeros(SICK_NUMS, dtype=np.float32)  # 初始化激光雷达数据
         # 创建订阅者（移除IMU订阅）
         # self.create_subscription(Twist, '/cmd_vel', self.cmd_vel_callback, 1)
         self.tf_buffer = Buffer()
@@ -64,8 +71,11 @@ class KalmanNode(Node):
         
         # 创建定时器
         self.tf_timer = self.create_timer(1.0 / self.get_parameter('tf_hz').value, self.tf_timer_callback)
+        self.sick_update_timer=self.create_timer(0.01,self.sick_update)
         self.timer = self.create_timer(self.dt, self.timer_callback)
         self.vel_pub = self.create_publisher(Twist, '/vel_predict', 1)
+        self.vel_sub=self.create_subscription(Twist, self.get_parameter('vel_topic').value, self.cmd_vel_callback, 1)
+        self.sick_sub = self.create_subscription(str, self.get_parameter('sick_topic').value, self.sick_callback, 1)
         self.tf_broadcaster = TransformBroadcaster(self)
         self.active = False
 
@@ -136,7 +146,30 @@ class KalmanNode(Node):
         vel.linear.y = self.kf.x[5, 0]  # vy
         vel.angular.z = self.kf.x[6, 0]  # omega
         self.vel_pub.publish(vel)
-
+    def sick_callback(self, msg: str):
+        """处理激光雷达数据"""
+        # msg是8路float 数据的字符串表示
+        
+        laser_data = json.loads(msg)
+        if len(laser_data) != 8:
+            self.get_logger().warn("激光雷达数据长度不正确")
+            return
+        # 将激光数据转换为numpy数组
+        self.laser_array = np.array(laser_data, dtype=np.float32)
+    def sick_update(self):
+        self.chas_tf=self.odom_tf+self.silo_tf
+        #提取最后n 路的数据
+        distance= self.laser_array[-SICK_NUMS:]
+        theta=[0,0.1,0.32,0.4,0.5]
+        # self.my_locator.update_sick_data(0,d/istance[0],)
+        for i in range(SICK_NUMS):
+            self.my_locator.update_sick_data(
+                i,
+                distance[i],
+                theta[i]
+            )
+        grd,orivec,cost= self.my_locator.grad_decent(self.chas_tf,self.silo_tf)
+        print(f"chas_tf x: {self.chas_tf.x}, y: {self.chas_tf.y}, z: {self.chas_tf.z}")
     def publish_fused_state(self):
         """发布融合后的状态（移除IMU相关字段）"""
         tf_pub = TransformStamped()
@@ -164,7 +197,19 @@ class KalmanNode(Node):
             tf_pub.transform.rotation.z = 0.0
             tf_pub.transform.rotation.w = 1.0
             
+        yaw= self.get_yaw_from_quaternion(
+            tf_pub.transform.rotation.x,
+            tf_pub.transform.rotation.y,
+            tf_pub.transform.rotation.z,
+            tf_pub.transform.rotation.w
+        )
+        self.odom_tf= Vec3(
+            tf_pub.transform.translation.x,
+            tf_pub.transform.translation.y,
+            yaw
+        )
         self.tf_broadcaster.sendTransform(tf_pub)
+        
 
     @staticmethod
     def get_yaw_from_quaternion(x, y, z, w):
