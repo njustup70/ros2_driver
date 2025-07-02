@@ -77,8 +77,9 @@ class AsyncSerial_t:
                         self.last_len = this_len
                     else:
                         self.last_len = 0
-                        # data = self._serial.read(self._serial.in_waiting)
-                        self.data_queue.put_nowait(self._raw_data)
+                        data = self._serial.read(self._serial.in_waiting)
+                        self.data_queue.put_nowait(data)
+                        # print(data)
                         continue
                     # self._raw_data = data
                     # if self._callback:
@@ -101,7 +102,10 @@ class AsyncSerial_t:
                     self.data_queue.get_nowait()
                 # self.data_queue.get_nowait()
             if self._callback:
-                self._callback(frame)
+                try:
+                    self._callback(frame)
+                except Exception as e:
+                    print(f"\033[91m[WARNING] Callback error: {e}\033[0m")
             
     def getRawData(self) -> bytes:
         """获取串口接收的原始数据"""
@@ -145,7 +149,7 @@ async def main_async() -> None:
         await asyncio.sleep(0.05)
 def main():
     serial = AsyncSerial_t("/dev/serial_sick", 230400)
-    serial.startListening(lambda data: print(f"Received: {data.decode()}"))
+    serial.startListening(lambda data: print(f"hex: {data.hex()}"))
     while True:
         serial.write(b"Hello from AsyncSerial_t!\n")
         time.sleep(1)
