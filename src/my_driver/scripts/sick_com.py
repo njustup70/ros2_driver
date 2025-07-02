@@ -30,20 +30,21 @@ class SickCommunicate_t(Node):
         '''
         数据包校验函数
         '''
+        databag = data.rstrip(b'\x00')
         if len(data) < 2:
             return False
-        data_valid=data[1:-2]
+        data_valid=databag[1:-1]
         checksum = 0
         for byte in data_valid:
             checksum += byte
         checksum &= 0xFF  # 保留低8位
         assert checksum < 256, "Checksum must be less than 256"
-        return checksum == data[-1] and checksum==data[0]
+        return checksum == databag[-1] and checksum==databag[0]
         
     def data_callback(self, data: bytes):
         # 处理从串口接收到的数据
         timestamp= time.time()
-        print(f"Received data: {data.hex()} at {timestamp}")
+        # print(f"Received data: {data.hex()} at {timestamp}")
         if not self.ValidationData(data):
             return
         # 解析数据
