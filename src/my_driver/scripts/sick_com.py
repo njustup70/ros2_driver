@@ -13,7 +13,7 @@ class tf:
 class SickCommunicate_t(Node):
     def __init__(self):
         super().__init__('sick_communicate')
-        self.declare_parameter('serial_port', '/dev/serial_x64')
+        self.declare_parameter('serial_port', '/dev/serial_sick')
         self.declare_parameter('serial_baudrate', 230400)
         self.serial = AsyncSerial_t(
             self.get_parameter('serial_port').value,
