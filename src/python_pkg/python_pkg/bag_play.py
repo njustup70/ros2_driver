@@ -50,13 +50,16 @@ class bag_play_node(Node):
         """添加一个话题到播放列表"""
         if topic_name in self.blacklist:
             print(f'\033[91m 话题 {topic_name} 在黑名单中，无法添加 \033[0m')
-            return
+            # return
+            self.filteredList.append(topic_name)
         if topic_name not in self.playlist :
             if self.active_whitelist and topic_name not in self.whitelist and topic_type not in self.typewhitelist:
                 self.filteredList.append(topic_name)
             elif not self.active_whitelist:
                 self.playlist.append(topic_name)
                 print(f'\033[95m 播放话题: {topic_name} \033[0m')
+            else:
+                self.filteredList.append(topic_name) #增加到被过滤列表
     def yaml_to_playlist(self):
         """从yaml文件中读取话题列表"""
         
