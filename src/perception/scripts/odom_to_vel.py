@@ -2,6 +2,7 @@
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
+from sensor_msgs.msg import Imu
 import numpy as np
 import math
 import scipy.linalg
@@ -40,58 +41,47 @@ class KalmanFilter:
         # 滤波器初始化标志
         self.initialized = False
     
-    def predict(self, dt=0.01):
-        """
-        预测步骤 - 基于物理模型预测下一时刻状态
-        改进了状态转移矩阵以适应实际时间间隔
-        """
-        # 更新状态转移矩阵 - 使用更加精确的运动模型
+    def predict(self, dt=0.01, is_angle=False):
         self.F = np.array([
-            [1, dt, 0.5*dt**2],
+            [1, dt, 0.5 * dt**2],
             [0, 1, dt],
             [0, 0, 1]
         ])
-        
-        # 预测状态
         self.x = np.dot(self.F, self.x)
-        
-        # 预测协方差
         self.P = np.dot(np.dot(self.F, self.P), self.F.T) + self.Q
+
+        # NEW: 如果是角度状态，对位置 wrap
+        if is_angle:
+            self.x[0] = self.wrap_angle(self.x[0])
         return self.x
-    
+
     def update(self, measurement, is_angle=False):
-        """
-        更新步骤 - 使用新的测量值修正预测
-        增加了角度归一化处理解决过零问题
-        """
-        # 如果是第一次更新，直接初始化状态
         if not self.initialized:
             self.x[0] = measurement
             self.initialized = True
             return self.x
-            
-        # 计算残差
+
         y = measurement - np.dot(self.H, self.x)
-        
-        # 角度测量特殊处理：归一化残差到[-π, π]范围
+
         if is_angle:
-            if y > math.pi:
-                y -= 2 * math.pi
-            elif y < -math.pi:
-                y += 2 * math.pi
-        
-        # 计算卡尔曼增益
+            y = self.wrap_angle(y)
+
         S = np.dot(self.H, np.dot(self.P, self.H.T)) + self.R
         K = np.dot(np.dot(self.P, self.H.T), np.linalg.inv(S))
-        
-        # 更新状态估计
         self.x = self.x + np.dot(K, y)
-        
-        # 更新协方差估计
+
         I = np.eye(self.P.shape[0])
         self.P = np.dot(I - np.dot(K, self.H), self.P)
-        
+
+        # NEW: 如果是角度状态，对位置 wrap
+        if is_angle:
+            self.x[0] = self.wrap_angle(self.x[0])
         return self.x
+
+    def wrap_angle(self, angle):
+        """更安全的 wrap"""
+        wrapped = (angle + np.pi) % (2 * np.pi) - np.pi
+        return wrapped
     
     def get_position(self):
         """获取估计的位置"""
@@ -114,32 +104,32 @@ class SickKalmanFilter(Node):
             Twist, 
             '/sick/local',
             self.position_callback,
-            10
+            1
         )
         
         # 发布估计结果
-        self.vel_pub = self.create_publisher(Twist, '/sick/vel_est', 10)
-        self.accel_pub = self.create_publisher(Twist, '/sick/accel_est', 10)
+        self.vel_pub = self.create_publisher(Twist, '/odom/vel_est', 10)
+        self.accel_pub = self.create_publisher(Imu, '/odom/accel_est', 10)
         
         # 初始化卡尔曼滤波器 (分离噪声参数)
         # 位置噪声小，速度噪声中等，加速度噪声大
         self.kf_x = KalmanFilter(
             pos_noise=1e-6,  # 位置噪声较小
-            vel_noise=1e-5,
-            accel_noise=0.06,
+            vel_noise=2e-5,
+            accel_noise=1e-2,
             measurement_noise=25e-6
         )
         self.kf_y = KalmanFilter(
             pos_noise=1e-6,
-            vel_noise=1e-5,
-            accel_noise=0.06,
+            vel_noise=2e-5,
+            accel_noise=1e-2,
             measurement_noise=25e-6
         )
         self.kf_yaw = KalmanFilter(
             pos_noise=1e-6,
             vel_noise=1e-5,
             accel_noise=0.06,
-            measurement_noise=0.0001  # 角度测量噪声稍大
+            measurement_noise=0.0001  # 角度测量噪声稍大,
         )
         
         # 时间跟踪
@@ -160,12 +150,12 @@ class SickKalmanFilter(Node):
             return
             
         # 转换为秒
-        dt = (current_time - self.last_time).nanoseconds * 1e-9
+        dt = 0.01
         self.last_time = current_time
         
         if dt <= 0 or dt > 0.1:  # 确保时间间隔合理
             dt = 0.01
-        
+        # print(f'时间间隔: {dt:.4f}秒')
         # 位置数据
         x = msg.linear.x
         y = msg.linear.y
@@ -174,7 +164,7 @@ class SickKalmanFilter(Node):
         # 预测步骤
         self.kf_x.predict(dt)
         self.kf_y.predict(dt)
-        self.kf_yaw.predict(dt)
+        self.kf_yaw.predict(dt,is_angle=True)
         
         # 更新步骤：对于yaw启用角度归一化处理
         self.kf_x.update(x)
@@ -189,10 +179,16 @@ class SickKalmanFilter(Node):
         self.vel_pub.publish(vel_msg)
         
         # 发布估计的加速度
-        accel_msg = Twist()
-        accel_msg.linear.x = self.kf_x.get_acceleration()
-        accel_msg.linear.y = self.kf_y.get_acceleration()
-        accel_msg.angular.z = self.kf_yaw.get_acceleration()
+        accel_msg = Imu()
+        accel_msg.header.stamp = current_time.to_msg()
+        accel_msg.header.frame_id = 'base_link'
+        
+        accel_msg.linear_acceleration.x = self.kf_x.get_acceleration()
+        accel_msg.linear_acceleration.y = self.kf_y.get_acceleration()
+        accel_msg.angular_velocity.z = self.kf_yaw.get_acceleration()
+        # accel_msg.linear.x = self.kf_x.get_acceleration()
+        # accel_msg.linear.y = self.kf_y.get_acceleration()
+        # accel_msg.angular.z = self.kf_yaw.get_acceleration()
         self.accel_pub.publish(accel_msg)
         
         # 调试信息
