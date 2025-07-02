@@ -18,7 +18,11 @@ class SerialAsync_t(asyncio.Protocol):
 
     def data_received(self, data):
         if self.callback:
-            self.callback(data)
+            if asyncio.iscoroutinefunction(self.callback):
+                self.loop.create_task(self.callback(data))
+            else:
+                self.callback(data)
+
 
     def connection_lost(self, exc):
         print(f"\033[91m[WARNING] Serial connection lost: {exc}\033[0m")
