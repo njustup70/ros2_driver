@@ -23,6 +23,7 @@ class KalmanNode(Node):
         self.declare_parameter('tf_hz', 10.0)              # 被监听的tf频率
         self.declare_parameter('vel_topic','/sick/vel')   #轮式里程计速度
         self.declare_parameter('sick_topic', '/sick/lidar')  #激光雷达点数据
+        self.declare_parameter('use_sick', True)  # 是否使用点激光数据
         # 时间参数
         self.dt = 1.0 / self.get_parameter('hz').value
         self.last_time = self.get_clock().now()
@@ -71,11 +72,12 @@ class KalmanNode(Node):
         
         # 创建定时器
         self.tf_timer = self.create_timer(1.0 / self.get_parameter('tf_hz').value, self.tf_timer_callback)
-        self.sick_update_timer=self.create_timer(0.01,self.sick_update)
         self.timer = self.create_timer(self.dt, self.timer_callback)
         self.vel_pub = self.create_publisher(Twist, '/vel_predict', 1)
         self.vel_sub=self.create_subscription(Twist, self.get_parameter('vel_topic').value, self.cmd_vel_callback, 1)
-        self.sick_sub = self.create_subscription(String, self.get_parameter('sick_topic').value, self.sick_callback, 1)
+        if self.get_parameter('use_sick').value:
+            self.sick_sub = self.create_subscription(String, self.get_parameter('sick_topic').value, self.sick_callback, 1)
+            self.sick_update_timer=self.create_timer(0.01,self.sick_update)
         self.tf_broadcaster = TransformBroadcaster(self)
         self.active = False
 
@@ -157,6 +159,8 @@ class KalmanNode(Node):
         # 将激光数据转换为numpy数组
         self.laser_array = np.array(laser_data, dtype=np.float32)
     def sick_update(self):
+        if self.active is False:
+            return
         self.chas_tf=self.odom_tf+self.silo_tf
         #提取最后n 路的数据
         distance= self.laser_array[-SICK_NUMS:]
