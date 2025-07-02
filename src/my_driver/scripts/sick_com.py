@@ -2,6 +2,7 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
 import sys, json, os,time,math
+sys.path.append('/home/Elaina/ros2_driver/src') 
 from protocol_lib.myserial import AsyncSerial_t
 from std_msgs.msg import String
 class tf:
@@ -12,7 +13,7 @@ class tf:
 class SickCommunicate_t(Node):
     def __init__(self):
         super().__init__('sick_communicate')
-        self.declare_parameter('serial_port', '/dev/serial_ch340')
+        self.declare_parameter('serial_port', '/dev/serial_x64')
         self.declare_parameter('serial_baudrate', 230400)
         self.serial = AsyncSerial_t(
             self.get_parameter('serial_port').value,
@@ -42,6 +43,7 @@ class SickCommunicate_t(Node):
     def data_callback(self, data: bytes):
         # 处理从串口接收到的数据
         timestamp= time.time()
+        print(f"Received data: {data.hex()} at {timestamp}")
         if not self.ValidationData(data):
             return
         # 解析数据
@@ -79,3 +81,15 @@ class SickCommunicate_t(Node):
             laser_data_json = json.dumps(laser_data)
             laser_data_msg = String(data=laser_data_json)
             self.sick_pub.publish(laser_data_msg)
+def main(args=None):
+    rclpy.init(args=args)
+    sick_communicate = SickCommunicate_t()
+    try:
+        rclpy.spin(sick_communicate)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        sick_communicate.destroy_node()
+        rclpy.shutdown()
+if __name__ == '__main__':
+    main()
