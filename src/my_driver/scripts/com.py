@@ -103,20 +103,51 @@ class Communicate_t(Node):
             # 短暂休眠避免CPU占用过高
             time.sleep(0.05)
 
+    def ValidationData_sick_com(self,data:bytes) -> bool:
+        '''
+            sick分支sick_com.py中的数据包校验函数(ValidationData)
+            返回一个bool值 true表示校验通过
+            只有当head和tail都校验通过 该数据帧视为有效
+        '''
+        databag = data.rstrip(b'\x00')
+        if len(data) < 2:
+            return False
+        data_valid=databag[1:-1]
+        checksum = 0
+        for byte in data_valid:
+            checksum += byte
+        checksum &= 0xFF  # 保留低8位
+        assert checksum < 256, "Checksum must be less than 256"
+        return checksum == databag[-1] and checksum==databag[0]
+
     def data_callback(self, data:bytes):
         """串口数据回调函数"""
         # print(f"Received data: {data}")
         # 这里可以添加对接收到数据的处理逻辑
         # 例如解析数据，更新状态等   
-        logger = DataSimulator(port='/dev/serial_ch340',baudrate=230400)
-        parsed = logger.parse_laser_frame(data)
-        print(f"Parsed Results: "
-              f"Time={parsed['TimeOffset']}s, "
-              f"SetRpm={parsed['SetRpm']}, "
-              f"DeltaRpm_Up={parsed['DeltaRpm_Up']}, "
-              f"DeltaRpm_Down={parsed['DeltaRpm_Down']}, "
-              f"Velo={parsed['Velo']}")
-        logger.save_to_json(parsed)
+        databag = data.rstrip(b'\x00')
+        if len(data) < 2:
+            return False
+        data_valid=databag[1:-1]
+        checksum = 0
+        for byte in data_valid:
+            checksum += byte
+        checksum &= 0xFF  # 保留低8位
+        assert checksum < 256, "Checksum must be less than 256"
+
+        if checksum == databag[-1] and checksum == databag[0]: 
+            # 校验通过,表示数据帧没有损坏
+            if data[1] == '0x34':
+                # 校验数据类型,0x34表示类型为射击参数
+                logger = DataSimulator(port='/dev/serial_ch340',baudrate=230400)
+                parsed = logger.parse_laser_frame(data)
+                print(f"Parsed Results: "
+                    f"Time={parsed['TimeOffset']}s, "
+                    f"SetRpm={parsed['SetRpm']}, "
+                    f"DeltaRpm_Up={parsed['DeltaRpm_Up']}, "
+                    f"DeltaRpm_Down={parsed['DeltaRpm_Down']}, "
+                    f"Velo={parsed['Velo']}")
+                logger.save_to_json(parsed)
 
         if data==b'\x34\x33\x00\x20': #如果是0x34 0x33 0x0 0x20
             json_data={

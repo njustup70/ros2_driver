@@ -55,20 +55,20 @@ class DataSimulator:
                 [DeltaRpm_Down(2字节)] + [Velo(4字节)]
         """
         # 验证数据长度
-        if len(frame_data) != 11:
-            raise ValueError(f"无效数据长度: 需要11字节, 实际收到{len(frame_data)}字节")
+        if len(frame_data) != 13:
+           raise ValueError(f"无效数据长度: 需要13字节, 实际收到{len(frame_data)}字节")
         
         # 验证帧头
-        if frame_data[0] != 0x34:
+        if frame_data[1] != 0x34:
             raise ValueError(f"帧头错误: 应为0x34, 实际为0x{frame_data[0]:02X}")
         
         # 解析三个uint16_t (小端序)
-        set_rpm = struct.unpack('<H', frame_data[1:3])[0]         # 字节1-2: SetRpm
-        delta_rpm_up = struct.unpack('<H', frame_data[3:5])[0]    # 字节3-4: DeltaRpm_Up
-        delta_rpm_down = struct.unpack('<H', frame_data[5:7])[0]  # 字节5-6: DeltaRpm_Down
+        set_rpm = struct.unpack('<H', frame_data[2:4])[0]         # 字节2-3: SetRpm
+        delta_rpm_up = struct.unpack('<H', frame_data[4:6])[0]    # 字节4-5: DeltaRpm_Up
+        delta_rpm_down = struct.unpack('<H', frame_data[6:8])[0]  # 字节6-7: DeltaRpm_Down
         
         # 解析float32 (小端序)
-        velo = struct.unpack('<f', frame_data[7:11])[0]           # 字节7-10: Velo
+        velo = struct.unpack('<f', frame_data[8:12])[0]           # 字节7-11: Velo
         
         # 计算相对时间（从程序启动开始）
         relative_time = time.time() - self.start_time
@@ -87,8 +87,10 @@ class DataSimulator:
             json.dump(data_dict, f)
             f.write('\n')  # 每帧数据单独一行
     
-    def generate_test_frames(self):
-        """生成三组测试数据帧"""
+  
+    """
+        def generate_test_frames(self):
+        # 生成三组测试数据帧
         frames = []
         
         # 第一组测试数据
@@ -124,9 +126,9 @@ class DataSimulator:
         frames.append(("帧3", frame3))
         
         return frames
-    
+
     def run_simulation(self):
-        """运行数据帧模拟测试"""
+        # 运行数据帧模拟测试
         print("开始模拟激光雷达数据帧处理...")
         test_frames = self.generate_test_frames()
         
@@ -148,3 +150,4 @@ class DataSimulator:
         
         print(f"模拟完成，数据已保存到 {self.output_file}")
         return test_frames
+    """
