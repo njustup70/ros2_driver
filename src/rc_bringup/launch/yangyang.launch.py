@@ -101,7 +101,7 @@ def generate_launch_description():
     )
     kalman_filter_node=Node(
         package='perception',
-        executable='kalman_node.py',
+        executable='kalman_without_imu.py',
         name='kalman_node',
         output='screen',
         parameters=[
@@ -131,7 +131,7 @@ def generate_launch_description():
         package='tf2_ros',
         executable="static_transform_publisher",
         name='odom_transform',
-        arguments=['0.2','6.5','0','0','0','0','odom','odom_transform']  # 发布静态变换
+        arguments=['0.35','7.65','0','0','0','0','odom','odom_transform']  # 发布静态变换
     )
     ld.add_action(map_to_odom_tf_node)
     # ld.add_action(robot_state_publisher_node)
