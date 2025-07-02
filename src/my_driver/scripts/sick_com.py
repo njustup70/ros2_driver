@@ -1,7 +1,8 @@
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
-import sys, json, os,time,math
+import sys, json, os,time,math,struct
+import numpy as np
 sys.path.append('/home/Elaina/ros2_driver/src') 
 from protocol_lib.myserial import AsyncSerial_t
 from std_msgs.msg import String
@@ -50,9 +51,9 @@ class SickCommunicate_t(Node):
         # 解析数据
         if data[1]==0x30:
             # 解析坐标数据
-            x=float.fromhex(data[2:6].hex())
-            y=float.fromhex(data[6:10].hex())
-            yaw=float.fromhex(data[10:14].hex())
+            x = struct.unpack('<f', data[2:6])[0]
+            y = struct.unpack('<f', data[6:10])[0]
+            yaw = struct.unpack('<f', data[10:14])[0]
             tf_data = tf(x, y, yaw)
             #算出速度
             twist_msg = Twist()
@@ -72,12 +73,14 @@ class SickCommunicate_t(Node):
             self.vel_pub.publish(twist_msg)  # 发布速度消息
         elif data[1]==0x31:
             # 解析传感器数据
-            # 7路激光 int16_t
+            # 8路激光 int16_t
             laser_data = []
-            for i in range(2, 16, 2):
+            for i in range(2, 18, 2):
                 #大端
-                value = int.from_bytes(data[i:i+2], byteorder='big', signed=True)
+                # value = int.from_bytes(data[i:i+2], byteorder='big', signed=True)
+                value:np.int16=struct.unpack('>h', data[i:i+2])[0]  # 使用大端字节序解析
                 laser_data.append(value)
+                assert -32768 <= value <= 32767, "Laser data out of range"
             #增加到json
             laser_data_json = json.dumps(laser_data)
             laser_data_msg = String(data=laser_data_json)
