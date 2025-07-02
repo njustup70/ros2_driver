@@ -3,24 +3,28 @@ import numpy as np
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
 from tf2_msgs.msg import TFMessage
-import math
+import math,json
 from rclpy.time import Time
 from geometry_msgs.msg import TransformStamped
 from tf2_ros import TransformBroadcaster, TransformListener, Buffer
 from EFK import FlexibleKalmanFilter, MovingAverageFilter, ExponentialMovingAverageFilter
-
+from std_msgs.msg import String
+from sensor_msgs.msg import PointCloud2
+from SiLocator import SiLocator, SickData, Vec3, SICK_NUMS
 class KalmanNode(Node):
     def __init__(self):
         super().__init__('kalman_node')
         self.get_logger().info("Kalman滤波器节点已启动")
         self.declare_parameter('imu_topic', '/livox/imu/normal')
-        self.declare_parameter('publish_tf_name', 'base_link')
+        self.declare_parameter('publish_tf_name', 'base_link_debug')
         self.declare_parameter('hz', 100)
         self.declare_parameter('kalman_model', 0)
         self.declare_parameter('map_frame', 'camera_init')  # 被监听的tf地图坐标
         self.declare_parameter('base_frame', 'body')       # 被监听的tf基座坐标
         self.declare_parameter('tf_hz', 10.0)              # 被监听的tf频率
-        
+        self.declare_parameter('vel_topic','/sick/vel')   #轮式里程计速度
+        self.declare_parameter('sick_topic', '/sick/lidar')  #激光雷达点数据
+        self.declare_parameter('use_sick', True)  # 是否使用点激光数据
         # 时间参数
         self.dt = 1.0 / self.get_parameter('hz').value
         self.last_time = self.get_clock().now()
@@ -51,21 +55,31 @@ class KalmanNode(Node):
         self.kf.P = np.diag([0.1, 0.1, 0.01, 0.01, 0.5, 0.5, 0.1])
         
         # 控制输入缓存
-        self.R_cmd = np.diag([0.5, 0.5, 0.5])  # 控制输入噪声协方差
+        self.R_cmd = np.diag([0.01, 0.01, 0.02])  # 控制输入噪声协方差
         self.H_cmd = np.zeros((3, 7))
         self.H_cmd[[0, 1, 2], [4, 5, 6]] = 1.0  # 控制输入 [vx, vy, vyaw] -> [vx, vy, omega]
         self.cmd_vel = np.zeros(3)  # 控制输入[vx, vy, vyaw]
         self.odom = np.zeros(5)     # [x, y, yaw, z, w]
-        
+        #sick 相关
+        self.my_locator = SiLocator()
+        self.odom_tf=Vec3(0.0, 0.0, 0.0)  # 初始化odom坐标
+        self.silo_tf= Vec3(0.0, 0.0, 0.0)  # 初始化silo坐标
+        self.chas_tf= Vec3(0.0, 0.0, 0.0)  # 初始化chassis坐标
+        self.laser_array = np.zeros(SICK_NUMS, dtype=np.float32)  # 初始化激光雷达数据
         # 创建订阅者（移除IMU订阅）
         # self.create_subscription(Twist, '/cmd_vel', self.cmd_vel_callback, 1)
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
-        
+
         # 创建定时器
         self.tf_timer = self.create_timer(1.0 / self.get_parameter('tf_hz').value, self.tf_timer_callback)
         self.timer = self.create_timer(self.dt, self.timer_callback)
         self.vel_pub = self.create_publisher(Twist, '/vel_predict', 1)
+        # self.vel_sub=self.create_subscription(Twist, self.get_parameter('vel_topic').value, self.cmd_vel_callback, 1)
+        if self.get_parameter('use_sick').value:
+            self.sick_sub = self.create_subscription(String, self.get_parameter('sick_topic').value, self.sick_callback, 1)
+            self.sick_update_timer=self.create_timer(0.01,self.sick_update)
+            self.sick_point_pub=self.create_publisher(PointCloud2, '/sick/pointcloud', 1)
         self.tf_broadcaster = TransformBroadcaster(self)
         self.active = False
 
@@ -136,9 +150,75 @@ class KalmanNode(Node):
         vel.linear.y = self.kf.x[5, 0]  # vy
         vel.angular.z = self.kf.x[6, 0]  # omega
         self.vel_pub.publish(vel)
+    def sick_callback(self, msg: String):
+        """处理激光雷达数据"""
+        # msg是8路float 数据的字符串表示
+        
+        laser_data = json.loads(msg.data)
+        if len(laser_data) != 8:
+            self.get_logger().warn("激光雷达数据长度不正确")
+            return
+        # 将激光数据转换为numpy数组
+        self.laser_array = np.array(laser_data, dtype=np.float32)
+    def sick_update(self):
+        if self.active is False:
+            return
+        self.chas_tf=self.odom_tf+self.silo_tf
+        #提取最后n 路的数据
+        distance= self.laser_array[3:]
+        
+        theta=[180,77.85,360-77.85,360-37.7,37.7]
+        # self.my_locator.update_sick_data(0,d/istance[0],)
+        for i in range(SICK_NUMS):
+            self.my_locator.update_sick_data(
+                i,
+                distance[i],
+                theta[i]
+            )
+        grd,orivec,cost= self.my_locator.grad_decent(self.chas_tf,self.silo_tf)
+        print(f'grd:{grd},orivec:{orivec},cost:{cost}')
+        #将sick点云转换为PointCloud2消息
+        pointcloud = PointCloud2()
+        pointcloud.header.stamp = self.get_clock().now().to_msg()
+        pointcloud.header.frame_id = self.get_parameter('publish_tf_name').value
+        pointcloud.height = 1
+        pointcloud.width = SICK_NUMS
+        pointcloud.is_dense = True
+        pointcloud.is_bigendian = False
+        pointcloud.point_step = 12  # 每个点的字节数
+        pointcloud.row_step = pointcloud.point_step * SICK_NUMS
+        import struct
+        from sensor_msgs.msg import PointField
 
+        # 定义 PointField 列表（XYZ，每个都是 float32）
+        pointcloud.fields = [
+            PointField(name='x', offset=0, datatype=PointField.FLOAT32, count=1),
+            PointField(name='y', offset=4, datatype=PointField.FLOAT32, count=1),
+            PointField(name='z', offset=8, datatype=PointField.FLOAT32, count=1),
+        ]
+
+        # 构造实际点数据
+        points_bytes = bytearray()
+        for i in range(SICK_NUMS):
+            r = distance[i]
+            theta_deg = theta[i]
+            theta_rad = math.radians(theta_deg)
+            x = r * math.cos(theta_rad)
+            y = r * math.sin(theta_rad)
+            z = 0.0  # 2D 激光默认 Z=0
+
+            # 按 float32 小端序打包
+            points_bytes.extend(struct.pack('<fff', x, y, z))
+
+        pointcloud.data = bytes(points_bytes)
+        # 发布点云消息
+        self.sick_point_pub.publish(pointcloud)
+
+        print(f'odom{self.odom_tf}')
+        # print(f'chas{self.chas_tf}')
+        print(f'silo{self.silo_tf}')
     def publish_fused_state(self):
-        """发布融合后的状态（移除IMU相关字段）"""
+        """发布融合后的状态"""
         tf_pub = TransformStamped()
         tf_pub.header.stamp = self.get_clock().now().to_msg()
         tf_pub.header.frame_id = 'odom_transform'
@@ -164,8 +244,36 @@ class KalmanNode(Node):
             tf_pub.transform.rotation.z = 0.0
             tf_pub.transform.rotation.w = 1.0
             
+        yaw= self.get_yaw_from_quaternion(
+            tf_pub.transform.rotation.x,
+            tf_pub.transform.rotation.y,
+            tf_pub.transform.rotation.z,
+            tf_pub.transform.rotation.w
+        )
+        self.odom_tf= Vec3(
+            tf_pub.transform.translation.x+0.0,
+            -tf_pub.transform.translation.y+0.0,
+            yaw
+        )
         self.tf_broadcaster.sendTransform(tf_pub)
-
+        if self.get_parameter('use_sick').value:
+            # 发布SICK的TF
+            tf_sick = TransformStamped()
+            tf_sick.header.stamp = self.get_clock().now().to_msg()
+            tf_sick.header.frame_id = 'odom'
+            tf_sick.child_frame_id='odom_transform'
+            tf_sick.transform.translation.x=self.silo_tf.x
+            tf_sick.transform.translation.y=8- self.silo_tf.y
+            tf_sick.transform.translation.z=0.0
+            #算yaw
+            yaw=self.silo_tf.z
+            tf_sick.transform.rotation.x = 0.0
+            tf_sick.transform.rotation.y = 0.0
+            tf_sick.transform.rotation.z = math.sin(yaw / 2.0)
+            tf_sick.transform.rotation.w = math.cos(yaw / 2.0)
+            # 四元数归一化
+            self.tf_broadcaster.sendTransform(tf_sick)
+        
     @staticmethod
     def get_yaw_from_quaternion(x, y, z, w):
         """根据四元数返回yaw偏航角"""
