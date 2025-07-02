@@ -4,7 +4,7 @@
     @Description: 读取下位机数据，记录日志(LocalTest)
 """
 
-# Input dataframe manually
+# Input dataframe manually(not from serial)
 
 import struct
 import json
@@ -13,19 +13,19 @@ import os
 from datetime import datetime
 from collections import OrderedDict
 
-class LaserDataSimulator:
+class DataSimulator:
     def __init__(self):
         # 记录程序启动时间作为时间零点
         self.start_time = time.time()
         
         # 创建带时间戳的唯一日志文件名
         self.output_file = self.generate_unique_filename()
-        print(f"日志文件: {self.output_file}")
+        print(f"Log File: {self.output_file}")
     
     def generate_unique_filename(self):
         """生成带时间戳的唯一文件名，并保存到指定文件夹"""
         # 指定目标文件夹
-        target_folder = "laserdata(log)"
+        target_folder = "shootdata(log)"
     
         # 创建目标文件夹（如果不存在）
         if not os.path.exists(target_folder):
@@ -33,7 +33,7 @@ class LaserDataSimulator:
     
         # 生成带时间戳的文件名
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        base_name = f"laser_data_{timestamp}"
+        base_name = f"shoot_data_{timestamp}"
         extension = ".json"
     
         # 检查文件是否重名并生成完整路径
@@ -148,15 +148,3 @@ class LaserDataSimulator:
         
         print(f"模拟完成，数据已保存到 {self.output_file}")
         return test_frames
-
-# 主函数
-if __name__ == "__main__":
-    # 创建并运行模拟器
-    simulator = LaserDataSimulator()
-    simulator.run_simulation()
-    
-    # 打印文件内容预览
-    print("\n日志文件内容预览:")
-    with open(simulator.output_file, 'r') as f:
-        for line in f:
-            print(line.strip())
