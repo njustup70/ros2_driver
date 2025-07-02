@@ -114,7 +114,7 @@ class SiLocator:
 
         for sick in self.sickdatas_list:
             # 过滤无效数据
-            if sick.distan > 12 or sick.distan <= 0:
+            if sick.distan > 4 or sick.distan <= 0:
                 continue
 
             # 计算理论距离和误差
@@ -126,9 +126,9 @@ class SiLocator:
 
             test_error = abs(theoryR - sick.distan)
             sick.error = test_error
-
-            # 累加总误差
-            self.total_cost += test_error
+            if test_error< 1:
+                # 累加总误差
+                self.total_cost += test_error
 
         return self.total_cost
 

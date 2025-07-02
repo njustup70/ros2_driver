@@ -75,7 +75,7 @@ class KalmanNode(Node):
         self.tf_timer = self.create_timer(1.0 / self.get_parameter('tf_hz').value, self.tf_timer_callback)
         self.timer = self.create_timer(self.dt, self.timer_callback)
         self.vel_pub = self.create_publisher(Twist, '/vel_predict', 1)
-        self.vel_sub=self.create_subscription(Twist, self.get_parameter('vel_topic').value, self.cmd_vel_callback, 1)
+        # self.vel_sub=self.create_subscription(Twist, self.get_parameter('vel_topic').value, self.cmd_vel_callback, 1)
         if self.get_parameter('use_sick').value:
             self.sick_sub = self.create_subscription(String, self.get_parameter('sick_topic').value, self.sick_callback, 1)
             self.sick_update_timer=self.create_timer(0.01,self.sick_update)
