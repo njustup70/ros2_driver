@@ -22,6 +22,7 @@ class SickCommunicate_t(Node):
             self.get_parameter('serial_baudrate').value
         )
         self.vel_pub= self.create_publisher(Twist, '/sick/vel', 10)  # 发布速度话题
+        self.local_pub=self.create_publisher(Twist, '/sick/local', 10)  # 发布本地坐标话题
         self.sick_pub=self.create_publisher(String, '/sick/lidar', 10)  # 发布激光数据话题
         # 启动串口监听
         self.serial.startListening(self.data_callback)
@@ -69,6 +70,11 @@ class SickCommunicate_t(Node):
                 elif dyaw < -math.pi:
                     dyaw += 2*math.pi
                 twist_msg.angular.z = dyaw / dt
+            local_msg = Twist()
+            local_msg.linear.x = tf_data.x
+            local_msg.linear.y = tf_data.y
+            local_msg.angular.z = tf_data.yaw
+            self.local_pub.publish(local_msg)  # 发布本地坐标消息
             self.last_timestamp = timestamp
             self.tf_last = tf_data
             self.vel_pub.publish(twist_msg)  # 发布速度消息
