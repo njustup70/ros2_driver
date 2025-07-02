@@ -43,7 +43,7 @@ class AsyncSerial_t:
         if self._serial and self._serial.is_open:
             self._serial.close()
 
-    def startListening(self, callback=None, wait_time=0.001) -> None:
+    def startListening(self, callback=None, wait_time=0.0001) -> None:
         """开始监听串口数据,启动read协程"""
         self._wait_time = wait_time
         if callback:
@@ -148,7 +148,7 @@ async def main_async() -> None:
         serial.write(data.encode())
         await asyncio.sleep(0.05)
 def main():
-    serial = AsyncSerial_t("/dev/serial_sick", 230400)
+    serial = AsyncSerial_t("/dev/serial_sick", 460800)
     serial.startListening(lambda data: print(f"hex: {data.hex()}"))
     while True:
         serial.write(b"Hello from AsyncSerial_t!\n")

@@ -58,7 +58,7 @@ class SerialAsync_t(asyncio.Protocol):
 
 def main():
     port = '/dev/serial_sick'  # 替换为实际串口
-    baudrate = 230400
+    baudrate = 460800
 
     async def data_callback(data):
         print(f"Received data: {data.hex()}")

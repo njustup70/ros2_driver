@@ -16,7 +16,7 @@ class SickCommunicate_t(Node):
     def __init__(self):
         super().__init__('sick_communicate')
         self.declare_parameter('serial_port', '/dev/serial_sick')
-        self.declare_parameter('serial_baudrate', 230400)
+        self.declare_parameter('serial_baudrate', 460800)
         self.serial = AsyncSerial_t(
             self.get_parameter('serial_port').value,
             self.get_parameter('serial_baudrate').value
@@ -70,11 +70,12 @@ class SickCommunicate_t(Node):
                 elif dyaw < -math.pi:
                     dyaw += 2*math.pi
                 twist_msg.angular.z = dyaw / dt
+                print(dt)
             local_msg = Twist()
             local_msg.linear.x = tf_data.x
             local_msg.linear.y = tf_data.y
             local_msg.angular.z = tf_data.yaw
-            self.local_pub.publish(local_msg)  # 发布本地坐标消息
+            self.local_pub.publish(local_msg)  # 发布本地坐标消息-0.00018086249265487702
             self.last_timestamp = timestamp
             self.tf_last = tf_data
             self.vel_pub.publish(twist_msg)  # 发布速度消息
@@ -89,7 +90,7 @@ class SickCommunicate_t(Node):
                 # laser_data.append(value)
                 assert -32768 <= value <= 32767, "Laser data out of range"
                 real_value= (value* 0.2167 + 63.1689) / 1000.0
-                #保留三位小数
+                #保留三位小数-0.00018086249265487702
                 real_value = round(real_value, 3)
                 laser_data.append(real_value)
             #增加到json
