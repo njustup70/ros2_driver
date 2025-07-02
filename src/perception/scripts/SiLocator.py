@@ -63,7 +63,7 @@ class SickData:
 class SiLocator:
     def __init__(self):
         self.sickdatas_list: List[SickData] = [SickData(i) for i in range(SICK_NUMS)]
-        self.learning_rate = 0.00001
+        self.learning_rate = 0.0001
         self.derivation_rate = 0.0001
         self.total_cost = 0.0
         self.feedback_cnt = 0

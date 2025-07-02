@@ -176,6 +176,7 @@ class KalmanNode(Node):
                 theta[i]
             )
         grd,orivec,cost= self.my_locator.grad_decent(self.chas_tf,self.silo_tf)
+        print(f'grd:{grd},orivec:{orivec},cost:{cost}')
         #将sick点云转换为PointCloud2消息
         pointcloud = PointCloud2()
         pointcloud.header.stamp = self.get_clock().now().to_msg()
@@ -213,9 +214,9 @@ class KalmanNode(Node):
         # 发布点云消息
         self.sick_point_pub.publish(pointcloud)
 
-        # print(f'odom{self.odom_tf}')
+        print(f'odom{self.odom_tf}')
         # print(f'chas{self.chas_tf}')
-        # print(f'silo{self.silo_tf}')
+        print(f'silo{self.silo_tf}')
     def publish_fused_state(self):
         """发布融合后的状态"""
         tf_pub = TransformStamped()
@@ -250,8 +251,8 @@ class KalmanNode(Node):
             tf_pub.transform.rotation.w
         )
         self.odom_tf= Vec3(
-            tf_pub.transform.translation.x,
-            -tf_pub.transform.translation.y,
+            tf_pub.transform.translation.x+0.0,
+            -tf_pub.transform.translation.y+0.0,
             yaw
         )
         self.tf_broadcaster.sendTransform(tf_pub)
