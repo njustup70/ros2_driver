@@ -22,6 +22,7 @@ setup(
         'console_scripts': [
             'image_bridge= python_pkg.image_bridge:main',
             'rosbag_record= python_pkg.rosbag_record:main',
+            'bag_play= python_pkg.bag_play:main',
         ],
     },
 )
