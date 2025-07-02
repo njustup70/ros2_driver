@@ -25,7 +25,7 @@ class bag_play_node(Node):
         if self.get_parameter('filter_debug').value:
             self.whitelist=['/tf']
             self.typewhitelist=['std_msgs/msg/String','geometry_msgs/msg/Twist']
-            self.blacklist=['/vel_predict']
+            self.blacklist.append('/vel_predict')
         if len(self.whitelist)==0 or len(self.typewhitelist)==0:
             print(f'\033[95m 不启动白名单] \033[0m')
             self.active_whitelist=False
@@ -100,11 +100,12 @@ class bag_play_node(Node):
         cmd = ['ros2', 'bag', 'play', self.rosbag_path, '--rate', str(self.get_parameter('rate').value)]
         if self.get_parameter('loop').value:
             cmd.append('--loop')
-        for topic in self.playlist:
-            cmd.append('--remap')
-            cmd.append(f'{topic}:={topic}')
+        # for topic in self.playlist:
+        #     cmd.append('--remap')
+        #     cmd.append(f'{topic}:={topic}')
+        cmd.append('--remap')
         for topic in self.filteredList:
-            cmd.append('--remap')
+            
             cmd.append(f'{topic}:={topic}/filtered')
         print(f'\033[95m 正在播放: {" ".join(cmd)} \033[0m')
         os.system(" ".join(cmd))
