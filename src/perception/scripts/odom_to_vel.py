@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import Twist,Vector3Stamped
 from sensor_msgs.msg import Imu
 import numpy as np
 import math
@@ -101,14 +101,14 @@ class SickKalmanFilter(Node):
         
         # 订阅位置话题
         self.subscription = self.create_subscription(
-            Twist, 
+            Vector3Stamped, 
             '/sick/local',
             self.position_callback,
             1
         )
         
         # 发布估计结果
-        self.vel_pub = self.create_publisher(Twist, '/odom/vel_est', 10)
+        self.vel_pub = self.create_publisher(Vector3Stamped, '/odom/vel_est', 10)
         self.accel_pub = self.create_publisher(Imu, '/odom/accel_est', 10)
         
         # 初始化卡尔曼滤波器 (分离噪声参数)
@@ -138,10 +138,10 @@ class SickKalmanFilter(Node):
         
         self.get_logger().info('改进版卡尔曼滤波节点已启动，优化了角度过零问题和速度响应')
 
-    def position_callback(self, msg):
+    def position_callback(self, msg:Vector3Stamped):
         """处理位置信息的回调函数"""
         # 获取当前时间
-        current_time = self.get_clock().now()
+        current_time = msg.header.stamp
         
         # 计算时间间隔
         if self.first_message:
@@ -150,16 +150,18 @@ class SickKalmanFilter(Node):
             return
             
         # 转换为秒
-        dt = 0.01
+        dt = (current_time.sec + current_time.nanosec * 1e-9) - \
+              (self.last_time.sec + self.last_time.nanosec * 1e-9)
+        
         self.last_time = current_time
         
         if dt <= 0 or dt > 0.1:  # 确保时间间隔合理
             dt = 0.01
         # print(f'时间间隔: {dt:.4f}秒')
         # 位置数据
-        x = msg.linear.x
-        y = msg.linear.y
-        yaw = self.normalize_angle(msg.angular.z)
+        x = msg.vector.x
+        y = msg.vector.y
+        yaw = self.normalize_angle(msg.vector.z)
         
         # 预测步骤
         self.kf_x.predict(dt)
@@ -172,19 +174,21 @@ class SickKalmanFilter(Node):
         self.kf_yaw.update(yaw, is_angle=True)
         
         # 发布估计的速度
-        vel_msg = Twist()
-        vel_msg.linear.x = self.kf_x.get_velocity()
-        vel_msg.linear.y = self.kf_y.get_velocity()
-        vel_msg.angular.z = self.kf_yaw.get_velocity()
+        vel_msg = Vector3Stamped()
+        vel_msg.header.stamp = current_time
+        vel_msg.vector.x = self.kf_x.get_velocity()
+        vel_msg.vector.y = self.kf_y.get_velocity()
+        vel_msg.vector.z = self.kf_yaw.get_velocity()
         self.vel_pub.publish(vel_msg)
         
         # 发布估计的加速度
         accel_msg = Imu()
-        accel_msg.header.stamp = current_time.to_msg()
+        accel_msg.header.stamp = current_time
         accel_msg.header.frame_id = 'base_link'
         
         accel_msg.linear_acceleration.x = self.kf_x.get_acceleration()
         accel_msg.linear_acceleration.y = self.kf_y.get_acceleration()
+        accel_msg.linear_acceleration.z=9.81  # 假设重力加速度为9.81 m/s²
         accel_msg.angular_velocity.z = self.kf_yaw.get_acceleration()
         # accel_msg.linear.x = self.kf_x.get_acceleration()
         # accel_msg.linear.y = self.kf_y.get_acceleration()
@@ -192,7 +196,7 @@ class SickKalmanFilter(Node):
         self.accel_pub.publish(accel_msg)
         
         # 调试信息
-        self.get_logger().debug(f'dt={dt:.4f}s, X_vel={vel_msg.linear.x:.3f}, Y_vel={vel_msg.linear.y:.3f}, Yaw_vel={vel_msg.angular.z:.3f}')
+        # self.get_logger().debug(f'dt={dt:.4f}s, X_vel={vel_msg.linear.x:.3f}, Y_vel={vel_msg.linear.y:.3f}, Yaw_vel={vel_msg.angular.z:.3f}')
     
     def normalize_angle(self, angle):
         """将角度归一化到[-π, π]范围"""
