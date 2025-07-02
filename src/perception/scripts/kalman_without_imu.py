@@ -9,6 +9,7 @@ from geometry_msgs.msg import TransformStamped
 from tf2_ros import TransformBroadcaster, TransformListener, Buffer
 from EFK import FlexibleKalmanFilter, MovingAverageFilter, ExponentialMovingAverageFilter
 from std_msgs.msg import String
+from sensor_msgs.msg import PointCloud2
 from SiLocator import SiLocator, SickData, Vec3, SICK_NUMS
 class KalmanNode(Node):
     def __init__(self):
@@ -78,6 +79,7 @@ class KalmanNode(Node):
         if self.get_parameter('use_sick').value:
             self.sick_sub = self.create_subscription(String, self.get_parameter('sick_topic').value, self.sick_callback, 1)
             self.sick_update_timer=self.create_timer(0.01,self.sick_update)
+            self.sick_point_pub=self.create_publisher(PointCloud2, '/sick/pointcloud', 1)
         self.tf_broadcaster = TransformBroadcaster(self)
         self.active = False
 
@@ -173,9 +175,46 @@ class KalmanNode(Node):
                 theta[i]
             )
         grd,orivec,cost= self.my_locator.grad_decent(self.chas_tf,self.silo_tf)
-        print(f'odom{self.odom_tf}')
-        print(f'chas{self.chas_tf}')
-        print(f'silo{self.silo_tf}')
+        #将sick点云转换为PointCloud2消息
+        pointcloud = PointCloud2()
+        pointcloud.header.stamp = self.get_clock().now().to_msg()
+        pointcloud.header.frame_id = self.get_parameter('publish_tf_name').value
+        pointcloud.height = 1
+        pointcloud.width = SICK_NUMS
+        pointcloud.is_dense = True
+        pointcloud.is_bigendian = False
+        pointcloud.point_step = 12  # 每个点的字节数
+        pointcloud.row_step = pointcloud.point_step * SICK_NUMS
+        import struct
+        from sensor_msgs.msg import PointField
+
+        # 定义 PointField 列表（XYZ，每个都是 float32）
+        pointcloud.fields = [
+            PointField(name='x', offset=0, datatype=PointField.FLOAT32, count=1),
+            PointField(name='y', offset=4, datatype=PointField.FLOAT32, count=1),
+            PointField(name='z', offset=8, datatype=PointField.FLOAT32, count=1),
+        ]
+
+        # 构造实际点数据
+        points_bytes = bytearray()
+        for i in range(SICK_NUMS):
+            r = distance[i]
+            theta_deg = theta[i]
+            theta_rad = math.radians(theta_deg)
+            x = r * math.cos(theta_rad)
+            y = r * math.sin(theta_rad)
+            z = 0.0  # 2D 激光默认 Z=0
+
+            # 按 float32 小端序打包
+            points_bytes.extend(struct.pack('<fff', x, y, z))
+
+        pointcloud.data = bytes(points_bytes)
+        # 发布点云消息
+        self.sick_point_pub.publish(pointcloud)
+
+        # print(f'odom{self.odom_tf}')
+        # print(f'chas{self.chas_tf}')
+        # print(f'silo{self.silo_tf}')
     def publish_fused_state(self):
         """发布融合后的状态"""
         tf_pub = TransformStamped()
