@@ -70,7 +70,7 @@ class SickCommunicate_t(Node):
                 elif dyaw < -math.pi:
                     dyaw += 2*math.pi
                 twist_msg.angular.z = dyaw / dt
-                print(dt)
+                # print(dt)
             local_msg = Twist()
             local_msg.linear.x = tf_data.x
             local_msg.linear.y = tf_data.y

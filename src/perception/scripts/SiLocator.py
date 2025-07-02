@@ -2,7 +2,7 @@ import math
 from typing import List, Tuple
 
 # 定义常量
-SICK_NUMS = 4
+SICK_NUMS = 5
 PI = math.pi
 SICK_DISTAN_TO_CENTER_METER = 0.0
 COURT_WIDE = 8.0

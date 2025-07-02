@@ -165,7 +165,8 @@ class KalmanNode(Node):
             return
         self.chas_tf=self.odom_tf+self.silo_tf
         #提取最后n 路的数据
-        distance= self.laser_array[-SICK_NUMS:]
+        distance= self.laser_array[3:]
+        
         theta=[180,77.85,360-77.85,360-37.7,37.7]
         # self.my_locator.update_sick_data(0,d/istance[0],)
         for i in range(SICK_NUMS):
