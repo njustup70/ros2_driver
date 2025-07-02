@@ -11,6 +11,8 @@ class bag_play_node(Node):
         self.declare_parameter('rosbag_root_path','/home/Elaina/ros2_driver/bag_play') #rosbag的根目录
         self.declare_parameter('rate',1) #播放的速率
         self.declare_parameter('loop',True) #是否循环播放
+        # self.declare_parameter("tf_debug",False)
+        # self.declare_parameter('tf_static_debug',False)
         self.whitelist=[] #播放的白名单
         self.typewhitelist=[] #话题类型的白名单
         self.blacklist=["/tf_static"] #播放的黑名单
@@ -20,6 +22,10 @@ class bag_play_node(Node):
         self.yaml_path=''
         self.find_db_and_yaml()
         self.active_whitelist=True #是否激活白名单
+        if self.get_parameter('filter_debug').value:
+            self.whitelist=['/tf']
+            self.typewhitelist=['std_msgs/msg/String','geometry_msgs/msg/Twist']
+            self.blacklist=['/vel_predict']
         if len(self.whitelist)==0 or len(self.typewhitelist)==0:
             print(f'\033[95m 不启动白名单] \033[0m')
             self.active_whitelist=False
@@ -50,16 +56,20 @@ class bag_play_node(Node):
         """添加一个话题到播放列表"""
         if topic_name in self.blacklist:
             print(f'\033[91m 话题 {topic_name} 在黑名单中，无法添加 \033[0m')
-            # return
             self.filteredList.append(topic_name)
-        if topic_name not in self.playlist :
-            if self.active_whitelist and topic_name not in self.whitelist and topic_type not in self.typewhitelist:
-                self.filteredList.append(topic_name)
-            elif not self.active_whitelist:
+            return
+        if topic_name not in self.playlist : #如果不在播放列表中
+            if (self.active_whitelist) : #如果激活了白名单
+                if (topic_name not in self.whitelist) and (topic_type not in self.typewhitelist) : #如果不在白名单或类型白名单中,或者在黑名单中
+                    self.filteredList.append(topic_name)
+                else:
+                    self.playlist.append(topic_name)
+                    print(f'\033[95m 播放话题: {topic_name} \033[0m')
+            elif not self.active_whitelist: #如果没有激活白名单
                 self.playlist.append(topic_name)
                 print(f'\033[95m 播放话题: {topic_name} \033[0m')
-            else:
-                self.filteredList.append(topic_name) #增加到被过滤列表
+            # else:
+                # self.filteredList.append(topic_name) #增加到被过滤列表
     def yaml_to_playlist(self):
         """从yaml文件中读取话题列表"""
         
