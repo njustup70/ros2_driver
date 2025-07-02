@@ -15,7 +15,7 @@ class KalmanNode(Node):
         super().__init__('kalman_node')
         self.get_logger().info("Kalman滤波器节点已启动")
         self.declare_parameter('imu_topic', '/livox/imu/normal')
-        self.declare_parameter('publish_tf_name', 'base_link')
+        self.declare_parameter('publish_tf_name', 'base_link_debug')
         self.declare_parameter('hz', 100)
         self.declare_parameter('kalman_model', 0)
         self.declare_parameter('map_frame', 'camera_init')  # 被监听的tf地图坐标
