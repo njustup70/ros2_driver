@@ -146,11 +146,11 @@ class KalmanNode(Node):
         vel.linear.y = self.kf.x[5, 0]  # vy
         vel.angular.z = self.kf.x[6, 0]  # omega
         self.vel_pub.publish(vel)
-    def sick_callback(self, msg: str):
+    def sick_callback(self, msg: String):
         """处理激光雷达数据"""
         # msg是8路float 数据的字符串表示
         
-        laser_data = json.loads(msg)
+        laser_data = json.loads(msg.data)
         if len(laser_data) != 8:
             self.get_logger().warn("激光雷达数据长度不正确")
             return
@@ -169,8 +169,9 @@ class KalmanNode(Node):
                 theta[i]
             )
         grd,orivec,cost= self.my_locator.grad_decent(self.chas_tf,self.silo_tf)
+        print(f'odom{self.odom_tf}')
         print(f'chas{self.chas_tf}')
-        print(f'chas{self.silo_tf}')
+        print(f'silo{self.silo_tf}')
     def publish_fused_state(self):
         """发布融合后的状态（移除IMU相关字段）"""
         tf_pub = TransformStamped()
