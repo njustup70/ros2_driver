@@ -83,6 +83,8 @@ class SickCommunicate_t(Node):
                 # laser_data.append(value)
                 assert -32768 <= value <= 32767, "Laser data out of range"
                 real_value= (value* 0.2167 + 63.1689) / 1000.0
+                #保留三位小数
+                real_value = round(real_value, 3)
                 laser_data.append(real_value)
             #增加到json
             laser_data_json = json.dumps(laser_data)
