@@ -69,7 +69,7 @@ class KalmanNode(Node):
         # self.create_subscription(Twist, '/cmd_vel', self.cmd_vel_callback, 1)
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
-        
+
         # 创建定时器
         self.tf_timer = self.create_timer(1.0 / self.get_parameter('tf_hz').value, self.tf_timer_callback)
         self.timer = self.create_timer(self.dt, self.timer_callback)
@@ -164,7 +164,7 @@ class KalmanNode(Node):
         self.chas_tf=self.odom_tf+self.silo_tf
         #提取最后n 路的数据
         distance= self.laser_array[-SICK_NUMS:]
-        theta=[0,0.1,0.32,0.4,0.5]
+        theta=[180,77.85,360-77.85,360-37.7,37.7]
         # self.my_locator.update_sick_data(0,d/istance[0],)
         for i in range(SICK_NUMS):
             self.my_locator.update_sick_data(
@@ -177,7 +177,7 @@ class KalmanNode(Node):
         print(f'chas{self.chas_tf}')
         print(f'silo{self.silo_tf}')
     def publish_fused_state(self):
-        """发布融合后的状态（移除IMU相关字段）"""
+        """发布融合后的状态"""
         tf_pub = TransformStamped()
         tf_pub.header.stamp = self.get_clock().now().to_msg()
         tf_pub.header.frame_id = 'odom_transform'
@@ -211,12 +211,28 @@ class KalmanNode(Node):
         )
         self.odom_tf= Vec3(
             tf_pub.transform.translation.x,
-            tf_pub.transform.translation.y,
+            -tf_pub.transform.translation.y,
             yaw
         )
         self.tf_broadcaster.sendTransform(tf_pub)
+        if self.get_parameter('use_sick').value:
+            # 发布SICK的TF
+            tf_sick = TransformStamped()
+            tf_sick.header.stamp = self.get_clock().now().to_msg()
+            tf_sick.header.frame_id = 'odom'
+            tf_sick.child_frame_id='odom_transform'
+            tf_sick.transform.translation.x=self.silo_tf.x
+            tf_sick.transform.translation.y=8- self.silo_tf.y
+            tf_sick.transform.translation.z=0.0
+            #算yaw
+            yaw=self.silo_tf.z
+            tf_sick.transform.rotation.x = 0.0
+            tf_sick.transform.rotation.y = 0.0
+            tf_sick.transform.rotation.z = math.sin(yaw / 2.0)
+            tf_sick.transform.rotation.w = math.cos(yaw / 2.0)
+            # 四元数归一化
+            self.tf_broadcaster.sendTransform(tf_sick)
         
-
     @staticmethod
     def get_yaw_from_quaternion(x, y, z, w):
         """根据四元数返回yaw偏航角"""
