@@ -169,7 +169,8 @@ class KalmanNode(Node):
                 theta[i]
             )
         grd,orivec,cost= self.my_locator.grad_decent(self.chas_tf,self.silo_tf)
-        print(f"chas_tf x: {self.chas_tf.x}, y: {self.chas_tf.y}, z: {self.chas_tf.z}")
+        print(f'chas{self.chas_tf}')
+        print(f'chas{self.silo_tf}')
     def publish_fused_state(self):
         """发布融合后的状态（移除IMU相关字段）"""
         tf_pub = TransformStamped()
