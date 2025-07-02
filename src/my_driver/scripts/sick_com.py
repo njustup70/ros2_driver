@@ -83,6 +83,7 @@ class SickCommunicate_t(Node):
             # 解析传感器数据
             # 8路激光 int16_t
             laser_data = []
+            bias=[0,0,0,0.188,0.313,0.313,0.293,0.293]
             for i in range(2, 18, 2):
                 #大端
                 # value = int.from_bytes(data[i:i+2], byteorder='big', signed=True)
@@ -91,7 +92,7 @@ class SickCommunicate_t(Node):
                 assert -32768 <= value <= 32767, "Laser data out of range"
                 real_value= (value* 0.2167 + 63.1689) / 1000.0
                 #保留三位小数-0.00018086249265487702
-                real_value = round(real_value, 3)
+                real_value = round(real_value, 3)+bias[i//2-1]  # 偏移量
                 laser_data.append(real_value)
             #增加到json
             laser_data_json = json.dumps(laser_data)
