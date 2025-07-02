@@ -2,6 +2,7 @@
 .vscode/start_program
 .idea/
 build/
+laserdata(log)/
 log/
 install/
 !packages/ros-humble-ros1-bridge/**
