@@ -250,9 +250,10 @@ class KalmanNode(Node):
             tf_pub.transform.rotation.z,
             tf_pub.transform.rotation.w
         )
+        #给odom_tf加上偏移
         self.odom_tf= Vec3(
-            tf_pub.transform.translation.x+0.0,
-            -tf_pub.transform.translation.y+0.0,
+            tf_pub.transform.translation.x+0.2,
+            -tf_pub.transform.translation.y+0.2,
             yaw
         )
         self.tf_broadcaster.sendTransform(tf_pub)
