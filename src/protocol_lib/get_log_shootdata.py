@@ -52,7 +52,7 @@ class LaserDataLogger:
     def generate_unique_filename(self):
         """生成带时间戳的唯一文件名，并保存到指定文件夹"""
         # 指定目标文件夹
-        target_folder = "laserdata(log)"
+        target_folder = "shootdata(log)"
     
         # 创建目标文件夹（如果不存在）
         if not os.path.exists(target_folder):
@@ -60,7 +60,7 @@ class LaserDataLogger:
     
         # 生成带时间戳的文件名
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        base_name = f"laser_data_{timestamp}"
+        base_name = f"shoot_data_{timestamp}"
         extension = ".json"
     
         # 检查文件是否重名并生成完整路径
@@ -178,6 +178,8 @@ class LaserDataLogger:
             self.ser.close()
             print(f"串口已关闭，数据保存至 {self.output_file}")
 
+            
+"""
 if __name__ == "__main__":
     # 配置串口参数 (根据实际情况修改)
     SERIAL_PORT = 'COM3'      # Windows: 'COMx', Linux: '/dev/ttyUSB0'
@@ -186,3 +188,4 @@ if __name__ == "__main__":
     # 创建并启动日志记录器
     logger = LaserDataLogger(port=SERIAL_PORT, baudrate=BAUD_RATE)
     logger.process_serial_stream()
+"""

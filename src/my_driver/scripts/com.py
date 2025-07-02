@@ -12,10 +12,12 @@ from threading import Thread, Event
 sys.path.append('/home/Elaina/ros2_driver/src') 
 # print(sys.path)
 from protocol_lib.myserial import AsyncSerial_t
+from protocol_lib.get_log_shootdata_local import DataSimulator
 from rclpy.time import Time
 import struct
 from tf2_ros import TransformListener,Buffer
 from std_msgs.msg import String
+
 class Communicate_t(Node):
     def __init__(self):
         super().__init__('communicate_t')
@@ -48,6 +50,7 @@ class Communicate_t(Node):
         #self.serial.startListening()#监听线程还开启自动重连
         self.serial_queue = []  # 用于存储串口数据
         self.serial_publish_timer = self.create_timer(0.002, self.publish_serial_data)  #500hz 定时器
+    
     def cmd_topic_callback(self, msg:Twist):
         '''
         速度指令发送
@@ -69,6 +72,7 @@ class Communicate_t(Node):
         data= data_header+linear_x+linear_y+angular_z
         # self.serial.write(self.ValidationData(data))
         self.queue_add_data(data)  # 将数据添加到队列中
+    
     def ValidationData(self,data:bytes):
         """验证数据格式，添加帧头和帧尾"""
         #帧头为中间data16进制之和
@@ -82,6 +86,7 @@ class Communicate_t(Node):
         # print(f"head: {head}, tail: {tail}")
         # print(f"Sending data: {[hex(b) for b in data]}")
         return head+data+tail
+    
     def watchdog_loop(self):
         """看门狗线程循环，定期检查是否超时"""
         while not self.stop_event.is_set():
@@ -97,17 +102,60 @@ class Communicate_t(Node):
                 self.get_logger().debug('Watchdog timeout, sent zero velocity')
             # 短暂休眠避免CPU占用过高
             time.sleep(0.05)
+
+    def ValidationData_sick_com(self,data:bytes) -> bool:
+        '''
+            sick分支sick_com.py中的数据包校验函数(ValidationData)
+            返回一个bool值 true表示校验通过
+            只有当head和tail都校验通过 该数据帧视为有效
+        '''
+        databag = data.rstrip(b'\x00')
+        if len(data) < 2:
+            return False
+        data_valid=databag[1:-1]
+        checksum = 0
+        for byte in data_valid:
+            checksum += byte
+        checksum &= 0xFF  # 保留低8位
+        assert checksum < 256, "Checksum must be less than 256"
+        return checksum == databag[-1] and checksum==databag[0]
+
     def data_callback(self, data:bytes):
         """串口数据回调函数"""
         # print(f"Received data: {data}")
         # 这里可以添加对接收到数据的处理逻辑
         # 例如解析数据，更新状态等   
+        databag = data.rstrip(b'\x00')
+        if len(data) < 2:
+            return False
+        data_valid=databag[1:-1]
+        checksum = 0
+        for byte in data_valid:
+            checksum += byte
+        checksum &= 0xFF  # 保留低8位
+        assert checksum < 256, "Checksum must be less than 256"
+
+        if checksum == databag[-1] and checksum == databag[0]: 
+            # 校验通过,表示数据帧没有损坏
+            if data[1] == '0x34':
+                # 校验数据类型,0x34表示类型为射击参数
+                logger = DataSimulator(port='/dev/serial_ch340',baudrate=230400)
+                parsed = logger.parse_laser_frame(data)
+                print(f"Parsed Results: "
+                    f"Time={parsed['TimeOffset']}s, "
+                    f"SetRpm={parsed['SetRpm']}, "
+                    f"DeltaRpm_Up={parsed['DeltaRpm_Up']}, "
+                    f"DeltaRpm_Down={parsed['DeltaRpm_Down']}, "
+                    f"Velo={parsed['Velo']}")
+                logger.save_to_json(parsed)
+
         if data==b'\x34\x33\x00\x20': #如果是0x34 0x33 0x0 0x20
             json_data={
                 "nav_state":"IDLE"
             }
             self.robot_state_pub.publish(String(data=json.dumps(json_data)))
         # print([hex(b) for b in data])
+    
     def robot_state_callback(self, msg: String):
         """导航和机器人其他状态回调函数
 
@@ -128,6 +176,7 @@ class Communicate_t(Node):
                 for i in range(10):
                     data:bytes=b'\x23\x23'
                     self.queue_add_data(data)  # 将数据添加到队列中
+    
     def tf_timer_callback(self):
         """定时器回调 - 将自身的tf转发给stm32"""
         if self.aligned_state:
@@ -155,6 +204,7 @@ class Communicate_t(Node):
         data= header+x+y+yaw
         # self.serial.write(self.ValidationData(data))
         self.queue_add_data(data)  # 将数据添加到队列中
+    
     def queue_add_data(self, data: bytes):
         '''将数据添加到串口队列中'''
         assert isinstance(data, bytes), "Data must be of type bytes"
@@ -168,6 +218,7 @@ class Communicate_t(Node):
         if self.serial_queue:
             data = self.serial_queue.pop(0)
             self.serial.write(self.ValidationData(data))
+
 def main(args=None):
     rclpy.init(args=args)
     node=Communicate_t()
@@ -179,5 +230,6 @@ def main(args=None):
         node.destroy_node()
         if rclpy.ok():
             rclpy.shutdown()
+
 if __name__ == '__main__':
     main()
