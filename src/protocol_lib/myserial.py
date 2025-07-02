@@ -26,6 +26,8 @@ class AsyncSerial_t:
         self._connect_lock = asyncio.Lock()
         self._loop=None
         self._thread=None
+        self.last_len=0
+        self.data_queue = asyncio.Queue()
     async def _connect_serial(self):
         """尝试连接串口，如果失败则等待重试"""
         while True:
@@ -41,7 +43,7 @@ class AsyncSerial_t:
         if self._serial and self._serial.is_open:
             self._serial.close()
 
-    def startListening(self, callback=None, wait_time=0.01) -> None:
+    def startListening(self, callback=None, wait_time=0.0001) -> None:
         """开始监听串口数据,启动read协程"""
         self._wait_time = wait_time
         if callback:
@@ -54,11 +56,12 @@ class AsyncSerial_t:
         # 在后台循环里跑串口连接管理 和 读循环
         asyncio.run_coroutine_threadsafe(self._connect_serial(), self._loop)
         asyncio.run_coroutine_threadsafe(self.__read(), self._loop)
-
+        asyncio.run_coroutine_threadsafe(self.datahandle(), self._loop)
     async def __read(self):
         """异步读取串口数据并调用回调"""
         while True:
             await asyncio.sleep(self._wait_time)
+            # if self.last_len==
             if not self._serial or not self._serial.is_open:
                 print(f"\033[91m[WARNING] Serial disconnected, retrying...\033[0m")
                 self._serial = None
@@ -67,11 +70,20 @@ class AsyncSerial_t:
                 continue
 
             try:
+                #检查数据是否停止发送
+                this_len = self._serial.in_waiting
                 if self._serial.in_waiting > 0:
-                    data = self._serial.read(self._serial.in_waiting)
-                    self._raw_data = data
-                    if self._callback:
-                        self._callback(data)
+                    if this_len != self.last_len:
+                        self.last_len = this_len
+                    else:
+                        self.last_len = 0
+                        data = self._serial.read(self._serial.in_waiting)
+                        self.data_queue.put_nowait(data)
+                        # print(data)
+                        continue
+                    # self._raw_data = data
+                    # if self._callback:
+                    #     self._callback(data)
             except Exception as e:
                 try:
                     if self._serial:
@@ -80,7 +92,21 @@ class AsyncSerial_t:
                     pass
                 self._serial = None
                 await asyncio.sleep(1)
-
+    async def datahandle(self):
+        """处理数据队列中的数据"""
+        while True:
+            frame = await self.data_queue.get()
+            #如果data_queue大于10就丢弃
+            if self.data_queue.qsize() > 10:
+                while not self.data_queue.qsize() == 10:
+                    self.data_queue.get_nowait()
+                # self.data_queue.get_nowait()
+            if self._callback:
+                try:
+                    self._callback(frame)
+                except Exception as e:
+                    print(f"\033[91m[WARNING] Callback error: {e}\033[0m")
+            
     def getRawData(self) -> bytes:
         """获取串口接收的原始数据"""
         return self._raw_data
@@ -106,10 +132,15 @@ class AsyncSerial_t:
         """后台线程中运行事件循环"""
         asyncio.set_event_loop(self._loop)
         self._loop.run_forever()
+    async def process_queue(self):
+        """示例消费者：在主协程里调用"""
+        while True:
+            frame = await self.data_queue.get()
+            print(f"[PROCESS] Got frame: {frame}")
 # 示例主函数
 async def main_async() -> None:
     # serial = AsyncSerial_t("/dev/COM2", 115200)
-    serial = AsyncSerial_t("/dev/ttyUSB0", 230400)
+    serial = AsyncSerial_t("/dev/ttyUSB1", 230400)
     # serial.startListening(lambda data: serial.write(data))
     serial.startListening(lambda data: print(f"Received: {data.decode()}"))
     while True:
@@ -117,8 +148,8 @@ async def main_async() -> None:
         serial.write(data.encode())
         await asyncio.sleep(0.05)
 def main():
-    serial = AsyncSerial_t("/dev/ttyUSB0", 230400)
-    serial.startListening(lambda data: print(f"Received: {data.decode()}"))
+    serial = AsyncSerial_t("/dev/serial_sick", 460800)
+    serial.startListening(lambda data: print(f"hex: {data.hex()}"))
     while True:
         serial.write(b"Hello from AsyncSerial_t!\n")
         time.sleep(1)

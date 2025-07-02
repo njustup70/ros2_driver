@@ -75,6 +75,13 @@ def generate_launch_description():
              }
         ]
     )
+    sick_node=Node(
+        package='my_driver',
+        executable='sick_com.py',
+        name='sick_node',
+        output='screen',
+        emulate_tty=True,
+    )
     #启动ms200
     ms200_launch=IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -108,6 +115,7 @@ def generate_launch_description():
             {'imu_topic': '/livox/imu/normal'},
             {'publish_tf_name': 'base_link'},
             {'hz': 100},
+            {'publish_tf_name': 'base_link'},
             {'map_frame': 'camera_init'},
             {'base_frame': 'body'}
         ])
@@ -135,6 +143,7 @@ def generate_launch_description():
     )
     ld.add_action(map_to_odom_tf_node)
     # ld.add_action(robot_state_publisher_node)
+    ld.add_action(sick_node)
     ld.add_action(kalman_filter_node)
     ld.add_action(mid360_launch)
     ld.add_action(imu_transform_launch)
