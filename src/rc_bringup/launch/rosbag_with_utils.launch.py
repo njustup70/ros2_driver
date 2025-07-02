@@ -49,7 +49,15 @@ def generate_launch_description():
         output='screen',
         condition=IfCondition(LaunchConfiguration('loop'))
     )
-
+    ros_bag_node=Node(
+        package='python_pkg',
+        executable='bag_play',
+        name='bag_play_node',
+        parameters=[{'loop': LaunchConfiguration('loop'),
+                     'rate': LaunchConfiguration('rate')}],
+        output='screen',
+        emulate_tty=True,
+    )
     #启动utils
     utils_launch=IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -67,8 +75,9 @@ def generate_launch_description():
         emulate_tty=True,
     )
     ld.add_action(utils_launch)
-    ld.add_action(ros_bag_exe)
-    ld.add_action(ros_bag_loop_exe)
+    ld.add_action(ros_bag_node)
+    # ld.add_action(ros_bag_exe)
+    # ld.add_action(ros_bag_loop_exe)
     ld.add_action(image_bridge_node)
     return ld
      
