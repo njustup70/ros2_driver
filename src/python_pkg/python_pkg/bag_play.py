@@ -7,7 +7,7 @@ import yaml,os,glob
 class bag_play_node(Node):
     def __init__(self):
         super().__init__('bag_play_node')
-        self.declare_parameter('filter_debug',True) #是否开启定位调试
+        self.declare_parameter('filter_debug',False) #是否开启定位调试
         self.declare_parameter('rosbag_root_path','/home/Elaina/ros2_driver/bag_play') #rosbag的根目录
         self.declare_parameter('rate',1) #播放的速率
         self.declare_parameter('loop',True) #是否循环播放
