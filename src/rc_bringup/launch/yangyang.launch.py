@@ -16,6 +16,7 @@ from launch.substitutions import Command, PathJoinSubstitution, FindExecutable
 def generate_launch_description():
     ld=LaunchDescription()
     ld.add_action(DeclareLaunchArgument('use_fast_lio_tf', default_value='true', description='增加point lio修正'))
+    ld.add_action(DeclareLaunchArgument('use_livox_publish', default_value='true', description='增加雷达到车体中心的tf发布'))  
     ld.add_action(DeclareLaunchArgument('use_tf_publish',default_value='true',description='Publish tf tree if use is True'))
     ld.add_action(DeclareLaunchArgument('use_realsense',default_value='true',description='Start realsense node if use is True'))
     ld.add_action(DeclareLaunchArgument('record_lidar',default_value='false',description='Record lidar data if use is True'))
@@ -113,9 +114,9 @@ def generate_launch_description():
         output='screen',
         parameters=[
             {'imu_topic': '/livox/imu/normal'},
-            {'publish_tf_name': 'base_link'},
+            {'publish_tf_name': 'livox_frame'},
             {'hz': 100},
-            {'publish_tf_name': 'base_link'},
+            {'publish_tf_name': 'livox_frame'},
             {'map_frame': 'camera_init'},
             {'base_frame': 'body'}
         ])
@@ -141,9 +142,17 @@ def generate_launch_description():
         name='odom_transform',
         arguments=['0.35','7.65','0','0','0','0','odom','odom_transform']  # 发布静态变换
     )
+    livox_to_base_tf_node = Node(
+        condition=IfCondition(LaunchConfiguration('use_livox_publish')),
+        package='tf2_ros',
+        executable="static_transform_publisher",
+        name='livox_to_base_tf',
+        arguments=['-0.25','-0.25','0','0','0','0','livox_frame','base_link']  # 发布静态变换
+    )
     ld.add_action(map_to_odom_tf_node)
     # ld.add_action(robot_state_publisher_node)
     ld.add_action(sick_node)
+    ld.add_action(livox_to_base_tf_node)
     ld.add_action(kalman_filter_node)
     ld.add_action(mid360_launch)
     ld.add_action(imu_transform_launch)
