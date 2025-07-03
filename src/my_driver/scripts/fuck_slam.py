@@ -8,7 +8,7 @@ class fuck_slam_t(Node):
         super().__init__('fuck_slam')
         self.declare_parameter('docker_name','fastlio2_container')
         self.docker_name=self.get_parameter('docker_name').get_parameter_value().string_value
-        self.robot_state_sub=self.create_subscription(String,'robot_state',self.robot_service)
+        self.robot_state_sub=self.create_subscription(String,'robot_state',self.robot_service,1)
         try:
             result = subprocess.check_output(
             ["sudo", "docker", "ps","-a"],
