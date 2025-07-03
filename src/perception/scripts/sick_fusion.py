@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+"""_summary_
+sick融合定位,目前的基础定位用的是point lio 进行插帧,没有轮式里程计融合
+Returns:
+    _type_: _description_
+"""
 import numpy as np
 from rclpy.node import Node
 from geometry_msgs.msg import Twist

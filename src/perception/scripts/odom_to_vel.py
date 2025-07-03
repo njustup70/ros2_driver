@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+'''
+从轮式里程计数据中提取速度和加速度信息
+发布的话题为/odom/vel_est 和 /odom/accel_est
+'''
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist,Vector3Stamped

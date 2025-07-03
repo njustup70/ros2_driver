@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+'''
+能对TF进行插帧,将10hz 插帧到100hz,对point lio 用参数没改,没做轮式里程计融合，sick融合
+'''
 import numpy as np
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
