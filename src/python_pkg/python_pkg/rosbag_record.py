@@ -14,8 +14,8 @@ class SmartBagRecorder(Node):
         super().__init__('smart_bag_recorder')
 
         # Declare ROS parameters with default values
-        self.declare_parameter('max_size_gb', 2.0) # 2GB
-        self.declare_parameter('max_folder_num', 5)
+        self.declare_parameter('max_size_gb', 5.0) # 2GB
+        self.declare_parameter('max_folder_num', 10)
         self.declare_parameter('record_images', False)
         self.declare_parameter('record_imu', True)
         self.declare_parameter('record_lidar', True)
