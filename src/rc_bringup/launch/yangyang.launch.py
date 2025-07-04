@@ -134,13 +134,21 @@ def generate_launch_description():
         name='robot_state_publisher',
         parameters=[{'robot_description': robot_description}],
     )
-    map_to_odom_tf_node = Node(
+    odomtransform_tf_node = Node(
         condition=IfCondition(LaunchConfiguration('use_tf_publish')),
         package='tf2_ros',
         executable="static_transform_publisher",
         name='odom_transform',
         arguments=['0.35','7.65','0','0','0','0','odom','odom_transform']  # 发布静态变换
     )
+    map_to_odom_tf_node = Node(
+        condition=IfCondition(LaunchConfiguration('use_tf_publish')),
+        package='tf2_ros',
+        executable="static_transform_publisher",
+        name='map_odom',
+        arguments=['0','0','0','0','0','0','map','odom']  # 发布静态变换
+    )
+    ld.add_action(odomtransform_tf_node)
     ld.add_action(map_to_odom_tf_node)
     # ld.add_action(robot_state_publisher_node)
     ld.add_action(sick_node)
