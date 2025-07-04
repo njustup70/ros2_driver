@@ -107,6 +107,7 @@ class fusion_node_t(Node):
             # 平移部分
             x_diff=x-(self.odom_x*math.cos(dyaw)-self.odom_y*math.sin(dyaw))
             y_diff=y-(self.odom_x*math.sin(dyaw)+self.odom_y*math.cos(dyaw))
+            yaw_diff=dyaw
             if yaw_diff > math.pi:
                 yaw_diff -= 2 * math.pi
             elif yaw_diff < -math.pi:
