@@ -11,8 +11,8 @@ from SiLocator import SiLocator, SickData, Vec3, SICK_NUMS
 class fusion_node_t(Node):
     def __init__(self):
         super().__init__('fusion_node')
-        self.declare_parameter('odom_frame','odom_wheel_debug')  #轮式里程计坐标
-        self.declare_parameter('publish_tf_name', 'base_link_debug')
+        self.declare_parameter('odom_frame','odom_wheel')  #轮式里程计坐标
+        self.declare_parameter('publish_tf_name', 'base_link')
         self.declare_parameter('fusion_hz', 10)    #修正频率
         self.declare_parameter('map_frame', 'camera_init')  # 被监听的tf地图坐标
         self.declare_parameter('base_frame', 'body')       # 被监听的tf基座坐标
@@ -98,8 +98,8 @@ class fusion_node_t(Node):
             #将激光雷达x y 转化到base_link坐标系车体x y 
             x_bias = self.get_parameter('lidar_x_bias').value
             y_bias = self.get_parameter('lidar_y_bias').value
-            x=x+x_bias*math.cos(yaw) - y_bias*math.sin(yaw)
-            y=y+x_bias*math.sin(yaw) + y_bias*math.cos(yaw)
+            x=x+x_bias*math.cos(yaw) - y_bias*math.sin(yaw)-x_bias #全局的原点要先变
+            y=y+x_bias*math.sin(yaw) + y_bias*math.cos(yaw)-y_bias #全局的原点要先变
             
             # laser-odom的tf
             dyaw= yaw - self.odom_yaw
