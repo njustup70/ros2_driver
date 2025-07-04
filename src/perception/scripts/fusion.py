@@ -3,9 +3,11 @@ import rclpy
 from rclpy.node import Node
 from tf2_ros import TransformBroadcaster, TransformListener, Buffer
 from geometry_msgs.msg import TransformStamped,Vector3Stamped
-import json,os,math
+import json,os,math,numpy as np
 import rclpy.time
-
+from sensor_msgs.msg import PointCloud2
+from std_msgs.msg import String
+from SiLocator import SiLocator, SickData, Vec3, SICK_NUMS
 class fusion_node_t(Node):
     def __init__(self):
         super().__init__('fusion_node')
@@ -41,9 +43,21 @@ class fusion_node_t(Node):
         self.tf_overage_y = []
         self.tf_overage_w=[]
         self.tf_overage_z=[]
+        #轮式里程计相关
         self.odom_x=0.0
         self.odom_y=0.0
         self.odom_yaw=0.0
+        #sick 相关
+        self.odom_tf=Vec3()
+        self.silo_tf=Vec3()
+        self.chas_tf=Vec3()
+        self.laser_array = np.zeros((8,), dtype=np.float32)  # 初始化激光数据数组
+        self.my_locator = SiLocator()
+        if self.use_sick:
+            self.sick_sub = self.create_subscription(String, self.get_parameter('sick_topic').value, self.sick_callback, 1)
+            self.sick_update_timer=self.create_timer(0.01,self.sick_update)
+            self.sick_point_pub=self.create_publisher(PointCloud2, '/sick/pointcloud', 1)
+            
     def slam_tf_callback(self):
         transform=TransformStamped()
         map_frame = self.get_parameter('map_frame').value
@@ -100,6 +114,77 @@ class fusion_node_t(Node):
         self.odom_yaw = msg.vector.z
         self.tf_publish(self.odom_frame, self.publish_tf_name, self.odom_x, self.odom_y, self.odom_yaw)
         #发布轮式里程计的tf
+    def sick_callback(self, msg: String):
+        """处理激光雷达数据"""
+        # msg是8路float 数据的字符串表示
+        
+        laser_data = json.loads(msg.data)
+        if len(laser_data) != 8:
+            self.get_logger().warn("激光雷达数据长度不正确")
+            return
+        # 将激光数据转换为numpy数组
+        self.laser_array = np.array(laser_data, dtype=np.float32)
+    def sick_update(self):
+        #从odom_transform到base_link获得
+        if self.tf_buffer.can_transform('odom_transform',self.publish_tf_name, rclpy.time.Time()):
+            transform = self.tf_buffer.lookup_transform('odom_transform', self.publish_tf_name, rclpy.time.Time())
+            self.odom_tf.x = transform.transform.translation.x+0.2
+            self.odom_tf.y = 8-transform.transform.translation.y+0.2 #坐标系是反的并且加一个初始点偏移
+            yaw= 2 * math.atan2(transform.transform.rotation.z, transform.transform.rotation.w)
+            self.odom_tf.z = yaw
+        else: 
+            return
+        self.chas_tf=self.odom_tf+self.silo_tf
+        #提取最后n 路的数据
+        distance= self.laser_array[3:]
+    
+        theta=[180,77.85,360-77.85,360-37.7,37.7]
+        # self.my_locator.update_sick_data(0,d/istance[0],)
+        for i in range(SICK_NUMS):
+            self.my_locator.update_sick_data(
+                i,
+                distance[i],
+                theta[i]
+            )
+        grd,orivec,cost= self.my_locator.grad_decent(self.chas_tf,self.silo_tf)
+        print(f'grd:{grd},orivec:{orivec},cost:{cost}')
+        #将sick点云转换为PointCloud2消息
+        pointcloud = PointCloud2()
+        pointcloud.header.stamp = self.get_clock().now().to_msg()
+        pointcloud.header.frame_id = self.get_parameter('publish_tf_name').value
+        pointcloud.height = 1
+        pointcloud.width = SICK_NUMS
+        pointcloud.is_dense = True
+        pointcloud.is_bigendian = False
+        pointcloud.point_step = 12  # 每个点的字节数
+        pointcloud.row_step = pointcloud.point_step * SICK_NUMS
+        import struct
+        from sensor_msgs.msg import PointField
+
+        # 定义 PointField 列表（XYZ，每个都是 float32）
+        pointcloud.fields = [
+            PointField(name='x', offset=0, datatype=PointField.FLOAT32, count=1),
+            PointField(name='y', offset=4, datatype=PointField.FLOAT32, count=1),
+            PointField(name='z', offset=8, datatype=PointField.FLOAT32, count=1),
+        ]
+
+        # 构造实际点数据
+        points_bytes = bytearray()
+        for i in range(SICK_NUMS):
+            r = distance[i]
+            theta_deg = theta[i]
+            theta_rad = math.radians(theta_deg)
+            x = r * math.cos(theta_rad)
+            y = r * math.sin(theta_rad)
+            z = 0.0  # 2D 激光默认 Z=0
+
+            # 按 float32 小端序打包
+            points_bytes.extend(struct.pack('<fff', x, y, z))
+
+        pointcloud.data = bytes(points_bytes)
+        # 发布点云消息
+        self.sick_point_pub.publish(pointcloud)
+        self.tf_publish('odom','odom_transform',self.silo_tf.x,8-self.silo_tf.y,self.silo_tf.z)  # 发布sick的tf
     def tf_publish(self,base_frame:str,child_frame:str,x,y,yaw):
         #先从yaw 算出w z
         w = math.cos(yaw / 2)
