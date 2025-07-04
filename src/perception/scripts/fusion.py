@@ -12,7 +12,7 @@ class fusion_node_t(Node):
     def __init__(self):
         super().__init__('fusion_node')
         self.declare_parameter('odom_frame','odom_wheel')  #轮式里程计坐标
-        self.declare_parameter('publish_tf_name', 'base_link_debug')
+        self.declare_parameter('publish_tf_name', 'base_link')
         self.declare_parameter('fusion_hz', 10)    #修正频率
         self.declare_parameter('map_frame', 'camera_init')  # 被监听的tf地图坐标
         self.declare_parameter('base_frame', 'body')       # 被监听的tf基座坐标
@@ -22,7 +22,7 @@ class fusion_node_t(Node):
         self.declare_parameter('lidar_slam_topic', '/lidar_slam/odom')  #激光雷达slam
         self.declare_parameter('lidar_x_bias',-0.15)  #激光雷达到odom的偏移
         self.declare_parameter('lidar_y_bias', -0.2) #激光雷达到odom的偏移
-        self.declare_parameter('use_sick', True)  # 是否使用点激光数据
+        self.declare_parameter('use_sick', False) # 是否使用点激光数据
         self.odom_topic = self.get_parameter('odom_topic').value
         self.sick_topic = self.get_parameter('sick_topic').value
         self.use_sick = self.get_parameter('use_sick').value
@@ -107,7 +107,7 @@ class fusion_node_t(Node):
             yaw_diff += 2 * math.pi
         #发布轮式偏移的tf
         self.tf_publish("map","laser_odom",x,y,yaw)      #激光雷达slam的tf 调试用转化到base_link坐标系
-        self.tf_publish("odom_transformed", self.odom_frame, x_diff, y_diff, yaw_diff)
+        self.tf_publish("odom_transform", self.odom_frame, x_diff, y_diff, yaw_diff)
     def odom_callback(self, msg:Vector3Stamped):
         self.odom_x = msg.vector.x
         self.odom_y = -msg.vector.y
