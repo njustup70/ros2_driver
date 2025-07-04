@@ -20,8 +20,8 @@ class fusion_node_t(Node):
         self.declare_parameter('odom_topic','/odom')   #轮式里程计
         self.declare_parameter('sick_topic', '/sick/lidar')  #激光雷达点数据
         self.declare_parameter('lidar_slam_topic', '/lidar_slam/odom')  #激光雷达slam
-        self.declare_parameter('lidar_x_bias',-0.15)  #激光雷达到odom的偏移
-        self.declare_parameter('lidar_y_bias', -0.2) #激光雷达到odom的偏移
+        self.declare_parameter('lidar_x_bias',-0.236)  #激光雷达到odom的偏移
+        self.declare_parameter('lidar_y_bias', -0.267) #激光雷达到odom的偏移
         self.declare_parameter('use_sick', False)  # 是否使用点激光数据
         self.odom_topic = self.get_parameter('odom_topic').value
         self.sick_topic = self.get_parameter('sick_topic').value
