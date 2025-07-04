@@ -118,6 +118,7 @@ class SmartBagRecorder(Node):
             'geometry_msgs/msg/TwistStamped',
             'geometry_msgs/msg/PoseStamped',
             # 'tf2_msgs/msg/TFMessage',
+            'geometry_msgs/msg/Vector3Stamped',
             'std_msgs/msg/String',
             'nav_msgs/msg/Path',
             'nav_msgs/msg/OccupancyGrid'

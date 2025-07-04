@@ -65,6 +65,13 @@ def generate_launch_description():
         ),
         
     )
+    odomtransform_tf_node = Node(
+        condition=IfCondition(LaunchConfiguration('use_tf_publish')),
+        package='tf2_ros',
+        executable="static_transform_publisher",
+        name='odom_transform',
+        arguments=['0.35','7.65','0','0','0','0','odom','odom_transform']  # 发布静态变换
+    )
     #启动image_bridge
     image_bridge_node=Node(
         package='python_pkg',
@@ -76,6 +83,7 @@ def generate_launch_description():
     )
     ld.add_action(utils_launch)
     ld.add_action(ros_bag_node)
+    ld.add_action(odomtransform_tf_node)
     # ld.add_action(ros_bag_exe)
     # ld.add_action(ros_bag_loop_exe)
     ld.add_action(image_bridge_node)

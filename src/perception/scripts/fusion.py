@@ -11,8 +11,8 @@ from SiLocator import SiLocator, SickData, Vec3, SICK_NUMS
 class fusion_node_t(Node):
     def __init__(self):
         super().__init__('fusion_node')
-        self.declare_parameter('odom_frame','odom_wheel')  #轮式里程计坐标
-        self.declare_parameter('publish_tf_name', 'base_link')
+        self.declare_parameter('odom_frame','odom_wheel_debug')  #轮式里程计坐标
+        self.declare_parameter('publish_tf_name', 'base_link_debug')
         self.declare_parameter('fusion_hz', 10)    #修正频率
         self.declare_parameter('map_frame', 'camera_init')  # 被监听的tf地图坐标
         self.declare_parameter('base_frame', 'body')       # 被监听的tf基座坐标
@@ -29,8 +29,8 @@ class fusion_node_t(Node):
         self.publish_tf_name = self.get_parameter('publish_tf_name').value
         self.fusion_hz = self.get_parameter('fusion_hz').value
         # self.map_frame = self.get_parameter('map_frame')
-        # self.base_frame = self.get_parameter('base_frame')
-        self.odom_frame = self.get_parameter('odom_frame').value
+        # self.base_frame = self.get_parameter('base_frame') 
+        self.odom_frame = self.get_parameter('odom_frame').value #轮式里程计的坐标系
         self.tf_hz = self.get_parameter('slam_hz').value
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
@@ -92,20 +92,35 @@ class fusion_node_t(Node):
             #算出x,y,w,z与轮式里程计的偏差
             #从w z 算出yaw
             yaw = 2*math.atan2(z, w)
-            #将x y 转化到odom坐标系
+            #将激光雷达x y 转化到base_link坐标系车体x y 
             x_bias = self.get_parameter('lidar_x_bias').value
             y_bias = self.get_parameter('lidar_y_bias').value
             x=x+x_bias*math.cos(yaw) - y_bias*math.sin(yaw)
             y=y+x_bias*math.sin(yaw) + y_bias*math.cos(yaw)
-            #将x y 转化到odom坐标系
-            x_diff = x - self.odom_x
-            y_diff = y - self.odom_y
             
-            yaw_diff = yaw - self.odom_yaw
+            # odom → base_link
+            odom_x = self.odom_x
+            odom_y = self.odom_y
+            odom_yaw = self.odom_yaw
+
+            # inverse(odom → base_link)
+            cos_yaw = math.cos(odom_yaw)
+            sin_yaw = math.sin(odom_yaw)
+
+            # 平移部分
+            dx = x - odom_x
+            dy = y - odom_y
+
+            x_diff = cos_yaw * dx + sin_yaw * dy
+            y_diff = -sin_yaw * dx + cos_yaw * dy
+
+            # 旋转部分
+            yaw_diff = yaw - odom_yaw
             if yaw_diff > math.pi:
                 yaw_diff -= 2 * math.pi
             elif yaw_diff < -math.pi:
                 yaw_diff += 2 * math.pi
+
             self.tf_publish("map","laser_odom",x,y,yaw)      #激光雷达slam的tf 调试用转化到base_link坐标系
         #发布轮式偏移的tf
         
