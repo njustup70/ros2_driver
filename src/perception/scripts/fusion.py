@@ -15,7 +15,7 @@ class fusion_node_t(Node):
         self.declare_parameter('map_frame', 'camera_init')  # 被监听的tf地图坐标
         self.declare_parameter('base_frame', 'body')       # 被监听的tf基座坐标
         self.declare_parameter('slam_hz', 200)              # 被监听的tf频率
-        self.declare_parameter('odom_topic','/sick/vel')   #轮式里程计速度
+        self.declare_parameter('odom_topic','/odom')   #轮式里程计
         self.declare_parameter('sick_topic', '/sick/lidar')  #激光雷达点数据
         self.declare_parameter('use_sick', True)  # 是否使用点激光数据
         self.odom_topic = self.get_parameter('odom')
