@@ -17,6 +17,9 @@ class fusion_node_t(Node):
         self.declare_parameter('slam_hz', 200)              # 被监听的tf频率
         self.declare_parameter('odom_topic','/odom')   #轮式里程计
         self.declare_parameter('sick_topic', '/sick/lidar')  #激光雷达点数据
+        self.declare_parameter('lidar_slam_topic', '/lidar_slam/odom')  #激光雷达slam
+        self.declare_parameter('lidar_x_bias',-0.15)  #激光雷达到odom的偏移
+        self.declare_parameter('lidar_y_bias', -0.2) #激光雷达到odom的偏移
         self.declare_parameter('use_sick', True)  # 是否使用点激光数据
         self.odom_topic = self.get_parameter('odom_topic').value
         self.sick_topic = self.get_parameter('sick_topic').value
@@ -74,14 +77,22 @@ class fusion_node_t(Node):
         #算出x,y,w,z与轮式里程计的偏差
         #从w z 算出yaw
         yaw = 2*math.atan2(z, w)
+        #将x y 转化到odom坐标系
+        x_bias = self.get_parameter('lidar_x_bias').value
+        y_bias = self.get_parameter('lidar_y_bias').value
+        x=x+x_bias*math.cos(yaw) - y_bias*math.sin(yaw)
+        y=y+x_bias*math.sin(yaw) + y_bias*math.cos(yaw)
+        #将x y 转化到odom坐标系
         x_diff = x - self.odom_x
         y_diff = y - self.odom_y
+        
         yaw_diff = yaw - self.odom_yaw
         if yaw_diff > math.pi:
             yaw_diff -= 2 * math.pi
         elif yaw_diff < -math.pi:
             yaw_diff += 2 * math.pi
         #发布轮式偏移的tf
+        self.tf_publish("map","laser_odom",x,y,yaw)      #激光雷达slam的tf 调试用转化到base_link坐标系
         self.tf_publish("odom_transformed", self.odom_frame, x_diff, y_diff, yaw_diff)
     def odom_callback(self, msg:Vector3Stamped):
         self.odom_x = msg.vector.x
