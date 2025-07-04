@@ -77,36 +77,38 @@ class fusion_node_t(Node):
         self.tf_overage_z.append(transform.transform.rotation.z)
     def fusion_callback(self):
         #将tf_overage_x,y,w,z进行均值滤波
-        if len(self.tf_overage_x) == 0:
-            return
-        x = sum(self.tf_overage_x) / len(self.tf_overage_x)
-        y = sum(self.tf_overage_y) / len(self.tf_overage_y)
-        w = sum(self.tf_overage_w) / len(self.tf_overage_w)
-        z = sum(self.tf_overage_z) / len(self.tf_overage_z)
-        #清空缓存
-        self.tf_overage_x.clear()
-        self.tf_overage_y.clear()
-        self.tf_overage_w.clear()
-        self.tf_overage_z.clear()
-        #算出x,y,w,z与轮式里程计的偏差
-        #从w z 算出yaw
-        yaw = 2*math.atan2(z, w)
-        #将x y 转化到odom坐标系
-        x_bias = self.get_parameter('lidar_x_bias').value
-        y_bias = self.get_parameter('lidar_y_bias').value
-        x=x+x_bias*math.cos(yaw) - y_bias*math.sin(yaw)
-        y=y+x_bias*math.sin(yaw) + y_bias*math.cos(yaw)
-        #将x y 转化到odom坐标系
-        x_diff = x - self.odom_x
-        y_diff = y - self.odom_y
-        
-        yaw_diff = yaw - self.odom_yaw
-        if yaw_diff > math.pi:
-            yaw_diff -= 2 * math.pi
-        elif yaw_diff < -math.pi:
-            yaw_diff += 2 * math.pi
+        x_diff,y_diff,yaw_diff = 0.0,0.0,0.0
+        if len(self.tf_overage_x) != 0: # 如果有slam 数据
+            # 计算均值
+            x = sum(self.tf_overage_x) / len(self.tf_overage_x)
+            y = sum(self.tf_overage_y) / len(self.tf_overage_y)
+            w = sum(self.tf_overage_w) / len(self.tf_overage_w)
+            z = sum(self.tf_overage_z) / len(self.tf_overage_z)
+            #清空缓存
+            self.tf_overage_x.clear()
+            self.tf_overage_y.clear()
+            self.tf_overage_w.clear()
+            self.tf_overage_z.clear()
+            #算出x,y,w,z与轮式里程计的偏差
+            #从w z 算出yaw
+            yaw = 2*math.atan2(z, w)
+            #将x y 转化到odom坐标系
+            x_bias = self.get_parameter('lidar_x_bias').value
+            y_bias = self.get_parameter('lidar_y_bias').value
+            x=x+x_bias*math.cos(yaw) - y_bias*math.sin(yaw)
+            y=y+x_bias*math.sin(yaw) + y_bias*math.cos(yaw)
+            #将x y 转化到odom坐标系
+            x_diff = x - self.odom_x
+            y_diff = y - self.odom_y
+            
+            yaw_diff = yaw - self.odom_yaw
+            if yaw_diff > math.pi:
+                yaw_diff -= 2 * math.pi
+            elif yaw_diff < -math.pi:
+                yaw_diff += 2 * math.pi
+            self.tf_publish("map","laser_odom",x,y,yaw)      #激光雷达slam的tf 调试用转化到base_link坐标系
         #发布轮式偏移的tf
-        self.tf_publish("map","laser_odom",x,y,yaw)      #激光雷达slam的tf 调试用转化到base_link坐标系
+        
         self.tf_publish("odom_transform", self.odom_frame, x_diff, y_diff, yaw_diff)
         if self.odom_x == 0.0 and self.odom_y == 0.0 and self.odom_yaw == 0.0:
             self.tf_publish(self.odom_frame, self.publish_tf_name, 0.0, 0.0, 0.0)

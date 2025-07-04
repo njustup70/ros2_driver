@@ -106,18 +106,12 @@ def generate_launch_description():
         period=5.0,  # Delay in seconds
         actions=[ros_bag_node]
     )
-    kalman_filter_node=Node(
+    fusion_node=Node(
         package='perception',
-        executable='kalman_without_imu.py',
-        name='kalman_node',
+        executable='fusion.py',
+        name='fusion_node',
         output='screen',
         parameters=[
-            {'imu_topic': '/livox/imu/normal'},
-            {'publish_tf_name': 'base_link'},
-            {'hz': 100},
-            {'publish_tf_name': 'base_link'},
-            {'map_frame': 'camera_init'},
-            {'base_frame': 'body'}
         ])
     #再开启新的xacro发布
     xacro_file_path=PathJoinSubstitution(
@@ -152,7 +146,7 @@ def generate_launch_description():
     ld.add_action(map_to_odom_tf_node)
     # ld.add_action(robot_state_publisher_node)
     ld.add_action(sick_node)
-    # ld.add_action(kalman_filter_node)
+    ld.add_action(fusion_node)
     ld.add_action(mid360_launch)
     ld.add_action(imu_transform_launch)
     ld.add_action(realsense_launch)
