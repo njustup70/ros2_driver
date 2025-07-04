@@ -18,15 +18,15 @@ class fusion_node_t(Node):
         self.declare_parameter('odom_topic','/odom')   #轮式里程计
         self.declare_parameter('sick_topic', '/sick/lidar')  #激光雷达点数据
         self.declare_parameter('use_sick', True)  # 是否使用点激光数据
-        self.odom_topic = self.get_parameter('odom')
-        self.sick_topic = self.get_parameter('sick_topic')
-        self.use_sick = self.get_parameter('use_sick')
-        self.publish_tf_name = self.get_parameter('publish_tf_name')
-        self.fusion_hz = self.get_parameter('fusion_hz')
+        self.odom_topic = self.get_parameter('odom_topic').value
+        self.sick_topic = self.get_parameter('sick_topic').value
+        self.use_sick = self.get_parameter('use_sick').value
+        self.publish_tf_name = self.get_parameter('publish_tf_name').value
+        self.fusion_hz = self.get_parameter('fusion_hz').value
         # self.map_frame = self.get_parameter('map_frame')
         # self.base_frame = self.get_parameter('base_frame')
-        self.odom_frame = self.get_parameter('odom_frame')
-        self.tf_hz = self.get_parameter('slam_hz')
+        self.odom_frame = self.get_parameter('odom_frame').value
+        self.tf_hz = self.get_parameter('slam_hz').value
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
         self.tf_broadcaster = TransformBroadcaster(self)
@@ -47,8 +47,8 @@ class fusion_node_t(Node):
         base_frame = self.get_parameter('base_frame').value
         try:
             if not self.tf_buffer.can_transform(map_frame, base_frame, rclpy.time.Time()):
-                self.get_logger().warn(f"Transform from {map_frame} to {base_frame} not available")
-                # return
+                # self.get_logger().warn(f"Transform from {map_frame} to {base_frame} not available")
+                return
             transform = self.tf_buffer.lookup_transform(map_frame, base_frame, rclpy.time.Time())
         except Exception as e:
             self.get_logger().error(f"Failed to get transform: {e}")
@@ -85,9 +85,9 @@ class fusion_node_t(Node):
         self.tf_publish("odom_transformed", self.odom_frame, x_diff, y_diff, yaw_diff)
     def odom_callback(self, msg:Vector3Stamped):
         self.odom_x = msg.vector.x
-        self.odom_y = msg.vector.y
+        self.odom_y = -msg.vector.y
         self.odom_yaw = msg.vector.z
-        self.tf_publish(self.odom_frame, self.publish_tf_name, msg.vector.x, msg.vector.y, msg.vector.z)
+        self.tf_publish(self.odom_frame, self.publish_tf_name, self.odom_x, self.odom_y, self.odom_yaw)
         #发布轮式里程计的tf
     def tf_publish(self,base_frame:str,child_frame:str,x,y,yaw):
         #先从yaw 算出w z
@@ -121,4 +121,6 @@ def main(args=None):
             rclpy.shutdown()
 
 if __name__ == '__main__':
+    print("Starting fusion node...")
     main()
+    
