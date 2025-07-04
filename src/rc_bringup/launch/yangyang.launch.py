@@ -112,6 +112,7 @@ def generate_launch_description():
         name='fusion_node',
         output='screen',
         parameters=[
+           { 'use_sick': False},  # 使用点云数据
         ])
     #再开启新的xacro发布
     xacro_file_path=PathJoinSubstitution(

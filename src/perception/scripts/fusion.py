@@ -133,7 +133,7 @@ class fusion_node_t(Node):
         if self.tf_buffer.can_transform('odom_transform',self.publish_tf_name, rclpy.time.Time()):
             transform = self.tf_buffer.lookup_transform('odom_transform', self.publish_tf_name, rclpy.time.Time())
             self.odom_tf.x = transform.transform.translation.x+0.2
-            self.odom_tf.y = 8-transform.transform.translation.y+0.2 #坐标系是反的并且加一个初始点偏移
+            self.odom_tf.y = -transform.transform.translation.y+0.2 #坐标系是反的并且加一个初始点偏移
             yaw= 2 * math.atan2(transform.transform.rotation.z, transform.transform.rotation.w)
             self.odom_tf.z = yaw
         else: 
@@ -151,8 +151,11 @@ class fusion_node_t(Node):
                 theta[i]
             )
         grd,orivec,cost= self.my_locator.grad_decent(self.chas_tf,self.silo_tf)
-        print(f'grd:{grd},orivec:{orivec},cost:{cost}')
-        #将sick点云转换为PointCloud2消息
+        # print(f'grd:{grd},orivec:{orivec},cost:{cost}')
+        print(f'odom:{self.odom_tf}')
+        print(f'silo:{self.silo_tf}')
+        print(f'chassis:{self.chas_tf}')
+        # print(self.silo_tf)        #将sick点云转换为PointCloud2消息
         pointcloud = PointCloud2()
         pointcloud.header.stamp = self.get_clock().now().to_msg()
         pointcloud.header.frame_id = self.get_parameter('publish_tf_name').value
@@ -207,16 +210,18 @@ class fusion_node_t(Node):
         self.tf_broadcaster.sendTransform(transform)
 
 def main(args=None):
+    from rclpy.executors import MultiThreadedExecutor
+
     rclpy.init(args=args)
     node = fusion_node_t()
+    exe = MultiThreadedExecutor()
+    exe.add_node(node)
     try:
-        rclpy.spin(node)
+        exe.spin()
     except KeyboardInterrupt:
-        pass
+        node.get_logger().info("Keyboard Interrupt")
     finally:
         node.destroy_node()
-        # rclpy.shutdown()
-        rclpy.ok()
         if rclpy.ok():
             rclpy.shutdown()
 
