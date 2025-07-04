@@ -47,6 +47,9 @@ class fusion_node_t(Node):
         self.odom_x=0.0
         self.odom_y=0.0
         self.odom_yaw=0.0
+        self.map_odom_x=0.0
+        self.map_odom_y=0.0
+        self.map_odom_yaw=0.0
         #sick 相关
         self.odom_tf=Vec3()
         self.silo_tf=Vec3()
@@ -98,24 +101,12 @@ class fusion_node_t(Node):
             x=x+x_bias*math.cos(yaw) - y_bias*math.sin(yaw)
             y=y+x_bias*math.sin(yaw) + y_bias*math.cos(yaw)
             
-            # odom → base_link
-            odom_x = self.odom_x
-            odom_y = self.odom_y
-            odom_yaw = self.odom_yaw
-
-            # inverse(odom → base_link)
-            cos_yaw = math.cos(odom_yaw)
-            sin_yaw = math.sin(odom_yaw)
+            # laser-odom的tf
+            dyaw= yaw - self.odom_yaw
 
             # 平移部分
-            dx = x - odom_x
-            dy = y - odom_y
-
-            x_diff = cos_yaw * dx + sin_yaw * dy
-            y_diff = -sin_yaw * dx + cos_yaw * dy
-
-            # 旋转部分
-            yaw_diff = yaw - odom_yaw
+            x_diff=x-(self.odom_x*math.cos(dyaw)-self.odom_y*math.sin(dyaw))
+            y_diff=y-(self.odom_x*math.sin(dyaw)+self.odom_y*math.cos(dyaw))
             if yaw_diff > math.pi:
                 yaw_diff -= 2 * math.pi
             elif yaw_diff < -math.pi:
