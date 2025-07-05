@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+'''
+对lio sam 进行滤波插帧的效果不好,没做轮式里程计融合,sick融合
+'''
 import numpy as np
 from rclpy.node import Node
 from sensor_msgs.msg import Imu

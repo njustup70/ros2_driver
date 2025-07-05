@@ -7,6 +7,7 @@ import numpy as np
 sys.path.append('/home/Elaina/ros2_driver/src') 
 from protocol_lib.myserial import AsyncSerial_t
 from std_msgs.msg import String
+from geometry_msgs.msg import Vector3Stamped
 class tf:
     def __init__(self, x=0.0, y=0.0,yaw=0.0):
         self.x = x
@@ -21,8 +22,8 @@ class SickCommunicate_t(Node):
             self.get_parameter('serial_port').value,
             self.get_parameter('serial_baudrate').value
         )
-        self.vel_pub= self.create_publisher(Twist, '/sick/vel', 10)  # 发布速度话题
-        self.local_pub=self.create_publisher(Twist, '/sick/local', 10)  # 发布本地坐标话题
+        self.vel_pub= self.create_publisher(Vector3Stamped, '/sick/vel', 10)  # 发布速度话题
+        self.local_pub=self.create_publisher(Vector3Stamped, '/odom', 10)  # 发布本地坐标话题
         self.sick_pub=self.create_publisher(String, '/sick/lidar', 10)  # 发布激光数据话题
         # 启动串口监听
         self.serial.startListening(self.data_callback)
@@ -58,23 +59,25 @@ class SickCommunicate_t(Node):
             yaw = struct.unpack('<f', data[10:14])[0]
             tf_data = tf(x, y, yaw)
             #算出速度
-            twist_msg = Twist()
+            twist_msg = Vector3Stamped()
             if self.tf_last.x != 0.0 or self.tf_last.y != 0.0:
                 dt = timestamp - self.last_timestamp
-                twist_msg.linear.x = (tf_data.x - self.tf_last.x) / dt
-                twist_msg.linear.y = -(tf_data.y - self.tf_last.y) / dt
+                twist_msg.vector.x = (tf_data.x - self.tf_last.x) / dt
+                twist_msg.vector.y = -(tf_data.y - self.tf_last.y) / dt
                 #增加过零点
                 dyaw= (tf_data.yaw - self.tf_last.yaw)
                 if dyaw >math.pi :
                     dyaw -= 2*math.pi
                 elif dyaw < -math.pi:
                     dyaw += 2*math.pi
-                twist_msg.angular.z = dyaw / dt
+                twist_msg.vector.z = dyaw / dt
                 # print(dt)
-            local_msg = Twist()
-            local_msg.linear.x = tf_data.x
-            local_msg.linear.y = tf_data.y
-            local_msg.angular.z = tf_data.yaw
+            local_msg = Vector3Stamped()
+            local_msg.vector.x = tf_data.x
+            local_msg.vector.y = tf_data.y
+            local_msg.vector.z = tf_data.yaw
+            local_msg.header.stamp= self.get_clock().now().to_msg()  # 设置时间戳
+            twist_msg.header.stamp = self.get_clock().now().to_msg()  # 设置
             self.local_pub.publish(local_msg)  # 发布本地坐标消息-0.00018086249265487702
             self.last_timestamp = timestamp
             self.tf_last = tf_data
