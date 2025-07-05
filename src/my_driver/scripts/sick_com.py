@@ -23,7 +23,9 @@ class SickCommunicate_t(Node):
             self.get_parameter('serial_baudrate').value
         )
         self.vel_pub= self.create_publisher(Vector3Stamped, '/sick/vel', 10)  # 发布速度话题
+
         self.local_pub=self.create_publisher(Vector3Stamped, '/odom', 10)  # 发布本地坐标话题
+
         self.sick_pub=self.create_publisher(String, '/sick/lidar', 10)  # 发布激光数据话题
         # 启动串口监听
         self.serial.startListening(self.data_callback)

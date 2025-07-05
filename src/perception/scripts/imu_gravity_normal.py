@@ -18,8 +18,8 @@ class ImuGravityFixer(Node):
         self.imu_topic = self.get_parameter('imu_topic').value
         self.output_topic = self.get_parameter('output_topic').value
 
-        self.sub = self.create_subscription(Imu, self.imu_topic, self.imu_callback, 10)
-        self.pub = self.create_publisher(Imu, self.output_topic, 10)
+        self.sub = self.create_subscription(Imu, self.imu_topic, self.imu_callback, 1)
+        self.pub = self.create_publisher(Imu, self.output_topic, 1)
 
         self.gravity = 9.81
         self.sample_count = 0

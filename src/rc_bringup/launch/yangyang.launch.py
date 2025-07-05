@@ -16,6 +16,7 @@ from launch.substitutions import Command, PathJoinSubstitution, FindExecutable
 def generate_launch_description():
     ld=LaunchDescription()
     ld.add_action(DeclareLaunchArgument('use_fast_lio_tf', default_value='true', description='增加point lio修正'))
+    ld.add_action(DeclareLaunchArgument('use_livox_publish', default_value='true', description='增加雷达到车体中心的tf发布'))  
     ld.add_action(DeclareLaunchArgument('use_tf_publish',default_value='true',description='Publish tf tree if use is True'))
     ld.add_action(DeclareLaunchArgument('use_realsense',default_value='true',description='Start realsense node if use is True'))
     ld.add_action(DeclareLaunchArgument('record_lidar',default_value='false',description='Record lidar data if use is True'))
@@ -112,7 +113,9 @@ def generate_launch_description():
         name='fusion_node',
         output='screen',
         parameters=[
+
            { 'use_sick': False},  # 使用点云数据
+
         ])
     #再开启新的xacro发布
     xacro_file_path=PathJoinSubstitution(
@@ -136,6 +139,7 @@ def generate_launch_description():
         name='odom_transform',
         arguments=['0.35','7.65','0','0','0','0','odom','odom_transform']  # 发布静态变换
     )
+
     map_to_odom_tf_node = Node(
         condition=IfCondition(LaunchConfiguration('use_tf_publish')),
         package='tf2_ros',

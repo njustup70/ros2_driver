@@ -6,10 +6,10 @@ class TestNode(Node):
     def __init__(self):
         super().__init__('test_node')
         self.pub=self.create_publisher(String,'robot_state',10)
-        self.tim=self.create_timer(0.1,self.timer_callback)
+        self.tim=self.create_timer(10,self.timer_callback)
     def timer_callback(self):
         msg=String()
-        msg.data=json.dumps({"nav_state": "ALIGNED"})
+        msg.data=json.dumps({"reset_slam": True})
         self.pub.publish(msg)
         self.get_logger().info(f"Published: {msg.data}")
 def main(args=None):
