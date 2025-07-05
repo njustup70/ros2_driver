@@ -10,12 +10,12 @@ class bag_play_node(Node):
         self.declare_parameter('filter_debug',False) #是否开启定位调试
         self.declare_parameter('rosbag_root_path','/home/Elaina/ros2_driver/bag_play') #rosbag的根目录
         self.declare_parameter('rate',1) #播放的速率
-        self.declare_parameter('loop',True) #是否循环播放
+        self.declare_parameter('loop',False) #是否循环播放
         # self.declare_parameter("tf_debug",False)
         # self.declare_parameter('tf_static_debug',False)
         self.whitelist=[] #播放的白名单
         self.typewhitelist=[] #话题类型的白名单
-        self.blacklist=["/tf_static"] #播放的黑名单
+        self.blacklist=["/tf","/tf_static"] #播放的黑名单
         self.playlist=[] #播放的列表
         self.filteredList=[]#被过滤的话题
         self.rosbag_path=''
