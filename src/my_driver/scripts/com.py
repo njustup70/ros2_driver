@@ -17,7 +17,7 @@ from rclpy.time import Time
 import struct
 from tf2_ros import TransformListener,Buffer
 from std_msgs.msg import String
-
+from sick_com import SickHandler
 class Communicate_t(Node):
     def __init__(self):
         super().__init__('communicate_t')
@@ -50,7 +50,8 @@ class Communicate_t(Node):
         #self.serial.startListening()#监听线程还开启自动重连
         self.serial_queue = []  # 用于存储串口数据
         self.serial_publish_timer = self.create_timer(0.002, self.publish_serial_data)  #500hz 定时器
-    
+        # sick数据处理
+        self.sick_handler = SickHandler(self)
     def cmd_topic_callback(self, msg:Twist):
         '''
         速度指令发送
@@ -136,6 +137,7 @@ class Communicate_t(Node):
         assert checksum < 256, "Checksum must be less than 256"
 
         if checksum == databag[-1] and checksum == databag[0]: 
+            self.sick_handler.handle_data(data)  # 处理sick数据
             # 校验通过,表示数据帧没有损坏
             if data[1] == '0x34':
                 # 校验数据类型,0x34表示类型为射击参数
