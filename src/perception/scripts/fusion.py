@@ -103,15 +103,17 @@ class fusion_node_t(Node):
             
             # laser-odom的tf
             dyaw= yaw - self.odom_yaw
+            if dyaw > math.pi:
+                dyaw -= 2 * math.pi
+            elif dyaw < -math.pi:
+                dyaw += 2 * math.pi
+
 
             # 平移部分
             x_diff=x-(self.odom_x*math.cos(dyaw)-self.odom_y*math.sin(dyaw))
             y_diff=y-(self.odom_x*math.sin(dyaw)+self.odom_y*math.cos(dyaw))
             yaw_diff=dyaw
-            if yaw_diff > math.pi:
-                yaw_diff -= 2 * math.pi
-            elif yaw_diff < -math.pi:
-                yaw_diff += 2 * math.pi
+            
 
             self.tf_publish("map","laser_odom",x,y,yaw)      #激光雷达slam的tf 调试用转化到base_link坐标系
         #发布轮式偏移的tf
