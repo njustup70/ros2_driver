@@ -59,7 +59,7 @@ def generate_launch_description():
         output='screen',
         emulate_tty=True,
         parameters=[
-            {'serial_port': '/dev/qingheng',
+            {'serial_port': '/dev/qinheng',
              'serial_baudrate':230400,
              }
         ]
