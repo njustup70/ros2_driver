@@ -59,7 +59,7 @@ def generate_launch_description():
         output='screen',
         emulate_tty=True,
         parameters=[
-            {'serial_port': '/dev/serial_ch340',
+            {'serial_port': '/dev/qingheng',
              'serial_baudrate':230400,
              }
         ]
@@ -88,17 +88,15 @@ def generate_launch_description():
         period=5.0,  # Delay in seconds
         actions=[ros_bag_node]
     )
-    kalman_filter_node=Node(
+    fusion_node=Node(
         package='perception',
-        executable='kalman_without_imu.py',
-        name='kalman_node',
+        executable='fusion.py',
+        name='fusion_node',
         output='screen',
         parameters=[
-            {'imu_topic': '/livox/imu/normal'},
-            {'publish_tf_name': 'base_link'},
-            {'hz': 100},
-            {'map_frame': 'camera_init'},
-            {'base_frame': 'body'}
+
+           { 'use_sick': False},  # 使用点云数据
+
         ])
     xacro_file_path:str= os.path.join(get_package_share_directory('my_tf_tree'),'urdf','dd.urdf.xacro')
     robot_description = Command([
@@ -158,7 +156,7 @@ def generate_launch_description():
         emulate_tty=True,
     )
     ld.add_action(compose_node)
-    ld.add_action(kalman_filter_node)
+    ld.add_action(fusion_node)
     ld.add_action(mid360_launch)
     ld.add_action(imu_transform_launch)
     ld.add_action(utils_launch)
