@@ -15,7 +15,7 @@ class bag_play_node(Node):
         # self.declare_parameter('tf_static_debug',False)
         self.whitelist=[] #播放的白名单
         self.typewhitelist=[] #话题类型的白名单
-        self.blacklist=["/tf","/tf_static"] #播放的黑名单
+        self.blacklist=["/tf_static"] #播放的黑名单
         self.playlist=[] #播放的列表
         self.filteredList=[]#被过滤的话题
         self.rosbag_path=''

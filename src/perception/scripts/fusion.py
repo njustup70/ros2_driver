@@ -12,8 +12,8 @@ from SiLocator import SiLocator, SickData, Vec3, SICK_NUMS
 class fusion_node_t(Node):
     def __init__(self):
         super().__init__('fusion_node')
-        self.declare_parameter('odom_frame','odom_wheel')  #轮式里程计坐标
-        self.declare_parameter('publish_tf_name', 'base_link')
+        self.declare_parameter('odom_frame','odom_wheel_debug')  #轮式里程计坐标
+        self.declare_parameter('publish_tf_name', 'base_link_debug')
         self.declare_parameter('fusion_hz', 10)    #修正频率
         self.declare_parameter('map_frame', 'camera_init')  # 被监听的tf地图坐标
         self.declare_parameter('base_frame', 'body')       # 被监听的tf基座坐标
@@ -21,8 +21,8 @@ class fusion_node_t(Node):
         self.declare_parameter('odom_topic','/odom')   #轮式里程计
         self.declare_parameter('sick_topic', '/sick/lidar')  #激光雷达点数据
         self.declare_parameter('lidar_slam_topic', '/lidar_slam/odom')  #激光雷达slam
-        self.declare_parameter('lidar_x_bias',-0.236)  #激光雷达到odom的偏移
-        self.declare_parameter('lidar_y_bias', -0.267) #激光雷达到odom的偏移
+        self.declare_parameter('lidar_x_bias',- 0.132)  #激光雷达到odom的偏移
+        self.declare_parameter('lidar_y_bias', -0.329) #激光雷达到odom的偏移
         self.declare_parameter('use_sick', False)  # 是否使用点激光数据
         self.odom_topic = self.get_parameter('odom_topic').value
         self.sick_topic = self.get_parameter('sick_topic').value
@@ -99,16 +99,25 @@ class fusion_node_t(Node):
             #将激光雷达x y 转化到base_link坐标系车体x y 
             x_bias = self.get_parameter('lidar_x_bias').value
             y_bias = self.get_parameter('lidar_y_bias').value
-            #雷达坐标系到车体坐标系的偏移
-            MyTf_laser_to_map= MyTf(x_bias, y_bias, yaw)  # 偏移量
-            base_link_to_map=MyTf(0,0,yaw)
-            # 将激光雷达坐标系的点转换到地图坐标系
-            laser_point = MyTf_laser_to_map.transform(np.array([laser_odom_x, laser_odom_y]))
-            base_link_point=base_link_to_map.inverse_transform(laser_point)  # 将激光雷达坐标系的点转换到车体坐标系
-            # 将激光雷达坐标系的点转换到车体坐标系
-            x= base_link_point[0]
-            y= base_link_point[1]
             
+            # 激光雷达相对于车体的偏移（假设yaw_bias已知）
+            laser_to_base_link = MyTf(-x_bias, y_bias, 0.0)
+
+            # 车体相对于地图的变换（假设laser_odom_x/y/yaw是车体在地图坐标系的pose）
+            base_link_to_map = MyTf(laser_odom_x, laser_odom_y, yaw)
+
+            # 激光雷达原点在雷达坐标系是(0,0)
+            x_l, y_l = 0.0, 0.0
+
+            # 先把激光雷达点转换到车体坐标系（用逆变换）
+            x_b, y_b = laser_to_base_link.inverse_transform(x_l, y_l)
+
+            # 再把车体坐标系点转换到地图坐标系
+            x_m, y_m = base_link_to_map.transform(x_b, y_b)
+            # self.tf_publish('map', 'laser', laser_odom_x, laser_odom_y, yaw)  # 发布tf，注意frame顺序和pose
+            # 发布tf，注意frame顺序和pose
+            # self.tf_publish('map', 'base', x_m, y_m, yaw)
+            x,y=x_m, y_m
             # laser-odom的tf
             dyaw= yaw - self.odom_yaw
             if dyaw > math.pi:
@@ -123,7 +132,7 @@ class fusion_node_t(Node):
             yaw_diff=dyaw
             
 
-            self.tf_publish("map","laser_odom",x,y,yaw)      #激光雷达slam的tf 调试用转化到base_link坐标系
+            # self.tf_publish("map","laser_odom",x,y,yaw)      #激光雷达slam的tf 调试用转化到base_link坐标系
         #发布轮式偏移的tf
         
         self.tf_publish("odom_transform", self.odom_frame, x_diff, y_diff, yaw_diff)
