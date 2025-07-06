@@ -162,7 +162,7 @@ def generate_launch_description():
     ld.add_action(utils_launch)
     ld.add_action(joy_launch)
     ld.add_action(communicate_node)
-    ld.add_action(ms200_launch)
+    # ld.add_action(ms200_launch)
     ld.add_action(ros_bag_action)
     return ld
      
