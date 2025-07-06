@@ -21,14 +21,16 @@ class MyTf:
         # 平移向量
         self.t = np.array([x, y])
 
-    def transform(self, points):
+    def transform(self, x, y):
         """
-        将点从局部坐标系 -> 经过该刚体变换后的坐标系
+        将单个点从局部坐标系 -> 经过该刚体变换后的坐标系
 
-        points: (2,) or (N,2)
+        输入: x, y (标量)
+        输出: x_new, y_new (标量)
         """
-        points = np.atleast_2d(points)
-        return (self.R @ points.T).T + self.t
+        p = np.array([x, y])
+        p_new = self.R @ p + self.t
+        return p_new[0], p_new[1]
 
     def inverse(self):
         """
@@ -48,20 +50,20 @@ class MyTf:
         inv_tf.yaw = yaw_inv
         return inv_tf
 
-    def inverse_transform(self, points):
+    def inverse_transform(self, x, y):
         """
-        等价于先求逆再transform
+        等价于先求逆再 transform
         """
         inv = self.inverse()
-        return inv.transform(points)
+        return inv.transform(x, y)
 
 # ======= 用法示例 =======
 if __name__ == "__main__":
     tf = MyTf(1.0, 2.0, np.deg2rad(90))
 
-    pt = np.array([1.0, 0.0])
-    p_global = tf.transform(pt)
-    print("Transformed:", p_global)
+    x_in, y_in = 1.0, 0.0
+    x_global, y_global = tf.transform(x_in, y_in)
+    print("Transformed:", x_global, y_global)
 
-    p_local = tf.inverse_transform(p_global)
-    print("Inverse transformed:", p_local)
+    x_local, y_local = tf.inverse_transform(x_global, y_global)
+    print("Inverse transformed:", x_local, y_local)
