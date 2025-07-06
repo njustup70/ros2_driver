@@ -59,7 +59,7 @@ def generate_launch_description():
         output='screen',
         emulate_tty=True,
         parameters=[
-            {'serial_port': '/dev/qinheng',
+            {'serial_port': '/dev/serial_qh',
              'serial_baudrate':230400,
              }
         ]
@@ -94,8 +94,8 @@ def generate_launch_description():
         name='fusion_node',
         output='screen',
         parameters=[
-            {'lidar_x_bias': -0.132},
-            {'lidar_y_bias': -0.329},
+            {'lidar_x_bias': 0.132},
+            {'lidar_y_bias': 0.329},
            { 'use_sick': False},  # 使用点云数据
 
         ])
