@@ -94,7 +94,7 @@ def generate_launch_description():
         name='fusion_node',
         output='screen',
         parameters=[
-            {'lidar_x_bias': -0.132},
+            {'lidar_x_bias': 0.132}, #odom到激光雷达的偏移,odom是子坐标系，激光雷达是父坐标系
             {'lidar_y_bias': -0.329},
            { 'use_sick': False},  # 使用点云数据
 
