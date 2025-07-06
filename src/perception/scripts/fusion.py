@@ -12,8 +12,8 @@ from SiLocator import SiLocator, SickData, Vec3, SICK_NUMS
 class fusion_node_t(Node):
     def __init__(self):
         super().__init__('fusion_node')
-        self.declare_parameter('odom_frame','odom_wheel_debug')  #轮式里程计坐标
-        self.declare_parameter('publish_tf_name', 'base_link_debug')
+        self.declare_parameter('odom_frame','odom_wheel')  #轮式里程计坐标
+        self.declare_parameter('publish_tf_name', 'base_link')
         self.declare_parameter('fusion_hz', 10)    #修正频率
         self.declare_parameter('map_frame', 'camera_init')  # 被监听的tf地图坐标
         self.declare_parameter('base_frame', 'body')       # 被监听的tf基座坐标
@@ -24,6 +24,7 @@ class fusion_node_t(Node):
         self.declare_parameter('lidar_x_bias', 0.132)  #激光雷达到odom的偏移
         self.declare_parameter('lidar_y_bias', -0.329) #激光雷达到odom的偏移
         self.declare_parameter('use_sick', False)  # 是否使用点激光数据
+        self.declare_parameter('slam_debug', True)  # 是否开启slam调试
         self.odom_topic = self.get_parameter('odom_topic').value
         self.sick_topic = self.get_parameter('sick_topic').value
         self.use_sick = self.get_parameter('use_sick').value
@@ -61,7 +62,9 @@ class fusion_node_t(Node):
             self.sick_sub = self.create_subscription(String, self.get_parameter('sick_topic').value, self.sick_callback, 1)
             self.sick_update_timer=self.create_timer(0.01,self.sick_update)
             self.sick_point_pub=self.create_publisher(PointCloud2, '/sick/pointcloud', 1)
-            
+        if self.get_parameter('slam_debug').value:
+            self.odom_frame='odom_wheel_debug'
+            self.publish_tf_name='base_link_debug'
     def slam_tf_callback(self):
         transform=TransformStamped()
         map_frame = self.get_parameter('map_frame').value
