@@ -104,23 +104,22 @@ class fusion_node_t(Node):
             y_bias = self.get_parameter('lidar_y_bias').value
             
             # 激光雷达相对于车体的偏移（假设yaw_bias已知）
-            laser_to_base_link = MyTf(x_bias, y_bias, 0.0)
+            laser_in_map = MyTf(laser_odom_x, laser_odom_y, yaw)  # 雷达在地图下
+            laser_to_base = MyTf(x_bias, y_bias, 0.0)             # 雷达相对于车体
 
-            # 车体相对于地图的变换（假设laser_odom_x/y/yaw是车体在地图坐标系的pose）
-            base_link_to_map = MyTf(laser_odom_x, laser_odom_y, yaw)
+            # 先把 base_link 的原点 在雷达坐标系下的位置
+            x_b_in_l, y_b_in_l = 0.0, 0.0
+            x_base_in_laser, y_base_in_laser = laser_to_base.inverse_transform(x_b_in_l, y_b_in_l)
 
-            # 激光雷达原点在雷达坐标系是(0,0)
-            x_l, y_l = 0.0, 0.0
+            # 再把这个点丢到地图
+            x_base_in_map, y_base_in_map = laser_in_map.transform(x_base_in_laser, y_base_in_laser)
 
-            # 先把激光雷达点转换到车体坐标系（用逆变换）
-            x_b, y_b = laser_to_base_link.inverse_transform(x_l, y_l)
+            # 最终 base_link 在地图下的坐标就是它
 
-            # 再把车体坐标系点转换到地图坐标系
-            x_m, y_m = base_link_to_map.transform(x_b, y_b)
             # self.tf_publish('map', 'laser', laser_odom_x, laser_odom_y, yaw)  # 发布tf，注意frame顺序和pose
             # 发布tf，注意frame顺序和pose
-            # self.tf_publish('map', 'base', x_m, y_m, yaw)
-            x,y=x_m, y_m
+            self.tf_publish('map', 'base', x_base_in_map, y_base_in_map, yaw)
+            x,y=x_base_in_map, y_base_in_map
             # laser-odom的tf
             dyaw= yaw - self.odom_yaw
             if dyaw > math.pi:
