@@ -4,6 +4,11 @@
 import rclpy
 from rclpy.node import Node
 import yaml,os,glob
+import argparse
+from rclpy.serialization import deserialize_message
+from rosidl_runtime_py.utilities import get_message
+from std_msgs.msg import String
+import rosbag2_py
 class bag_play_node(Node):
     def __init__(self):
         super().__init__('bag_play_node')
@@ -22,6 +27,8 @@ class bag_play_node(Node):
         self.yaml_path=''
         self.find_db_and_yaml()
         self.active_whitelist=True #是否激活白名单
+        self.play_mcap=False #是否使用mcap格式
+        self.reader = rosbag2_py.SequentialReader()
         if self.get_parameter('filter_debug').value:
             self.whitelist=['/tf']
             self.typewhitelist=['std_msgs/msg/String','geometry_msgs/msg/Twist']
@@ -43,10 +50,14 @@ class bag_play_node(Node):
             # 查找 .db3 文件
             db3_files = glob.glob(os.path.join(rosbag_path, "*.db3"))
             yaml_files = glob.glob(os.path.join(rosbag_path, "*.yaml"))
+            mcap_files = glob.glob(os.path.join(rosbag_path, "*.mcap"))
             if db3_files:
                 self.rosbag_path=db3_files[0]
             if yaml_files:
                 self.yaml_path=yaml_files[0]
+            if mcap_files:
+                self.rosbag_path=mcap_files[0]
+                self.play_mcap=True
                 
         else:
             print("没有找到文件夹")
@@ -109,12 +120,26 @@ class bag_play_node(Node):
             cmd.append(f'{topic}:={topic}/filtered')
         print(f'\033[95m 正在播放: {" ".join(cmd)} \033[0m')
         os.system(" ".join(cmd))
+    def mcapplay(self):
+        """_summary_播放mcap文件
+        """
+        self.reader.open(
+        rosbag2_py.StorageOptions(uri=self.rosbag_path, storage_id="mcap"),
+        rosbag2_py.ConverterOptions(
+            input_serialization_format="cdr", output_serialization_format="cdr"
+        ),
+        topic_types = self.reader.get_all_topics_and_types()
+
+    )
+
 def main(args=None):
     rclpy.init(args=args)
     node = bag_play_node()
     node.yaml_to_playlist()
-    if len(node.playlist) > 0:
+    if (len(node.playlist)  > 0) and node.play_mcap==False :
         node.playbag()
+    elif (len(node.playlist)  > 0) and node.play_mcap:
+        node.playbag()                #现在逻辑是一样的 
     else:
         print(f'\033[91m 没有可播放的话题 \033[0m')
     rclpy.shutdown()
