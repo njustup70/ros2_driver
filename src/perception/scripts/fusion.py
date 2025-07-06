@@ -21,7 +21,7 @@ class fusion_node_t(Node):
         self.declare_parameter('odom_topic','/odom')   #轮式里程计
         self.declare_parameter('sick_topic', '/sick/lidar')  #激光雷达点数据
         self.declare_parameter('lidar_slam_topic', '/lidar_slam/odom')  #激光雷达slam
-        self.declare_parameter('lidar_x_bias',- 0.132)  #激光雷达到odom的偏移
+        self.declare_parameter('lidar_x_bias', 0.132)  #激光雷达到odom的偏移
         self.declare_parameter('lidar_y_bias', -0.329) #激光雷达到odom的偏移
         self.declare_parameter('use_sick', False)  # 是否使用点激光数据
         self.odom_topic = self.get_parameter('odom_topic').value
@@ -101,7 +101,7 @@ class fusion_node_t(Node):
             y_bias = self.get_parameter('lidar_y_bias').value
             
             # 激光雷达相对于车体的偏移（假设yaw_bias已知）
-            laser_to_base_link = MyTf(-x_bias, y_bias, 0.0)
+            laser_to_base_link = MyTf(x_bias, y_bias, 0.0)
 
             # 车体相对于地图的变换（假设laser_odom_x/y/yaw是车体在地图坐标系的pose）
             base_link_to_map = MyTf(laser_odom_x, laser_odom_y, yaw)
