@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import rclpy
+from my_tf import MyTf
 from rclpy.node import Node
 from tf2_ros import TransformBroadcaster, TransformListener, Buffer
 from geometry_msgs.msg import TransformStamped,Vector3Stamped
@@ -83,8 +84,8 @@ class fusion_node_t(Node):
         x_diff,y_diff,yaw_diff = 0.0,0.0,0.0
         if len(self.tf_overage_x) != 0: # 如果有slam 数据
             # 计算均值
-            x = sum(self.tf_overage_x) / len(self.tf_overage_x)
-            y = sum(self.tf_overage_y) / len(self.tf_overage_y)
+            laser_odom_x = sum(self.tf_overage_x) / len(self.tf_overage_x)
+            laser_odom_y = sum(self.tf_overage_y) / len(self.tf_overage_y)
             w = sum(self.tf_overage_w) / len(self.tf_overage_w)
             z = sum(self.tf_overage_z) / len(self.tf_overage_z)
             #清空缓存
@@ -99,10 +100,14 @@ class fusion_node_t(Node):
             x_bias = self.get_parameter('lidar_x_bias').value
             y_bias = self.get_parameter('lidar_y_bias').value
             #雷达坐标系到车体坐标系的偏移
-            x_body=x+x_bias
-            y_body=y+y_bias
-            x=x_body*math.cos(yaw) - y_body*math.sin(yaw) #全局的原点要先变
-            y=x_body*math.sin(yaw) + y_body*math.cos(yaw) #全局的原点要先变
+            MyTf_laser_to_map= MyTf(x_bias, y_bias, yaw)  # 偏移量
+            base_link_to_map=MyTf(0,0,yaw)
+            # 将激光雷达坐标系的点转换到地图坐标系
+            laser_point = MyTf_laser_to_map.transform(np.array([laser_odom_x, laser_odom_y]))
+            base_link_point=base_link_to_map.inverse_transform(laser_point)  # 将激光雷达坐标系的点转换到车体坐标系
+            # 将激光雷达坐标系的点转换到车体坐标系
+            x= base_link_point[0]
+            y= base_link_point[1]
             
             # laser-odom的tf
             dyaw= yaw - self.odom_yaw
