@@ -102,7 +102,7 @@ class fusion_node_t(Node):
             x_body=x+x_bias
             y_body=y+y_bias
             x=x_body*math.cos(yaw) - y_body*math.sin(yaw) #全局的原点要先变
-            y=x_bias*math.sin(yaw) + y_body*math.cos(yaw) #全局的原点要先变
+            y=x_body*math.sin(yaw) + y_body*math.cos(yaw) #全局的原点要先变
             
             # laser-odom的tf
             dyaw= yaw - self.odom_yaw
