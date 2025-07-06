@@ -98,8 +98,11 @@ class fusion_node_t(Node):
             #将激光雷达x y 转化到base_link坐标系车体x y 
             x_bias = self.get_parameter('lidar_x_bias').value
             y_bias = self.get_parameter('lidar_y_bias').value
-            x=x+x_bias*math.cos(yaw) - y_bias*math.sin(yaw)-x_bias #全局的原点要先变
-            y=y+x_bias*math.sin(yaw) + y_bias*math.cos(yaw)-y_bias #全局的原点要先变
+            #雷达坐标系到车体坐标系的偏移
+            x_body=x+x_bias
+            y_body=y+y_bias
+            x=x_body*math.cos(yaw) - y_body*math.sin(yaw) #全局的原点要先变
+            y=x_bias*math.sin(yaw) + y_body*math.cos(yaw) #全局的原点要先变
             
             # laser-odom的tf
             dyaw= yaw - self.odom_yaw
