@@ -8,6 +8,7 @@ import json,os,math,numpy as np
 import rclpy.time
 from sensor_msgs.msg import PointCloud2
 from std_msgs.msg import String
+from itertools import product
 from SiLocator import SiLocator, SickData, Vec3, SICK_NUMS
 class fusion_node_t(Node):
     def __init__(self):
@@ -16,6 +17,8 @@ class fusion_node_t(Node):
         self.declare_parameter('publish_tf_name', 'base_link')
         self.declare_parameter('fusion_hz', 10)    #修正频率
         self.declare_parameter('map_frame', 'camera_init')  # 被监听的tf地图坐标
+        self.declare_parameter('map_frame_vec',['camera_init']) # 被监听的tf地图坐标 
+        self.declare_parameter('base_frame_vec',['body','aft_mapped'])  # 被监听的tf基座坐标
         self.declare_parameter('base_frame', 'body')       # 被监听的tf基座坐标
         self.declare_parameter('slam_hz', 200)              # 被监听的tf频率
         self.declare_parameter('odom_topic','/odom')   #轮式里程计
@@ -31,6 +34,8 @@ class fusion_node_t(Node):
         self.publish_tf_name = self.get_parameter('publish_tf_name').value
         self.fusion_hz = self.get_parameter('fusion_hz').value
         # self.map_frame = self.get_parameter('map_frame')
+        self.map_frame_vec = self.get_parameter('map_frame_vec').value  #被监听的tf地图坐标
+        self.base_frame_vec = self.get_parameter('base_frame_vec').value  #被监听
         # self.base_frame = self.get_parameter('base_frame') 
         self.odom_frame = self.get_parameter('odom_frame').value #轮式里程计的坐标系
         self.tf_hz = self.get_parameter('slam_hz').value
@@ -69,14 +74,26 @@ class fusion_node_t(Node):
         transform=TransformStamped()
         map_frame = self.get_parameter('map_frame').value
         base_frame = self.get_parameter('base_frame').value
-        try:
-            if not self.tf_buffer.can_transform(map_frame, base_frame, rclpy.time.Time()):
-                # self.get_logger().warn(f"Transform from {map_frame} to {base_frame} not available")
+        if len(self.map_frame_vec) >0 and len(self.base_frame_vec) > 0:
+            #尝试找出其中能用的tf
+            for map_frame, base_frame in product(self.map_frame_vec, self.base_frame_vec): #遍历所有frame组合
+                try:
+                    if not self.tf_buffer.can_transform(map_frame, base_frame, rclpy.time.Time()):
+                        # self.get_logger().warn(f"Transform from {map_frame} to {base_frame} not available")
+                        continue
+                    transform = self.tf_buffer.lookup_transform(map_frame, base_frame, rclpy.time.Time())
+                    break  # 找到一个可用的就退出循环
+                except Exception as e:
+                    self.get_logger().error(f"Failed to get transform from {map_frame} to {base_frame}: {e}")
+        else:
+            try:
+                if not self.tf_buffer.can_transform(map_frame, base_frame, rclpy.time.Time()):
+                    # self.get_logger().warn(f"Transform from {map_frame} to {base_frame} not available")
+                    return
+                transform = self.tf_buffer.lookup_transform(map_frame, base_frame, rclpy.time.Time())
+            except Exception as e:
+                self.get_logger().error(f"Failed to get transform: {e}")
                 return
-            transform = self.tf_buffer.lookup_transform(map_frame, base_frame, rclpy.time.Time())
-        except Exception as e:
-            self.get_logger().error(f"Failed to get transform: {e}")
-            return
         # self.tf_overage_buffer.append(transform)
         self.tf_overage_x.append(transform.transform.translation.x)
         self.tf_overage_y.append(transform.transform.translation.y)
