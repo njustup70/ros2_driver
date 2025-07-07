@@ -43,36 +43,57 @@ class bag_play_node(Node):
 
 
     def find_db_and_yaml(self):
-        """递归查找rosbag的db3和yaml文件"""
+        """递归查找，同一文件夹下同时有db3/mcap和yaml"""
         rosbag_root_path = self.get_parameter('rosbag_root_path').value
+
         self.rosbag_path = ''
         self.yaml_path = ''
         self.play_mcap = False
+        self.no_metadata = False
 
         for root, dirs, files in os.walk(rosbag_root_path):
-            db3_files = glob.glob(os.path.join(root, "*.db3"))
-            yaml_files = glob.glob(os.path.join(root, "*.yaml"))
-            mcap_files = glob.glob(os.path.join(root, "*.mcap"))
+            dirs.sort()  # 保证从 a 开始
 
-            if db3_files:
-                self.rosbag_path = db3_files[0]
-            if yaml_files:
-                self.yaml_path = yaml_files[0]
-            if mcap_files:
+            db3_files = glob.glob(os.path.join(root, "*.db3"))
+            mcap_files = glob.glob(os.path.join(root, "*.mcap"))
+            yaml_files = glob.glob(os.path.join(root, "*.yaml"))
+
+            # 如果这个文件夹有 mcap 和 yaml，优先用 mcap
+            if mcap_files and yaml_files:
                 self.rosbag_path = mcap_files[0]
-                # self.play_mcap = True
-            self.yaml_path=''
-            # 如果找到了就退出
-            if self.rosbag_path :
-                print(f'\033[95m 找到db3或mcap文件: {self.rosbag_path} \033[0m')
-                if not self.yaml_path:
-                    self.no_matedata = True
-                    print(f'\033[91m 没有找到yaml文件,将使用默认播放 \033[0m')
+                self.yaml_path = yaml_files[0]
+                print(f'\033[95m 找到mcap文件: {self.rosbag_path} \033[0m')
+                print(f'\033[95m 找到yaml文件: {self.yaml_path} \033[0m')
                 break
 
-        if not self.rosbag_path :
-            raise FileNotFoundError("没有找到db3或mcap")
+            # 否则如果有 db3 和 yaml
+            elif db3_files and yaml_files:
+                self.rosbag_path = db3_files[0]
+                self.yaml_path = yaml_files[0]
+                print(f'\033[95m 找到db3文件: {self.rosbag_path} \033[0m')
+                print(f'\033[95m 找到yaml文件: {self.yaml_path} \033[0m')
+                break
 
+            # 如果有 mcap 但没有 yaml
+            elif mcap_files:
+                self.rosbag_path = mcap_files[0]
+                self.yaml_path = ''
+                self.no_metadata = True
+                print(f'\033[95m 找到mcap文件: {self.rosbag_path} \033[0m')
+                print(f'\033[91m 没有找到yaml文件，将使用默认播放 \033[0m')
+                break
+
+            # 如果有 db3 但没有 yaml
+            elif db3_files:
+                self.rosbag_path = db3_files[0]
+                self.yaml_path = ''
+                self.no_metadata = True
+                print(f'\033[95m 找到db3文件: {self.rosbag_path} \033[0m')
+                print(f'\033[91m 没有找到yaml文件，将使用默认播放 \033[0m')
+                break
+
+        if not self.rosbag_path:
+            raise FileNotFoundError("没有找到 db3 或 mcap 文件")
     def add_topic(self,topic_name:str,topic_type:str=None):
         """添加一个话题到播放列表"""
         if topic_name in self.blacklist:
