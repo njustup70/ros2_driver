@@ -9,12 +9,13 @@ class FilterMcapNode(Node):
         super().__init__('filter_mcap_node')
 
         self.declare_parameter('rosbag_root_path', '/home/Elaina/ros2_driver/bag_play/mcap_filter')
-        self.declare_parameter('whitelist', [])
+        self.declare_parameter('whitelist', ['/livox/lidar/pc'])
         self.declare_parameter('start_time', '')
         self.declare_parameter('end_time', '')
 
         self.rosbag_root_path = self.get_parameter('rosbag_root_path').value
-        self.whitelist = self.get_parameter('whitelist').value
+        # self.whitelist = self.get_parameter('whitelist').
+        self.whitelist = self.get_parameter('whitelist').get_parameter_value().string_array_value
         self.start_time = self.get_parameter('start_time').value
         self.end_time = self.get_parameter('end_time').value
 
@@ -57,16 +58,17 @@ class FilterMcapNode(Node):
             '--include-metadata'
         ]
 
-        if not self.whitelist:
+        if len(self.whitelist) == 0 or (len(self.whitelist) == 1 and self.whitelist[0] == ''):
             self.get_logger().warn('白名单为空，将不过滤话题！')
+            return
         else:
             for topic in self.whitelist:
                 cmd.extend(['-y', topic])
             self.get_logger().info(f'保留话题: {self.whitelist}')
 
-        if self.start_time:
+        if self.start_time!= '':
             cmd.extend(['--start', self.start_time])
-        if self.end_time:
+        if self.end_time!= '':
             cmd.extend(['--end', self.end_time])
 
         self.get_logger().info(f'输出到: {output_path}')
