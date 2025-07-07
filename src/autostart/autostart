@@ -92,37 +92,38 @@ start_ros2_driver() {
     return 1
 }
 
-# 启动ROS2应用
-start_ros2_launch() {
-    log "⏳ 验证ROS2 Driver容器状态..."
+# # 启动ROS2应用
+# start_ros2_launch() {
+#     log "⏳ 验证ROS2 Driver容器状态..."
     
-    # 等待容器完全就绪（检查ros2命令是否可用）
-    local timeout=20
-    while (( timeout-- > 0 )); do
-        if docker exec ros2driver-container fish -c "command -v ros2" >/dev/null 2>&1; then
-            break
-        fi
-        sleep 1
-    done
+#     # 等待容器完全就绪（检查ros2命令是否可用）
+#     local timeout=20
+#     while (( timeout-- > 0 )); do
+#         if docker exec ros2driver-container fish -c "command -v ros2" >/dev/null 2>&1; then
+#             break
+#         fi
+#         sleep 1
+#     done
     
-    if (( timeout <= 0 )); then
-        log "❌ ROS2 Driver容器未就绪，ros2命令不可用"
-        return 1
-    fi
+#     if (( timeout <= 0 )); then
+#         log "❌ ROS2 Driver容器未就绪，ros2命令不可用"
+#         return 1
+#     fi
     
-    log "🚀 执行: ros2 launch rc_bringup didi.launch.py"
-    docker exec -d ros2driver-container fish -c "ros2 launch rc_bringup didi.launch.py >> /tmp/ros2_launch.log 2>&1"
+#     log "🚀 执行: ros2 launch rc_bringup didi.launch.py(放包)"
+#     docker exec -d ros2driver-container fish -c "ros2 bag play ./rosbag_record/1/07-05-11-06 
+#  >> /tmp/ros2_launch.log 2>&1"
     
-    # 验证应用是否启动
-    sleep 3  # 等待进程启动
-    if docker exec ros2driver-container pgrep -f "ros2 launch" >/dev/null; then
-        log "✅ ROS2应用已启动 (PID: $(docker exec ros2driver-container pgrep -f 'ros2 launch'))"
-        log "📋 应用日志位置: /tmp/ros2_launch.log"
-    else
-        log "❌ ROS2应用启动失败，查看日志: docker exec ros2driver-container cat /tmp/ros2_launch.log"
-        return 1
-    fi
-}
+#     # 验证应用是否启动
+#     sleep 3  # 等待进程启动
+#     if docker exec ros2driver-container pgrep -f "ros2 launch" >/dev/null; then
+#         log "✅ ROS2应用已启动 (PID: $(docker exec ros2driver-container pgrep -f 'ros2 launch'))"
+#         log "📋 应用日志位置: /tmp/ros2_launch.log"
+#     else
+#         log "❌ ROS2应用启动失败，查看日志: docker exec ros2driver-container cat /tmp/ros2_launch.log"
+#         return 1
+#     fi
+# }
 # 主启动函数
 start() {
     init_log
