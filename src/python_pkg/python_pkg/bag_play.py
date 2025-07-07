@@ -25,9 +25,10 @@ class bag_play_node(Node):
         self.filteredList=[]#被过滤的话题
         self.rosbag_path=''
         self.yaml_path=''
-        self.find_db_and_yaml()
         self.active_whitelist=True #是否激活白名单
         self.play_mcap=False #是否使用mcap格式
+        self.no_matedata=False #是否没有元数据
+        self.find_db_and_yaml()
         self.reader = rosbag2_py.SequentialReader()
         if self.get_parameter('filter_debug').value:
             self.whitelist=['/tf']
@@ -39,30 +40,39 @@ class bag_play_node(Node):
         else:
             print(f'\033[95m 启动白名单: {self.whitelist} \033[0m')
             print(f'\033[95m 启动类型白名单: {self.typewhitelist} \033[0m')
-    def find_db_and_yaml(self):
-        """查找rosbag的db3和yaml文件"""
-        rosbag_root_path = self.get_parameter('rosbag_root_path').value
-        folders = [d for d in os.listdir(rosbag_root_path) if os.path.isdir(os.path.join(rosbag_root_path, d))]
-        if folders:
-            first_folder = folders[0]  # 取第一个文件夹
-            rosbag_path = os.path.join(rosbag_root_path, first_folder)
 
-            # 查找 .db3 文件
-            db3_files = glob.glob(os.path.join(rosbag_path, "*.db3"))
-            yaml_files = glob.glob(os.path.join(rosbag_path, "*.yaml"))
-            mcap_files = glob.glob(os.path.join(rosbag_path, "*.mcap"))
+
+    def find_db_and_yaml(self):
+        """递归查找rosbag的db3和yaml文件"""
+        rosbag_root_path = self.get_parameter('rosbag_root_path').value
+        self.rosbag_path = ''
+        self.yaml_path = ''
+        self.play_mcap = False
+
+        for root, dirs, files in os.walk(rosbag_root_path):
+            db3_files = glob.glob(os.path.join(root, "*.db3"))
+            yaml_files = glob.glob(os.path.join(root, "*.yaml"))
+            mcap_files = glob.glob(os.path.join(root, "*.mcap"))
+
             if db3_files:
-                self.rosbag_path=db3_files[0]
+                self.rosbag_path = db3_files[0]
             if yaml_files:
-                self.yaml_path=yaml_files[0]
+                self.yaml_path = yaml_files[0]
             if mcap_files:
-                self.rosbag_path=mcap_files[0]
-                self.play_mcap=True
-                
-        else:
-            print("没有找到文件夹")
-        if self.rosbag_path=='' or self.yaml_path=='':
-            FileNotFoundError("没有找到db3或yaml文件")
+                self.rosbag_path = mcap_files[0]
+                # self.play_mcap = True
+            self.yaml_path=''
+            # 如果找到了就退出
+            if self.rosbag_path :
+                print(f'\033[95m 找到db3或mcap文件: {self.rosbag_path} \033[0m')
+                if not self.yaml_path:
+                    self.no_matedata = True
+                    print(f'\033[91m 没有找到yaml文件,将使用默认播放 \033[0m')
+                break
+
+        if not self.rosbag_path :
+            raise FileNotFoundError("没有找到db3或mcap")
+
     def add_topic(self,topic_name:str,topic_type:str=None):
         """添加一个话题到播放列表"""
         if topic_name in self.blacklist:
@@ -83,11 +93,8 @@ class bag_play_node(Node):
                 # self.filteredList.append(topic_name) #增加到被过滤列表
     def yaml_to_playlist(self):
         """从yaml文件中读取话题列表"""
-        
-        if not os.path.exists(self.yaml_path):
-            print(f'\033[91m yaml文件不存在: {self.yaml_path} \033[0m')
-            return
-
+        if self.no_matedata:
+            return #如果没有元数据就不读取yaml文件
         with open(self.yaml_path, 'r') as file:
             data = yaml.safe_load(file)
             # 注意这里先进入 rosbag2_bagfile_information
@@ -105,43 +112,28 @@ class bag_play_node(Node):
         """_summary_
         调用ros2 bag play 播放并remap 被过滤的话题
         """
-        if not self.playlist:
+        if (not self.playlist) and (not self.no_matedata):
             print(f'\033[91m 没有可播放的话题 \033[0m')
             return
         cmd = ['ros2', 'bag', 'play', self.rosbag_path, '--rate', str(self.get_parameter('rate').value)]
         if self.get_parameter('loop').value:
             cmd.append('--loop')
-        # for topic in self.playlist:
-        #     cmd.append('--remap')
-        #     cmd.append(f'{topic}:={topic}')
-        cmd.append('--remap')
+
+        if len(self.filteredList) > 0:
+            # print(f'\033[95m 被过滤的话题: {self.filteredList} \033[0m')
+            cmd.append('--remap')
         for topic in self.filteredList:
             
             cmd.append(f'{topic}:={topic}/filtered')
         print(f'\033[95m 正在播放: {" ".join(cmd)} \033[0m')
         os.system(" ".join(cmd))
-    def mcapplay(self):
-        """_summary_播放mcap文件
-        """
-        self.reader.open(
-        rosbag2_py.StorageOptions(uri=self.rosbag_path, storage_id="mcap"),
-        rosbag2_py.ConverterOptions(
-            input_serialization_format="cdr", output_serialization_format="cdr"
-        ),
-        topic_types = self.reader.get_all_topics_and_types()
-
-    )
 
 def main(args=None):
+
     rclpy.init(args=args)
     node = bag_play_node()
     node.yaml_to_playlist()
-    if (len(node.playlist)  > 0) and node.play_mcap==False :
-        node.playbag()
-    elif (len(node.playlist)  > 0) and node.play_mcap:
-        node.playbag()                #现在逻辑是一样的 
-    else:
-        print(f'\033[91m 没有可播放的话题 \033[0m')
+    node.playbag()
     rclpy.shutdown()
 if __name__ == '__main__':
     main()
