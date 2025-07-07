@@ -29,7 +29,8 @@ RUN . /opt/ros/humble/setup.sh && \
     cd orbbec_ws &&\
     # 构建整个 packages 工作区
     colcon build --event-handlers console_direct+ --cmake-args -DCMAKE_BUILD_TYPE=Release &&\
-    echo "source ~/packages/orbbec_ws/install/setup.bash" >> /home/${USERNAME}/.bashrc
+    echo "source ~/packages/orbbec_ws/install/setup.bash" >> /home/${USERNAME}/.bashrc \
+    && echo 'bass source ~/packages/orbbec_ws/install/setup.bash' >> /home/$USERNAME/.config/fish/config.fish
 #添加realsense驱动
 RUN sudo apt-get update \
     && sudo apt-get install -y ros-humble-realsense2-camera 
@@ -38,7 +39,8 @@ RUN sudo apt-get update \
 COPY  --chown=${USERNAME}:${USER_GID} ./packages/ms200_ros/oradar_ros /home/${USERNAME}/packages/ros_ws/src/oradar_ros 
 COPY --chown=${USERNAME}:${USER_GID} ./packages/nagisa_imu /home/${USERNAME}/packages/ros_ws/src/nagisa_imu 
 RUN . /opt/ros/humble/setup.sh && pip3 install pyserial && cd ./ros_ws && colcon build \
-    && echo 'source ~/packages/ros_ws/install/setup.bash' >> /home/$USERNAME/.bashrc
+    && echo 'source ~/packages/ros_ws/install/setup.bash' >> /home/$USERNAME/.bashrc \
+    && echo 'bass source ~/packages/ros_ws/install/setup.bash' >> /home/$USERNAME/.config/fish/config.fish
 #添加轮趣imu驱动
 COPY --chown=${USERNAME}:${USER_GID} ./packages/wheel_imu /home/${USERNAME}/packages/ros_ws/src/wheel_imu
 RUN . /opt/ros/humble/setup.sh && cd ./ros_ws && colcon build --packages-select  serial \
