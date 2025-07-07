@@ -64,6 +64,7 @@ RUN  echo 'export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH' >> /home/${US
     && echo 'source /opt/ros/humble/setup.bash' >> /home/$USERNAME/.bashrc \ 
     && echo 'source ~/ros2_driver/install/setup.bash' >> /home/$USERNAME/.bashrc \  
     && echo 'bass source ~/ros2_driver/install/setup.bash' >> /home/$USERNAME/.config/fish/config.fish \
+    && echo 'bass source ~/packages/ws_livox/install/setup.bash' >> /home/$USERNAME/.config/fish/config.fish \
     && echo "export ROS_LOCALHOST_ONLY=1" >> /home/$USERNAME/.bashrc \
     && echo "export ROS_LOCALHOST_ONLY=1" >> /home/$USERNAME/.config/fish/config.fish 
 CMD ["/bin/bash"]
