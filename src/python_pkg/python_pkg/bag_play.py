@@ -52,6 +52,8 @@ class bag_play_node(Node):
         self.no_metadata = False
 
         for root, dirs, files in os.walk(rosbag_root_path):
+            if 'mcap_filter' in dirs:
+                dirs.remove('mcap_filter')
             dirs.sort()  # 保证从 a 开始
 
             db3_files = glob.glob(os.path.join(root, "*.db3"))
