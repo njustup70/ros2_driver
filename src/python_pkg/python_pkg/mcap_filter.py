@@ -52,7 +52,7 @@ class FilterMcapNode(Node):
         output_path = os.path.join(output_dir, f"{bag_base}_filtered.mcap")
 
         cmd = [
-            'mcap_x64', 'filter',
+            'mcap', 'filter',
             self.mcap_path,
             '-o', output_path,
             '--include-metadata'
