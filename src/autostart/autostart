@@ -7,12 +7,12 @@
 ### END INIT INFO
 
 # 配置文件路径
-LOG_FILE="/home/nagisa/ros2_driver/src/autostart/startlog.log"
-LOCK_FILE="/home/nagisa/ros2_driver/src/autostart/startlog.lock"
+LOG_FILE="/home/up70/ros2_driver/src/autostart/startlog.log"
+LOCK_FILE="/home/up70/ros2_driver/src/autostart/startlog.lock"
 
 # 项目目录定义
-LIO_SAM_DIR="/home/nagisa/slam_docker/lio_sam/.devcontainer"
-ROS2_DRIVER_DIR="/home/nagisa/ros2_driver/.devcontainer"
+LIO_SAM_DIR="/home/up70/slam_docker/lio_sam/.devcontainer"
+ROS2_DRIVER_DIR="/home/up70/ros2_driver/.devcontainer"
 
 init_log() {
     mkdir -p "$(dirname "$LOG_FILE")"
