@@ -62,6 +62,7 @@ class FilterMcapNode(Node):
             self.get_logger().warn('白名单为空，将不过滤话题！')
             return
         else:
+            # cmd.append('-y')
             for topic in self.whitelist:
                 cmd.extend(['-y', topic])
             self.get_logger().info(f'保留话题: {self.whitelist}')

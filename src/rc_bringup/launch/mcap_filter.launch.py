@@ -11,7 +11,7 @@ def generate_launch_description():
             output='screen',
             parameters=[
                 # {'rosbag_root_path': '/data'},
-                {'whitelist': ['/livox/lidar/pc','livox/imu/normal']},
+                {'whitelist': ['/livox/lidar/pc','/livox/imu/normal']},
                 {'start_time': ''},
                 {'end_time': ''}
             ]
