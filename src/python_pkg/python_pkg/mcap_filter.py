@@ -47,8 +47,8 @@ class FilterMcapNode(Node):
                 if os.path.exists(output_path):
                     self.get_logger().info(f'已处理过，跳过: {output_path}')
                     continue
-
-                self.get_logger().info(f'找到 mcap 文件: {self.mcap_path}')
+                print(f'\033[95m 找到mcap文件: {self.mcap_path} \033[0m')
+                # self.get_logger().info(f'找到 mcap 文件: {self.mcap_path}')
                 self.do_filter(bag_dir, output_path)
                 any_found = True
 
@@ -75,8 +75,9 @@ class FilterMcapNode(Node):
 
             for topic in cleaned_whitelist:
                 cmd.extend(['-y', topic])
-
-            self.get_logger().info(f'保留话题: {cleaned_whitelist}')
+            # print(f'\033[95m 找到mcap文件: {self.mcap_path} \033[0m')
+            print(f'\033[95m 保留话题{cleaned_whitelist} \033[0m')
+            # self.get_logger().info(f'保留话题: {cleaned_whitelist}')
 
         if self.start_time:
             cmd.extend(['--start', self.start_time])
