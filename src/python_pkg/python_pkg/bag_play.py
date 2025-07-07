@@ -27,7 +27,7 @@ class bag_play_node(Node):
         self.yaml_path=''
         self.active_whitelist=True #是否激活白名单
         self.play_mcap=False #是否使用mcap格式
-        self.no_matedata=False #是否没有元数据
+        self.no_metadata=False #是否没有元数据
         self.find_db_and_yaml()
         self.reader = rosbag2_py.SequentialReader()
         if self.get_parameter('filter_debug').value:
@@ -52,6 +52,8 @@ class bag_play_node(Node):
         self.no_metadata = False
 
         for root, dirs, files in os.walk(rosbag_root_path):
+            if 'mcap_filter' in dirs:
+                dirs.remove('mcap_filter')
             dirs.sort()  # 保证从 a 开始
 
             db3_files = glob.glob(os.path.join(root, "*.db3"))
@@ -114,7 +116,7 @@ class bag_play_node(Node):
                 # self.filteredList.append(topic_name) #增加到被过滤列表
     def yaml_to_playlist(self):
         """从yaml文件中读取话题列表"""
-        if self.no_matedata:
+        if self.no_metadata:
             return #如果没有元数据就不读取yaml文件
         with open(self.yaml_path, 'r') as file:
             data = yaml.safe_load(file)
@@ -133,7 +135,7 @@ class bag_play_node(Node):
         """_summary_
         调用ros2 bag play 播放并remap 被过滤的话题
         """
-        if (not self.playlist) and (not self.no_matedata):
+        if (not self.playlist) and (not self.no_metadata):
             print(f'\033[91m 没有可播放的话题 \033[0m')
             return
         cmd = ['ros2', 'bag', 'play', self.rosbag_path, '--rate', str(self.get_parameter('rate').value)]
