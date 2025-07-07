@@ -59,7 +59,7 @@ def generate_launch_description():
         output='screen',
         emulate_tty=True,
         parameters=[
-            {'serial_port': '/dev/serial_ch340',
+            {'serial_port': '/dev/serial_qh',
              'serial_baudrate':230400,
              }
         ]
@@ -88,17 +88,16 @@ def generate_launch_description():
         period=5.0,  # Delay in seconds
         actions=[ros_bag_node]
     )
-    kalman_filter_node=Node(
+    fusion_node=Node(
         package='perception',
-        executable='kalman_without_imu.py',
-        name='kalman_node',
+        executable='fusion.py',
+        name='fusion_node',
         output='screen',
         parameters=[
-            {'imu_topic': '/livox/imu/normal'},
-            {'publish_tf_name': 'base_link'},
-            {'hz': 100},
-            {'map_frame': 'camera_init'},
-            {'base_frame': 'body'}
+            {'lidar_x_bias': 0.132}, #odom到激光雷达的偏移,odom是子坐标系，激光雷达是父坐标系
+            {'lidar_y_bias': -0.329},
+           { 'use_sick': False},  # 使用点云数据
+            {'slam_debug': False},  # 是否开启slam调试
         ])
     xacro_file_path:str= os.path.join(get_package_share_directory('my_tf_tree'),'urdf','dd.urdf.xacro')
     robot_description = Command([
@@ -121,7 +120,7 @@ def generate_launch_description():
         parameters=[{
             'child_frame_id': 'odom_transform',  # 旋转后坐标系
             'frame_id': 'odom',  # 参考坐标系
-            'translation': {'x': 0.2, 'y': 6.5, 'z': 0.0}, 
+            'translation': {'x': 0.39, 'y': 7.643, 'z': 0.0}, 
             'rotation': {'x':0.0, 'y':0.0, 'z':0.0, 'w':1.0}  # 四元数表示的 90 度旋转（绕 Z 轴）
         }],
     )
@@ -158,13 +157,13 @@ def generate_launch_description():
         emulate_tty=True,
     )
     ld.add_action(compose_node)
-    ld.add_action(kalman_filter_node)
+    ld.add_action(fusion_node)
     ld.add_action(mid360_launch)
     ld.add_action(imu_transform_launch)
     ld.add_action(utils_launch)
     ld.add_action(joy_launch)
     ld.add_action(communicate_node)
-    ld.add_action(ms200_launch)
+    # ld.add_action(ms200_launch)
     ld.add_action(ros_bag_action)
     return ld
      

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import rclpy
+from my_tf import MyTf
 from rclpy.node import Node
 from tf2_ros import TransformBroadcaster, TransformListener, Buffer
 from geometry_msgs.msg import TransformStamped,Vector3Stamped
@@ -20,9 +21,10 @@ class fusion_node_t(Node):
         self.declare_parameter('odom_topic','/odom')   #轮式里程计
         self.declare_parameter('sick_topic', '/sick/lidar')  #激光雷达点数据
         self.declare_parameter('lidar_slam_topic', '/lidar_slam/odom')  #激光雷达slam
-        self.declare_parameter('lidar_x_bias',-0.236)  #激光雷达到odom的偏移
-        self.declare_parameter('lidar_y_bias', -0.267) #激光雷达到odom的偏移
+        self.declare_parameter('lidar_x_bias', 0.132)  #激光雷达到odom的偏移
+        self.declare_parameter('lidar_y_bias', -0.329) #激光雷达到odom的偏移
         self.declare_parameter('use_sick', False)  # 是否使用点激光数据
+        self.declare_parameter('slam_debug', True)  # 是否开启slam调试
         self.odom_topic = self.get_parameter('odom_topic').value
         self.sick_topic = self.get_parameter('sick_topic').value
         self.use_sick = self.get_parameter('use_sick').value
@@ -60,7 +62,9 @@ class fusion_node_t(Node):
             self.sick_sub = self.create_subscription(String, self.get_parameter('sick_topic').value, self.sick_callback, 1)
             self.sick_update_timer=self.create_timer(0.01,self.sick_update)
             self.sick_point_pub=self.create_publisher(PointCloud2, '/sick/pointcloud', 1)
-            
+        if self.get_parameter('slam_debug').value:
+            self.odom_frame='odom_wheel_debug'
+            self.publish_tf_name='base_link_debug'
     def slam_tf_callback(self):
         transform=TransformStamped()
         map_frame = self.get_parameter('map_frame').value
@@ -83,8 +87,8 @@ class fusion_node_t(Node):
         x_diff,y_diff,yaw_diff = 0.0,0.0,0.0
         if len(self.tf_overage_x) != 0: # 如果有slam 数据
             # 计算均值
-            x = sum(self.tf_overage_x) / len(self.tf_overage_x)
-            y = sum(self.tf_overage_y) / len(self.tf_overage_y)
+            laser_odom_x = sum(self.tf_overage_x) / len(self.tf_overage_x)
+            laser_odom_y = sum(self.tf_overage_y) / len(self.tf_overage_y)
             w = sum(self.tf_overage_w) / len(self.tf_overage_w)
             z = sum(self.tf_overage_z) / len(self.tf_overage_z)
             #清空缓存
@@ -98,9 +102,24 @@ class fusion_node_t(Node):
             #将激光雷达x y 转化到base_link坐标系车体x y 
             x_bias = self.get_parameter('lidar_x_bias').value
             y_bias = self.get_parameter('lidar_y_bias').value
-            x=x+x_bias*math.cos(yaw) - y_bias*math.sin(yaw)-x_bias #全局的原点要先变
-            y=y+x_bias*math.sin(yaw) + y_bias*math.cos(yaw)-y_bias #全局的原点要先变
             
+            # 激光雷达相对于车体的偏移（假设yaw_bias已知）
+            laser_in_map = MyTf(laser_odom_x, laser_odom_y, yaw)  # 雷达在地图下
+            laser_to_base = MyTf(x_bias, y_bias, 0.0)             # 雷达相对于车体
+
+            # 先把 base_link 的原点 在雷达坐标系下的位置
+            x_b_in_l, y_b_in_l = 0.0, 0.0
+            x_base_in_laser, y_base_in_laser = laser_to_base.inverse_transform(x_b_in_l, y_b_in_l)
+
+            # 再把这个点丢到地图
+            x_base_in_map, y_base_in_map = laser_in_map.transform(x_base_in_laser, y_base_in_laser)
+
+            # 最终 base_link 在地图下的坐标就是它
+
+            # self.tf_publish('map', 'laser', laser_odom_x, laser_odom_y, yaw)  # 发布tf，注意frame顺序和pose
+            # 发布tf，注意frame顺序和pose
+            self.tf_publish('map', 'base', x_base_in_map, y_base_in_map, yaw)
+            x,y=x_base_in_map, y_base_in_map
             # laser-odom的tf
             dyaw= yaw - self.odom_yaw
             if dyaw > math.pi:
@@ -115,7 +134,7 @@ class fusion_node_t(Node):
             yaw_diff=dyaw
             
 
-            self.tf_publish("map","laser_odom",x,y,yaw)      #激光雷达slam的tf 调试用转化到base_link坐标系
+            # self.tf_publish("map","laser_odom",x,y,yaw)      #激光雷达slam的tf 调试用转化到base_link坐标系
         #发布轮式偏移的tf
         
         self.tf_publish("odom_transform", self.odom_frame, x_diff, y_diff, yaw_diff)
