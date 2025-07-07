@@ -53,7 +53,7 @@ USER root
 #增加docker 嵌套支持与usb_cam支持
 RUN apt-get update && apt-get install docker docker-compose ros-humble-usb-cam ros-humble-rosbridge-suite   ros-humble-imu-tools ros-humble-rosbag2 ros-humble-rosbag2-storage-mcap  -y
 USER $USERNAME
-RUN pip install pyzmq crcmod
+RUN pip install pyzmq crcmod pyserial-asyncio    
 USER root
 # #安装foxglove 转化工具
 COPY ./packages/mcap /usr/local/bin
