@@ -131,10 +131,9 @@ start() {
     echo $$ > "${LOCK_FILE}"
     
     clean_containers
-    start_lio_sam || return 1
     start_ros2_driver || return 1
-    start_ros2_launch
-    
+    sleep 10
+    start_lio_sam 
     log "✅ 所有服务已启动完成"
 }
 

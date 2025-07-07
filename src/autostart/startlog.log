@@ -1,272 +1,79 @@
-[2025-07-07 13:49:34] ✖️ Service not running
-[2025-07-07 13:49:38] ✅ Starting service...
-✅ Hello from init.d service! System booted at 2025年 07月 07日 星期一 13:49:38 CST
-[2025-07-07 13:49:41] ✖️ Service not running
-[2025-07-07 14:18:29] 🔒 创建锁文件: 675738 > /home/nagisa/ros2_driver/src/autostart/startlog.lock
-[2025-07-07 14:18:29] 🧹 清理现有容器...
-[2025-07-07 14:18:29] ✅ 容器已成功移除
-[2025-07-07 14:18:29] 🚀 启动LIO-SAM容器...
-[2025-07-07 14:18:29] 📌 LIO-SAM终端PID: 675763
-[2025-07-07 14:18:29] 🚀 启动ROS2 Driver容器...
-[2025-07-07 14:18:29] 📌 ROS2 Driver终端PID: 675774
-[2025-07-07 14:18:29] ⏳ 等待容器启动(10秒)...
-[2025-07-07 14:18:44] 🚀 启动ROS2应用: rc_bringup didi.launch.py
-[2025-07-07 14:18:44] 📌 ROS2应用终端PID: 676074
-[2025-07-07 14:18:44] ✅ 所有服务已启动完成
-[2025-07-07 14:23:55] 🔒 创建锁文件: 681828 > /home/nagisa/ros2_driver/src/autostart/startlog.lock
-[2025-07-07 14:23:55] 🧹 清理现有容器...
-[2025-07-07 14:23:55] ✅ 容器已成功移除
-[2025-07-07 14:23:55] 🚀 启动LIO-SAM容器...
-[2025-07-07 14:23:55] 📌 LIO-SAM终端PID: 681857
-[2025-07-07 14:23:55] 🚀 启动ROS2 Driver容器...
-[2025-07-07 14:23:55] 📌 ROS2 Driver终端PID: 681864
-[2025-07-07 14:23:55] ⏳ 等待容器启动(10秒)...
-[2025-07-07 14:25:13] 🔒 创建锁文件: 683348 > /home/nagisa/ros2_driver/src/autostart/startlog.lock
-[2025-07-07 14:25:13] 🧹 清理现有容器...
-[2025-07-07 14:25:13] ✅ 容器已成功移除
-[2025-07-07 14:25:13] 🚀 启动LIO-SAM容器...
-[2025-07-07 14:25:13] 📌 LIO-SAM终端PID: 683379
-[2025-07-07 14:25:13] 🚀 启动ROS2 Driver容器...
-[2025-07-07 14:25:13] 📌 ROS2 Driver终端PID: 683386
-[2025-07-07 14:25:13] ⏳ 等待容器启动(15秒)...
-[2025-07-07 14:25:28] 🚀 启动ROS2应用: rc_bringup didi.launch.py
-[2025-07-07 14:25:28] 📌 ROS2应用终端PID: 683681
-[2025-07-07 14:25:28] ✅ 所有服务已启动完成
-[2025-07-07 14:28:44] 🔒 创建锁文件: 687703 > /home/nagisa/ros2_driver/src/autostart/startlog.lock
-[2025-07-07 14:28:44] 🧹 清理现有容器...
-[2025-07-07 14:28:44] ✅ 容器已成功移除
-[2025-07-07 14:28:44] 🚀 启动LIO-SAM容器...
-time="2025-07-07T14:28:44+08:00" level=warning msg="/home/nagisa/slam_docker/lio_sam/.devcontainer/docker-compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
-time="2025-07-07T14:28:44+08:00" level=warning msg="Found orphan containers ([voxel_slam_container point_lio_container dio_slam_container]) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
+[2025-07-07 15:38:40] 🔒 创建锁文件: 756 > /home/nagisa/ros2_driver/src/autostart/startlog.lock
+[2025-07-07 15:38:41] 🧹 清理现有容器...
+[2025-07-07 15:38:53] ✅ 容器已成功移除
+[2025-07-07 15:38:53] 🚀 启动LIO-SAM容器...
+time="2025-07-07T15:38:53+08:00" level=warning msg="The \"DISPLAY\" variable is not set. Defaulting to a blank string."
+time="2025-07-07T15:38:53+08:00" level=warning msg="/home/nagisa/slam_docker/lio_sam/.devcontainer/docker-compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2025-07-07T15:38:53+08:00" level=warning msg="Found orphan containers ([voxel_slam_container point_lio_container dio_slam_container]) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
  Container lio_sam_container  Creating
  Container lio_sam_container  Created
  Container lio_sam_container  Starting
  Container lio_sam_container  Started
-[2025-07-07 14:28:44] ✅ LIO-SAM容器已启动
-[2025-07-07 14:28:44] 📌 容器ID: a839ced6c977
-[2025-07-07 14:28:44] 🚀 启动ROS2 Driver容器...
-time="2025-07-07T14:28:44+08:00" level=warning msg="/home/nagisa/ros2_driver/.devcontainer/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
-time="2025-07-07T14:28:44+08:00" level=warning msg="Found orphan containers ([lio_sam_container voxel_slam_container point_lio_container dio_slam_container]) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
+[2025-07-07 15:38:54] ✅ LIO-SAM容器已启动
+[2025-07-07 15:38:54] 📌 容器ID: 0dbe4ea1d35b
+[2025-07-07 15:38:54] 🚀 启动ROS2 Driver容器...
+time="2025-07-07T15:38:54+08:00" level=warning msg="The \"DISPLAY\" variable is not set. Defaulting to a blank string."
+time="2025-07-07T15:38:54+08:00" level=warning msg="/home/nagisa/ros2_driver/.devcontainer/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2025-07-07T15:38:54+08:00" level=warning msg="Found orphan containers ([lio_sam_container voxel_slam_container point_lio_container dio_slam_container]) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
  Container ros2driver-container  Creating
  Container ros2driver-container  Created
  Container ros2driver-container  Starting
  Container ros2driver-container  Started
-[2025-07-07 14:28:45] ✅ ROS2 Driver容器已启动
-[2025-07-07 14:28:45] 📌 容器ID: c8cb93b64493
-[2025-07-07 14:28:45] ⏳ 验证ROS2 Driver容器状态...
-[2025-07-07 14:28:45] 🚀 执行: ros2 launch rc_bringup didi.launch.py
-[2025-07-07 14:28:49] ✅ ROS2应用已启动 (PID: 689209)
-[2025-07-07 14:28:49] 📋 应用日志位置: /tmp/ros2_launch.log
-[2025-07-07 14:28:49] ✅ 所有服务已启动完成
-[2025-07-07 15:06:33] 🔒 创建锁文件: 730024 > /home/nagisa/ros2_driver/src/autostart/startlog.lock
-[2025-07-07 15:06:33] 🧹 清理现有容器...
-[2025-07-07 15:06:33] ✅ 容器已成功移除
-[2025-07-07 15:06:33] 🚀 启动LIO-SAM容器...
-time="2025-07-07T15:06:33+08:00" level=warning msg="/home/nagisa/slam_docker/lio_sam/.devcontainer/docker-compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
-time="2025-07-07T15:06:33+08:00" level=warning msg="Found orphan containers ([voxel_slam_container point_lio_container dio_slam_container]) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
- Container lio_sam_container  Creating
- Container lio_sam_container  Created
- Container lio_sam_container  Starting
- Container lio_sam_container  Started
-[2025-07-07 15:06:34] ✅ LIO-SAM容器已启动
-[2025-07-07 15:06:34] 📌 容器ID: bd2c701e7df1
-[2025-07-07 15:06:34] 🚀 启动ROS2 Driver容器...
-time="2025-07-07T15:06:34+08:00" level=warning msg="/home/nagisa/ros2_driver/.devcontainer/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
-time="2025-07-07T15:06:34+08:00" level=warning msg="Found orphan containers ([lio_sam_container voxel_slam_container point_lio_container dio_slam_container]) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
+[2025-07-07 15:38:55] ✅ ROS2 Driver容器已启动
+[2025-07-07 15:38:55] 📌 容器ID: c7494e17b6df
+[2025-07-07 15:38:55] ⏳ 验证ROS2 Driver容器状态...
+[2025-07-07 15:38:55] 🚀 执行: ros2 launch rc_bringup didi.launch.py(放包)
+[2025-07-07 15:38:59] ✅ ROS2应用已启动 (PID: 3539
+4754
+6211)
+[2025-07-07 15:38:59] 📋 应用日志位置: /tmp/ros2_launch.log
+[2025-07-07 15:38:59] ✅ 所有服务已启动完成
+[2025-07-07 15:47:41] 🛑 停止所有服务...
+[2025-07-07 15:47:41] 🧹 清理现有容器...
+[2025-07-07 15:47:41] ✅ 容器已成功移除
+[2025-07-07 15:47:41] 🔓 移除锁文件
+[2025-07-07 15:47:41] ✅ 所有服务已停止
+[2025-07-07 15:47:44] 🔒 创建锁文件: 15222 > /home/nagisa/ros2_driver/src/autostart/startlog.lock
+[2025-07-07 15:47:44] 🧹 清理现有容器...
+[2025-07-07 15:47:44] ✅ 容器已成功移除
+[2025-07-07 15:47:44] 🚀 启动ROS2 Driver容器...
+time="2025-07-07T15:47:44+08:00" level=warning msg="/home/nagisa/ros2_driver/.devcontainer/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2025-07-07T15:47:44+08:00" level=warning msg="Found orphan containers ([voxel_slam_container point_lio_container dio_slam_container]) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
  Container ros2driver-container  Creating
  Container ros2driver-container  Created
  Container ros2driver-container  Starting
  Container ros2driver-container  Started
-[2025-07-07 15:06:34] ✅ ROS2 Driver容器已启动
-[2025-07-07 15:06:34] 📌 容器ID: feb0c7d28a82
-[2025-07-07 15:06:34] ⏳ 验证ROS2 Driver容器状态...
-[2025-07-07 15:06:35] 🚀 执行: ros2 launch rc_bringup didi.launch.py(放包)
-[2025-07-07 15:06:38] ✅ ROS2应用已启动 (PID: 731503)
-[2025-07-07 15:06:38] 📋 应用日志位置: /tmp/ros2_launch.log
-[2025-07-07 15:06:38] ✅ 所有服务已启动完成
-[2025-07-07 15:10:45] 🔒 创建锁文件: 736283 > /home/nagisa/ros2_driver/src/autostart/startlog.lock
-[2025-07-07 15:10:45] 🧹 清理现有容器...
-[2025-07-07 15:10:45] ✅ 容器已成功移除
-[2025-07-07 15:10:45] 🚀 启动LIO-SAM容器...
-time="2025-07-07T15:10:45+08:00" level=warning msg="/home/nagisa/slam_docker/lio_sam/.devcontainer/docker-compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
-time="2025-07-07T15:10:45+08:00" level=warning msg="Found orphan containers ([voxel_slam_container point_lio_container dio_slam_container]) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
+[2025-07-07 15:47:44] ✅ ROS2 Driver容器已启动
+[2025-07-07 15:47:44] 📌 容器ID: c5596b87f888
+[2025-07-07 15:47:44] 🚀 启动LIO-SAM容器...
+time="2025-07-07T15:47:44+08:00" level=warning msg="/home/nagisa/slam_docker/lio_sam/.devcontainer/docker-compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2025-07-07T15:47:44+08:00" level=warning msg="Found orphan containers ([ros2driver-container voxel_slam_container point_lio_container dio_slam_container]) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
  Container lio_sam_container  Creating
  Container lio_sam_container  Created
  Container lio_sam_container  Starting
  Container lio_sam_container  Started
-[2025-07-07 15:10:46] ✅ LIO-SAM容器已启动
-[2025-07-07 15:10:46] 📌 容器ID: 01ebc008041a
-[2025-07-07 15:11:17] 🔒 创建锁文件: 738071 > /home/nagisa/ros2_driver/src/autostart/startlog.lock
-[2025-07-07 15:11:17] 🧹 清理现有容器...
-[2025-07-07 15:11:18] ✅ 容器已成功移除
-[2025-07-07 15:11:18] 🚀 启动LIO-SAM容器...
-time="2025-07-07T15:11:18+08:00" level=warning msg="/home/nagisa/slam_docker/lio_sam/.devcontainer/docker-compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
-time="2025-07-07T15:11:18+08:00" level=warning msg="Found orphan containers ([voxel_slam_container point_lio_container dio_slam_container]) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
- Container lio_sam_container  Creating
- Container lio_sam_container  Created
- Container lio_sam_container  Starting
- Container lio_sam_container  Started
-[2025-07-07 15:11:18] ✅ LIO-SAM容器已启动
-[2025-07-07 15:11:18] 📌 容器ID: bd713e6cc4c8
-[2025-07-07 15:11:18] ⏳ 验证ROS2 Driver容器状态...
-[2025-07-07 15:11:38] ❌ ROS2 Driver容器未就绪，ros2命令不可用
-[2025-07-07 15:14:15] 🔒 创建锁文件: 742772 > /home/nagisa/ros2_driver/src/autostart/startlog.lock
-[2025-07-07 15:14:15] 🧹 清理现有容器...
-[2025-07-07 15:14:15] ✅ 容器已成功移除
-[2025-07-07 15:14:15] 🚀 启动LIO-SAM容器...
-time="2025-07-07T15:14:15+08:00" level=warning msg="/home/nagisa/slam_docker/lio_sam/.devcontainer/docker-compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
-time="2025-07-07T15:14:15+08:00" level=warning msg="Found orphan containers ([voxel_slam_container point_lio_container dio_slam_container]) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
- Container lio_sam_container  Creating
- Container lio_sam_container  Created
- Container lio_sam_container  Starting
- Container lio_sam_container  Started
-[2025-07-07 15:14:16] ✅ LIO-SAM容器已启动
-[2025-07-07 15:14:16] 📌 容器ID: e8cbe23cb5b9
-[2025-07-07 15:14:16] 🚀 启动ROS2 Driver容器...
-time="2025-07-07T15:14:16+08:00" level=warning msg="/home/nagisa/ros2_driver/.devcontainer/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
-time="2025-07-07T15:14:16+08:00" level=warning msg="Found orphan containers ([lio_sam_container voxel_slam_container point_lio_container dio_slam_container]) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
+[2025-07-07 15:47:45] ✅ LIO-SAM容器已启动
+[2025-07-07 15:47:45] 📌 容器ID: a86a168e6a80
+[2025-07-07 15:47:45] ✅ 所有服务已启动完成
+[2025-07-07 15:49:25] 🔒 创建锁文件: 17702 > /home/nagisa/ros2_driver/src/autostart/startlog.lock
+[2025-07-07 15:49:25] 🧹 清理现有容器...
+[2025-07-07 15:49:25] ✅ 容器已成功移除
+[2025-07-07 15:49:25] 🚀 启动ROS2 Driver容器...
+time="2025-07-07T15:49:25+08:00" level=warning msg="/home/nagisa/ros2_driver/.devcontainer/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2025-07-07T15:49:25+08:00" level=warning msg="Found orphan containers ([voxel_slam_container point_lio_container dio_slam_container]) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
  Container ros2driver-container  Creating
  Container ros2driver-container  Created
  Container ros2driver-container  Starting
  Container ros2driver-container  Started
-[2025-07-07 15:14:16] ✅ ROS2 Driver容器已启动
-[2025-07-07 15:14:16] 📌 容器ID: 5fd52922d342
-[2025-07-07 15:14:16] ⏳ 验证ROS2 Driver容器状态...
-[2025-07-07 15:14:17] 🚀 执行: ros2 launch rc_bringup didi.launch.py(放包)
-[2025-07-07 15:14:20] ✅ ROS2应用已启动 (PID: 744303)
-[2025-07-07 15:14:20] 📋 应用日志位置: /tmp/ros2_launch.log
-[2025-07-07 15:14:20] ✅ 所有服务已启动完成
-[2025-07-07 15:15:55] 🔒 创建锁文件: 746352 > /home/nagisa/ros2_driver/src/autostart/startlog.lock
-[2025-07-07 15:15:55] 🧹 清理现有容器...
-[2025-07-07 15:15:56] ✅ 容器已成功移除
-[2025-07-07 15:15:56] 🚀 启动LIO-SAM容器...
-time="2025-07-07T15:15:56+08:00" level=warning msg="/home/nagisa/slam_docker/lio_sam/.devcontainer/docker-compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
-time="2025-07-07T15:15:56+08:00" level=warning msg="Found orphan containers ([voxel_slam_container point_lio_container dio_slam_container]) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
+[2025-07-07 15:49:25] ✅ ROS2 Driver容器已启动
+[2025-07-07 15:49:25] 📌 容器ID: ffd939478be7
+[2025-07-07 15:49:35] 🚀 启动LIO-SAM容器...
+time="2025-07-07T15:49:35+08:00" level=warning msg="/home/nagisa/slam_docker/lio_sam/.devcontainer/docker-compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2025-07-07T15:49:35+08:00" level=warning msg="Found orphan containers ([ros2driver-container voxel_slam_container point_lio_container dio_slam_container]) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
  Container lio_sam_container  Creating
  Container lio_sam_container  Created
  Container lio_sam_container  Starting
  Container lio_sam_container  Started
-[2025-07-07 15:15:56] ✅ LIO-SAM容器已启动
-[2025-07-07 15:15:56] 📌 容器ID: 1e7641e9ba07
-[2025-07-07 15:15:56] 🚀 启动ROS2 Driver容器...
-time="2025-07-07T15:15:56+08:00" level=warning msg="/home/nagisa/ros2_driver/.devcontainer/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
-time="2025-07-07T15:15:56+08:00" level=warning msg="Found orphan containers ([lio_sam_container voxel_slam_container point_lio_container dio_slam_container]) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
- Container ros2driver-container  Creating
- Container ros2driver-container  Created
- Container ros2driver-container  Starting
- Container ros2driver-container  Started
-[2025-07-07 15:15:57] ✅ ROS2 Driver容器已启动
-[2025-07-07 15:15:57] 📌 容器ID: f73d3c1cb822
-[2025-07-07 15:15:57] ⏳ 验证ROS2 Driver容器状态...
-[2025-07-07 15:15:57] 🚀 执行: ros2 launch rc_bringup didi.launch.py(放包)
-[2025-07-07 15:16:00] ✅ ROS2应用已启动 (PID: 747950)
-[2025-07-07 15:16:00] 📋 应用日志位置: /tmp/ros2_launch.log
-[2025-07-07 15:16:00] ✅ 所有服务已启动完成
-[2025-07-07 15:20:04] 🔒 创建锁文件: 752559 > /home/nagisa/ros2_driver/src/autostart/startlog.lock
-[2025-07-07 15:20:04] 🧹 清理现有容器...
-[2025-07-07 15:20:04] ✅ 容器已成功移除
-[2025-07-07 15:20:04] 🚀 启动LIO-SAM容器...
-time="2025-07-07T15:20:04+08:00" level=warning msg="/home/nagisa/slam_docker/lio_sam/.devcontainer/docker-compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
-time="2025-07-07T15:20:04+08:00" level=warning msg="Found orphan containers ([voxel_slam_container point_lio_container dio_slam_container]) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
- Container lio_sam_container  Creating
- Container lio_sam_container  Created
- Container lio_sam_container  Starting
- Container lio_sam_container  Started
-[2025-07-07 15:20:04] ✅ LIO-SAM容器已启动
-[2025-07-07 15:20:04] 📌 容器ID: aee07eb51d0d
-[2025-07-07 15:20:04] 🚀 启动ROS2 Driver容器...
-time="2025-07-07T15:20:04+08:00" level=warning msg="/home/nagisa/ros2_driver/.devcontainer/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
-time="2025-07-07T15:20:04+08:00" level=warning msg="Found orphan containers ([lio_sam_container voxel_slam_container point_lio_container dio_slam_container]) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
- Container ros2driver-container  Creating
- Container ros2driver-container  Created
- Container ros2driver-container  Starting
- Container ros2driver-container  Started
-[2025-07-07 15:20:05] ✅ ROS2 Driver容器已启动
-[2025-07-07 15:20:05] 📌 容器ID: 3b488e1b9e55
-[2025-07-07 15:20:05] ⏳ 验证ROS2 Driver容器状态...
-[2025-07-07 15:20:05] 🚀 执行: ros2 launch rc_bringup didi.launch.py(放包)
-[2025-07-07 15:20:08] ✅ ROS2应用已启动 (PID: 754111)
-[2025-07-07 15:20:08] 📋 应用日志位置: /tmp/ros2_launch.log
-[2025-07-07 15:20:08] ✅ 所有服务已启动完成
-[2025-07-07 15:32:04] 🔒 创建锁文件: 768840 > /home/nagisa/ros2_driver/src/autostart/startlog.lock
-[2025-07-07 15:32:04] 🧹 清理现有容器...
-[2025-07-07 15:32:04] ✅ 容器已成功移除
-[2025-07-07 15:32:04] 🚀 启动LIO-SAM容器...
-time="2025-07-07T15:32:04+08:00" level=warning msg="/home/nagisa/slam_docker/lio_sam/.devcontainer/docker-compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
-time="2025-07-07T15:32:04+08:00" level=warning msg="Found orphan containers ([voxel_slam_container point_lio_container dio_slam_container]) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
- Container lio_sam_container  Creating
- Container lio_sam_container  Created
- Container lio_sam_container  Starting
- Container lio_sam_container  Started
-[2025-07-07 15:32:04] ✅ LIO-SAM容器已启动
-[2025-07-07 15:32:04] 📌 容器ID: 1c51538d9bc5
-[2025-07-07 15:32:04] 🚀 启动ROS2 Driver容器...
-time="2025-07-07T15:32:04+08:00" level=warning msg="/home/nagisa/ros2_driver/.devcontainer/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
-time="2025-07-07T15:32:04+08:00" level=warning msg="Found orphan containers ([lio_sam_container voxel_slam_container point_lio_container dio_slam_container]) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
- Container ros2driver-container  Creating
- Container ros2driver-container  Created
- Container ros2driver-container  Starting
- Container ros2driver-container  Started
-[2025-07-07 15:32:05] ✅ ROS2 Driver容器已启动
-[2025-07-07 15:32:05] 📌 容器ID: a94eed01ce32
-[2025-07-07 15:32:05] ⏳ 验证ROS2 Driver容器状态...
-[2025-07-07 15:32:05] 🚀 执行: ros2 launch rc_bringup didi.launch.py(放包)
-[2025-07-07 15:32:08] ✅ ROS2应用已启动 (PID: 770312)
-[2025-07-07 15:32:08] 📋 应用日志位置: /tmp/ros2_launch.log
-[2025-07-07 15:32:08] ✅ 所有服务已启动完成
-[2025-07-07 15:32:52] 🔒 创建锁文件: 772190 > /home/nagisa/ros2_driver/src/autostart/startlog.lock
-[2025-07-07 15:32:52] 🧹 清理现有容器...
-[2025-07-07 15:32:52] ✅ 容器已成功移除
-[2025-07-07 15:32:52] 🚀 启动LIO-SAM容器...
-time="2025-07-07T15:32:52+08:00" level=warning msg="/home/nagisa/slam_docker/lio_sam/.devcontainer/docker-compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
-time="2025-07-07T15:32:52+08:00" level=warning msg="Found orphan containers ([voxel_slam_container point_lio_container dio_slam_container]) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
- Container lio_sam_container  Creating
- Container lio_sam_container  Created
- Container lio_sam_container  Starting
- Container lio_sam_container  Started
-[2025-07-07 15:32:53] ✅ LIO-SAM容器已启动
-[2025-07-07 15:32:53] 📌 容器ID: 7f5c9d8ec4e3
-[2025-07-07 15:32:53] 🚀 启动ROS2 Driver容器...
-time="2025-07-07T15:32:53+08:00" level=warning msg="/home/nagisa/ros2_driver/.devcontainer/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
-time="2025-07-07T15:32:53+08:00" level=warning msg="Found orphan containers ([lio_sam_container voxel_slam_container point_lio_container dio_slam_container]) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
- Container ros2driver-container  Creating
- Container ros2driver-container  Created
- Container ros2driver-container  Starting
- Container ros2driver-container  Started
-[2025-07-07 15:32:53] ✅ ROS2 Driver容器已启动
-[2025-07-07 15:32:53] 📌 容器ID: d0667c8a3c93
-[2025-07-07 15:32:53] ⏳ 验证ROS2 Driver容器状态...
-[2025-07-07 15:32:54] 🚀 执行: ros2 launch rc_bringup didi.launch.py(放包)
-[2025-07-07 15:32:57] ✅ ROS2应用已启动 (PID: 772619
-773762
-773995)
-[2025-07-07 15:32:57] 📋 应用日志位置: /tmp/ros2_launch.log
-[2025-07-07 15:32:57] ✅ 所有服务已启动完成
-[2025-07-07 15:33:09] 🔒 创建锁文件: 774374 > /home/nagisa/ros2_driver/src/autostart/startlog.lock
-[2025-07-07 15:33:09] 🧹 清理现有容器...
-[2025-07-07 15:33:09] ✅ 容器已成功移除
-[2025-07-07 15:33:09] 🚀 启动LIO-SAM容器...
-time="2025-07-07T15:33:09+08:00" level=warning msg="/home/nagisa/slam_docker/lio_sam/.devcontainer/docker-compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
-time="2025-07-07T15:33:09+08:00" level=warning msg="Found orphan containers ([voxel_slam_container point_lio_container dio_slam_container]) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
- Container lio_sam_container  Creating
- Container lio_sam_container  Created
- Container lio_sam_container  Starting
- Container lio_sam_container  Started
-[2025-07-07 15:33:09] ✅ LIO-SAM容器已启动
-[2025-07-07 15:33:09] 📌 容器ID: 40b1b27fbcd4
-[2025-07-07 15:33:09] 🚀 启动ROS2 Driver容器...
-time="2025-07-07T15:33:10+08:00" level=warning msg="/home/nagisa/ros2_driver/.devcontainer/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
-time="2025-07-07T15:33:10+08:00" level=warning msg="Found orphan containers ([lio_sam_container voxel_slam_container point_lio_container dio_slam_container]) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
- Container ros2driver-container  Creating
- Container ros2driver-container  Created
- Container ros2driver-container  Starting
- Container ros2driver-container  Started
-[2025-07-07 15:33:10] ✅ ROS2 Driver容器已启动
-[2025-07-07 15:33:10] 📌 容器ID: 49042aaf18f3
-[2025-07-07 15:33:10] ⏳ 验证ROS2 Driver容器状态...
-[2025-07-07 15:33:10] 🚀 执行: ros2 launch rc_bringup didi.launch.py(放包)
-[2025-07-07 15:33:14] ✅ ROS2应用已启动 (PID: 774735
-775878
-776117)
-[2025-07-07 15:33:14] 📋 应用日志位置: /tmp/ros2_launch.log
-[2025-07-07 15:33:14] ✅ 所有服务已启动完成
+[2025-07-07 15:49:36] ✅ LIO-SAM容器已启动
+[2025-07-07 15:49:36] 📌 容器ID: 5df47cef9f58
+[2025-07-07 15:49:36] ✅ 所有服务已启动完成
