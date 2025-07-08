@@ -3,10 +3,10 @@ import docker,subprocess,json
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
-class fuck_slam_t(Node):
+class FuckSlam(Node):
     def __init__(self):
         super().__init__('fuck_slam')
-        self.declare_parameter('docker_name','fastlio2_container')
+        self.declare_parameter('docker_name','voxel_slam_container')
         self.docker_name=self.get_parameter('docker_name').get_parameter_value().string_value
         self.robot_state_sub=self.create_subscription(String,'robot_state',self.robot_service,1)
         try:
@@ -48,9 +48,10 @@ class fuck_slam_t(Node):
                 except subprocess.CalledProcessError as e:
                     print(e.output.decode())
                 self.get_logger().info("SLAM重置成功")
+                
 def main(args=None):
     rclpy.init(args=args)
-    node=fuck_slam_t()
+    node=FuckSlam()
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:

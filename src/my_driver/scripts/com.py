@@ -18,6 +18,8 @@ import struct
 from tf2_ros import TransformListener,Buffer
 from std_msgs.msg import String
 from sick_com import SickHandler
+from fuck_slam import FuckSlam
+
 class Communicate_t(Node):
     def __init__(self):
         super().__init__('communicate_t')
@@ -139,6 +141,13 @@ class Communicate_t(Node):
         if checksum == databag[-1] and checksum == databag[0]: 
             self.sick_handler.handle_data(data)  # 处理sick数据
             # 校验通过,表示数据帧没有损坏
+            if data[1] == '0x40':
+                # 校验数据类型，0x40表示fuck_slam的值需更改
+                rclpy.init(args=args)
+                node=FuckSlam()
+                rclpy.spin(node)
+                print("Reset Slam_docker !!!")
+
             if data[1] == '0x34':
                 # 校验数据类型,0x34表示类型为射击参数
                 logger = DataSimulator(port='/dev/serial_ch340',baudrate=230400)
