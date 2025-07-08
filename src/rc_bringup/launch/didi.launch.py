@@ -94,8 +94,8 @@ def generate_launch_description():
         name='fusion_node',
         output='screen',
         parameters=[
-            {'lidar_x_bias': 0.132}, #odom到激光雷达的偏移,odom是子坐标系，激光雷达是父坐标系
-            {'lidar_y_bias': -0.329},
+            {'lidar_x_bias': 0.13255}, #odom到激光雷达的偏移,odom是子坐标系，激光雷达是父坐标系
+            {'lidar_y_bias': -0.3288},
            { 'use_sick': False},  # 使用点云数据
             {'slam_debug': False},  # 是否开启slam调试
         ])
