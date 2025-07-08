@@ -17,7 +17,7 @@ def generate_launch_description():
     ld=LaunchDescription()
     ld.add_action(DeclareLaunchArgument('use_extern_imu',default_value='false',description='Start extern imu node if use is True'))
     ld.add_action(DeclareLaunchArgument('use_imu_transform',default_value='true',description='Start imu transform node if use is True'))
-    ld.add_action(DeclareLaunchArgument('record_lidar',default_value='false',description='Record lidar data if use is True'))
+    ld.add_action(DeclareLaunchArgument('record_lidar',default_value='true',description='Record lidar data if use is True'))
     ld.add_action(DeclareLaunchArgument('record_imu',default_value='true',description='Record imu data if use is True'))
     ld.add_action(DeclareLaunchArgument('record_images',default_value='false',description='Record images if use is True'))
     ld.add_action(DeclareLaunchArgument('record_nav',default_value='true',description='Record nav data if use is True'))

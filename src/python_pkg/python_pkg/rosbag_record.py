@@ -128,7 +128,7 @@ class SmartBagRecorder(Node):
             'geometry_msgs/msg/PoseStamped',
             'tf2_msgs/msg/TFMessage',
             'sensor_msgs/msg/Imu',
-            # 'sensor_msgs/msg/PointCloud2',
+            'sensor_msgs/msg/PointCloud2',
             'sensor_msgs/msg/LaserScan',
             'geometry_msgs/msg/Vector3Stamped',
             'std_msgs/msg/String',
