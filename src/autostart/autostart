@@ -15,11 +15,36 @@ LIO_SAM_DIR="/home/up70/slam_docker/lio_sam/.devcontainer"
 ROS2_DRIVER_DIR="/home/up70/ros2_driver/.devcontainer"
 
 init_log() {
-    mkdir -p "$(dirname "$LOG_FILE")"
-    touch "$LOG_FILE"
-    # 使用当前用户（推荐）
-    chown $(id -u):$(id -g) "$LOG_FILE"
-    chmod 644 "$LOG_FILE"
+    local log_dir
+    log_dir=$(dirname "$LOG_FILE")
+    
+    # 确保日志目录存在并设置权限（所有用户可读写执行）[1,4](@ref)
+    if [ ! -d "$log_dir" ]; then
+        mkdir -p "$log_dir"
+        log "📁 创建目录: $log_dir"
+    fi
+    chmod 777 "$log_dir"
+    
+    # 处理日志文件（存在则更新权限，不存在则创建）[2,6](@ref)
+    if [ ! -f "$LOG_FILE" ]; then
+        touch "$LOG_FILE"
+        log "📝 创建日志文件: $LOG_FILE"
+    fi
+    chmod 666 "$LOG_FILE"
+    
+    # 处理锁文件（存在则更新权限，不存在则创建）[2,7](@ref)
+    if [ ! -f "$LOCK_FILE" ]; then
+        touch "$LOCK_FILE"
+        log "🔒 创建锁文件: $LOCK_FILE"
+    fi
+    chmod 666 "$LOCK_FILE"
+    
+    # 设置脚本自身权限[6](@ref)
+    local script_path
+    script_path=$(realpath "$0")
+    chmod 755 "$script_path"
+    
+    log "✅ 权限已设置：目录($log_dir)=777, 文件($LOG_FILE,$LOCK_FILE)=666"
 }
 
 # 日志记录函数
@@ -136,6 +161,7 @@ start() {
     start_lio_sam 
     log "✅ 所有服务已启动完成"
 }
+
 
 # 停止服务
 stop() {
