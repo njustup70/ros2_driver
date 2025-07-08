@@ -13,3 +13,5 @@ metadata.yaml
 *.cpy
 *.zip
 *.mcap
+*.log
+*.lock
