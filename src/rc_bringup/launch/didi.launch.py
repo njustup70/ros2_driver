@@ -120,7 +120,7 @@ def generate_launch_description():
         parameters=[{
             'child_frame_id': 'odom_transform',  # 旋转后坐标系
             'frame_id': 'odom',  # 参考坐标系
-            'translation': {'x': 0.39, 'y': 7.643, 'z': 0.0}, 
+            'translation': {'x': 0.39+0.132, 'y': 7.643-0.329, 'z': 0.0}, 
             'rotation': {'x':0.0, 'y':0.0, 'z':0.0, 'w':1.0}  # 四元数表示的 90 度旋转（绕 Z 轴）
         }],
     )
