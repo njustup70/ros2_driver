@@ -26,4 +26,4 @@ services:
     user: "Elaina"
     # runtime: "nvidia"
     working_dir: "/home/Elaina/ros2_driver" # 指定默认工作目录
-    entrypoint: [ "/bin/bash", "-i", "-c", " source ~/.bashrc && ros2 launch rc_bringup didi.launch.py "]
+    # entrypoint: [ "/bin/bash", "-i", "-c", " source ~/.bashrc && ros2 launch rc_bringup didi.launch.py "]

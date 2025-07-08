@@ -15,36 +15,11 @@ LIO_SAM_DIR="/home/up70/slam_docker/lio_sam/.devcontainer"
 ROS2_DRIVER_DIR="/home/up70/ros2_driver/.devcontainer"
 
 init_log() {
-    local log_dir
-    log_dir=$(dirname "$LOG_FILE")
-    
-    # 确保日志目录存在并设置权限（所有用户可读写执行）[1,4](@ref)
-    if [ ! -d "$log_dir" ]; then
-        mkdir -p "$log_dir"
-        log "📁 创建目录: $log_dir"
-    fi
-    chmod 777 "$log_dir"
-    
-    # 处理日志文件（存在则更新权限，不存在则创建）[2,6](@ref)
-    if [ ! -f "$LOG_FILE" ]; then
-        touch "$LOG_FILE"
-        log "📝 创建日志文件: $LOG_FILE"
-    fi
-    chmod 666 "$LOG_FILE"
-    
-    # 处理锁文件（存在则更新权限，不存在则创建）[2,7](@ref)
-    if [ ! -f "$LOCK_FILE" ]; then
-        touch "$LOCK_FILE"
-        log "🔒 创建锁文件: $LOCK_FILE"
-    fi
-    chmod 666 "$LOCK_FILE"
-    
-    # 设置脚本自身权限[6](@ref)
-    local script_path
-    script_path=$(realpath "$0")
-    chmod 755 "$script_path"
-    
-    log "✅ 权限已设置：目录($log_dir)=777, 文件($LOG_FILE,$LOCK_FILE)=666"
+    mkdir -p "$(dirname "$LOG_FILE")"
+    touch "$LOG_FILE"
+    # 使用当前用户（推荐）
+    chown $(id -u):$(id -g) "$LOG_FILE"
+    chmod 644 "$LOG_FILE"
 }
 
 # 日志记录函数
@@ -117,39 +92,38 @@ start_ros2_driver() {
     return 1
 }
 
-# # 启动ROS2应用
-# start_ros2_launch() {
-#     log "⏳ 验证ROS2 Driver容器状态..."
+# 启动ROS2应用
+start_ros2_launch() {
+    log "⏳ 验证ROS2 Driver容器状态..."
     
-#     # 等待容器完全就绪（检查ros2命令是否可用）
-#     local timeout=20
-#     while (( timeout-- > 0 )); do
-#         if docker exec ros2driver-container fish -c "command -v ros2" >/dev/null 2>&1; then
-#             break
-#         fi
-#         sleep 1
-#     done
+    # 等待容器完全就绪（检查ros2命令是否可用）
+    local timeout=20
+    while (( timeout-- > 0 )); do
+        if docker exec ros2driver-container fish -c "command -v ros2" >/dev/null 2>&1; then
+            break
+        fi
+        sleep 1
+    done
     
-#     if (( timeout <= 0 )); then
-#         log "❌ ROS2 Driver容器未就绪，ros2命令不可用"
-#         return 1
-#     fi
-    
-#     log "🚀 执行: ros2 launch rc_bringup didi.launch.py(放包)"
-#     docker exec -d ros2driver-container fish -c "ros2 bag play ./rosbag_record/1/07-05-11-06 
-#  >> /tmp/ros2_launch.log 2>&1"
-    
-#     # 验证应用是否启动
-#     sleep 3  # 等待进程启动
-#     if docker exec ros2driver-container pgrep -f "ros2 launch" >/dev/null; then
-#         log "✅ ROS2应用已启动 (PID: $(docker exec ros2driver-container pgrep -f 'ros2 launch'))"
-#         log "📋 应用日志位置: /tmp/ros2_launch.log"
-#     else
-#         log "❌ ROS2应用启动失败，查看日志: docker exec ros2driver-container cat /tmp/ros2_launch.log"
-#         return 1
-#     fi
-# }
-# 主启动函数
+    if (( timeout <= 0 )); then
+        log "❌ ROS2 Driver容器未就绪，ros2命令不可用"
+        return 1
+    fi
+
+    log "🚀 执行: ros2 launch rc_bringup didi.launch.py"
+    docker exec -d ros2driver-container fish -c "ros2 launch rc_bringup didi.launch.py > /tmp/ros2_launch.log 2>&1"
+        
+    # 验证应用是否启动
+    sleep 3  # 等待进程启动
+    if docker exec ros2driver-container pgrep -f "ros2 launch" >/dev/null; then
+        log "✅ ROS2应用已启动 (PID: $(docker exec ros2driver-container pgrep -f 'ros2 launch'))"
+        log "📋 应用日志位置: /tmp/ros2_launch.log"
+    else
+        log "❌ ROS2应用启动失败，查看日志: docker exec ros2driver-container cat /tmp/ros2_launch.log"
+        return 1
+    fi
+}
+
 start() {
     init_log
     log "🔒 创建锁文件: $$ > ${LOCK_FILE}"
@@ -157,11 +131,12 @@ start() {
     
     clean_containers
     start_ros2_driver || return 1
-    sleep 10
+    sleep 3 
+    start_ros2_launch || return 1
+    sleep 6
     start_lio_sam 
     log "✅ 所有服务已启动完成"
 }
-
 
 # 停止服务
 stop() {
