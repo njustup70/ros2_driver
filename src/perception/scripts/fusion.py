@@ -50,6 +50,7 @@ class fusion_node_t(Node):
         self.tf_overage_y = []
         self.tf_overage_w=[]
         self.tf_overage_z=[]
+        self.tf_overage_yaw=np.array([], dtype=np.float32)  # 用于存储yaw的均值滤波
         #轮式里程计相关
         self.odom_x=0.0
         self.odom_y=0.0
@@ -99,6 +100,8 @@ class fusion_node_t(Node):
         self.tf_overage_y.append(transform.transform.translation.y)
         self.tf_overage_w.append(transform.transform.rotation.w)
         self.tf_overage_z.append(transform.transform.rotation.z)
+        yaw= 2 * math.atan2(transform.transform.rotation.z, transform.transform.rotation.w)
+        self.tf_overage_yaw = np.append(self.tf_overage_yaw, yaw)
     def fusion_callback(self):
         #将tf_overage_x,y,w,z进行均值滤波
         x_diff,y_diff,yaw_diff = 0.0,0.0,0.0
@@ -108,14 +111,20 @@ class fusion_node_t(Node):
             laser_odom_y = sum(self.tf_overage_y) / len(self.tf_overage_y)
             w = sum(self.tf_overage_w) / len(self.tf_overage_w)
             z = sum(self.tf_overage_z) / len(self.tf_overage_z)
+            sin_sum=np.sum(np.sin(self.tf_overage_yaw))
+            cos_sum=np.sum(np.cos(self.tf_overage_yaw))
+            mean_yaw = math.atan2(sin_sum, cos_sum)  # 计算均值yaw
+            
             #清空缓存
             self.tf_overage_x.clear()
             self.tf_overage_y.clear()
             self.tf_overage_w.clear()
             self.tf_overage_z.clear()
+            self.tf_overage_yaw = np.array([], dtype=np.float32)  # 清空yaw缓存
             #算出x,y,w,z与轮式里程计的偏差
             #从w z 算出yaw
-            yaw = 2*math.atan2(z, w)
+            # yaw = 2*math.atan2(z, w)
+            yaw = mean_yaw  # 使用均值yaw
             #将激光雷达x y 转化到base_link坐标系车体x y 
             x_bias = self.get_parameter('lidar_x_bias').value
             y_bias = self.get_parameter('lidar_y_bias').value
