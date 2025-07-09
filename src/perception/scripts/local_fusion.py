@@ -26,7 +26,7 @@ class fusion_node_t(Node):
         self.declare_parameter('slam_debug', True)  # 是否开启slam调试
         self.declare_parameter('base_link_to_map',[0.39,-0.357,0.0]) #base_link到map 左下角的偏移  右手系
         self.declare_parameter('base_to_laser', [-0.13255, 0.3288, 0.0])  # 激光雷达到base_link的偏移 右手系
-        self.declare_parameter('loc_to_map',[0.0,0.0,0.00875776])
+        self.declare_parameter('loc_to_map',[0.0,0.0,-0.00875776])
         self.laser_frame= self.get_parameter('laser_frame').value  #激光初始点下的激光雷达坐标
         self.odom_topic = self.get_parameter('odom_topic').value
         self.odom_frame = self.get_parameter('odom_frame').value #轮式里程计坐标
