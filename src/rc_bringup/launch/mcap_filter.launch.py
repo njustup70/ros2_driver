@@ -12,7 +12,7 @@ def generate_launch_description():
             emulate_tty=True,
             parameters=[
                 # {'rosbag_root_path': '/data'},
-                {'whitelist': ['/livox/lidar/pc','/livox/imu/normal','/odom']},
+                {'whitelist': ['/livox/lidar/pc','/livox/imu/normal','/odom','livox/imu']},
                 {'start_time': ''},
                 {'end_time': ''}
             ]
