@@ -257,7 +257,7 @@ class fusion_node_t(Node):
             print(f"\033[92m 地图编号改为{self.map_num} \033[0m")
     import math
 
-    def transform_left_lower_to_right_upper(x, y, yaw, dx, dy, dyaw):
+    def transform_left_lower_to_right_upper(sefl,x, y, yaw, dx, dy, dyaw):
         # 先旋转
         x_rot = math.cos(dyaw) * x - math.sin(dyaw) * y
         y_rot = math.sin(dyaw) * x + math.cos(dyaw) * y
