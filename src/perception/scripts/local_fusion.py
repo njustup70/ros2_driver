@@ -2,7 +2,7 @@
 import rclpy
 from my_tf import MyTf
 from rclpy.node import Node
-from tf2_ros import TransformBroadcaster, TransformListener, Buffer
+from tf2_ros import TransformBroadcaster, TransformListener, Buffer,StaticTransformBroadcaster
 from geometry_msgs.msg import TransformStamped,Vector3Stamped
 import json,os,math,numpy as np
 import rclpy.time
@@ -13,6 +13,7 @@ class fusion_node_t(Node):
     def __init__(self):
         super().__init__('fusion_node')
         self.declare_parameter('odom_frame','odom_wheel')  #轮式里程计坐标
+        self.declare_parameter('base_frame', 'laser_base_link')  #激光雷达坐标
         self.declare_parameter('publish_tf_name', 'base_link')
         self.declare_parameter('fusion_hz', 10)    #修正频率
         self.declare_parameter('map_frame_vec',['camera_init']) # 被监听的tf地图坐标 
@@ -20,23 +21,26 @@ class fusion_node_t(Node):
         self.declare_parameter('slam_hz', 200)              # 被监听的tf频率
         self.declare_parameter('odom_topic','/odom')   #轮式里程计
         self.declare_parameter('slam_debug', True)  # 是否开启slam调试
-        self.declare_parameter('base_link_to_map',[0.39,0.357,0.0]) #base_link到map 左下角的偏移
-        self.declare_parameter('lidar_to_base', [0.13255, -0.3288, 0.0])  # 激光雷达到base_link的偏移
+        self.declare_parameter('base_link_to_map',[0.39,-0.357,0.0]) #base_link到map 左下角的偏移  右手系
+        self.declare_parameter('lidar_to_base', [0.13255, -0.3288, 0.0])  # 激光雷达到base_link的偏移 右手系
         self.declare_parameter('loc_to_map',[0,0,0])
         self.odom_topic = self.get_parameter('odom_topic').value
-        self.publish_tf_name = self.get_parameter('publish_tf_name').value
+        self.odom_frame = self.get_parameter('odom_frame').value #轮式里程计坐标
+        self.base_frame = self.get_parameter('base_frame').value #发布的base_link坐标
+        self.laser_base_frame = self.get_parameter('laser_base_frame').value  #激光雷达坐标
         self.fusion_hz = self.get_parameter('fusion_hz').value
         # self.map_frame = self.get_parameter('map_frame')
         self.map_frame_vec = self.get_parameter('map_frame_vec').value  #被监听的tf地图坐标
         self.base_frame_vec = self.get_parameter('base_frame_vec').value  #被监听
         # self.base_frame = self.get_parameter('base_frame') 
-        self.odom_frame = self.get_parameter('odom_frame').value #轮式里程计的坐标系
         self.tf_hz = self.get_parameter('slam_hz').value
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
         self.tf_broadcaster = TransformBroadcaster(self)
+        self.static_tf_broadcaster = StaticTransformBroadcaster(self)
         self.timer = self.create_timer(1.0/self.tf_hz,self.slam_tf_callback)
         self.fusion_timer = self.create_timer(1.0/self.fusion_hz, self.fusion_callback)
+        self.tf_publish_timer = self.create_timer(0.5, self.tf_manage)
         self.odom_sub=self.create_subscription(Vector3Stamped, self.odom_topic, self.odom_callback, 10)
         #创建均值滤波器
         self.tf_overage_x = []
@@ -53,7 +57,8 @@ class fusion_node_t(Node):
         self.map_odom_yaw=0.0
         if self.get_parameter('slam_debug').value:
             self.odom_frame='odom_wheel_debug'
-            self.publish_tf_name='base_link_debug'
+            self.base_frame='base_link_debug'
+            self.laser_base_frame='laser_base_link_debug'
     def slam_tf_callback(self):
         transform=TransformStamped()
         if len(self.map_frame_vec) >0 and len(self.base_frame_vec) > 0:
@@ -106,22 +111,19 @@ class fusion_node_t(Node):
             #从w z 算出yaw
             # yaw = 2*math.atan2(z, w)
             yaw = mean_yaw  # 使用均值yaw
-            #将激光雷达x y 转化到base_link坐标系车体x y 
-            
+            #将激光雷达发布
+            self.tf_publish('base_init', self.laser_base_frame, laser_odom_x, laser_odom_y, yaw)
             # 激光雷达相对于车体的偏移（假设yaw_bias已知）
-            laser_in_map = MyTf(laser_odom_x, laser_odom_y, yaw)  # 雷达在地图下
-            laser_to_base = MyTf(0.0, 0.0, 0.0)             # 雷达相对于车体
-
-            # 先把 base_link 的原点 在雷达坐标系下的位置
-            x_b_in_l, y_b_in_l = 0.0, 0.0
-            x_base_in_laser, y_base_in_laser = laser_to_base.inverse_transform(x_b_in_l, y_b_in_l)
-
-            # 再把这个点丢到地图
-            x_base_in_map, y_base_in_map = laser_in_map.transform(x_base_in_laser, y_base_in_laser)
-
-            x,y=x_base_in_map, y_base_in_map
+            #获得base_link的原点在地图下的坐标
+            base_link_tf= self.tf_buffer.lookup_transform('base_init', self.base_frame, rclpy.time.Time())
+            x_base_slam = base_link_tf.transform.translation.x
+            y_base_slam = base_link_tf.transform.translation.y
+            w= base_link_tf.transform.rotation.w
+            z= base_link_tf.transform.rotation.z
+            yaw_base_slam= 2 * math.atan2(z, w)  # 计算yaw
+            # self.odom_yaw = yaw
             # laser-odom的tf
-            dyaw= yaw - self.odom_yaw
+            dyaw= yaw_base_slam - self.odom_yaw
             if dyaw > math.pi:
                 dyaw -= 2 * math.pi
             elif dyaw < -math.pi:
@@ -129,22 +131,22 @@ class fusion_node_t(Node):
 
 
             # 平移部分
-            x_diff=x-(self.odom_x*math.cos(dyaw)-self.odom_y*math.sin(dyaw))
-            y_diff=y-(self.odom_x*math.sin(dyaw)+self.odom_y*math.cos(dyaw))
+            x_diff=x_base_slam-(self.odom_x*math.cos(dyaw)-self.odom_y*math.sin(dyaw))
+            y_diff=yaw_base_slam-(self.odom_x*math.sin(dyaw)+self.odom_y*math.cos(dyaw))
             yaw_diff=dyaw
             
 
             # self.tf_publish("map","laser_odom",x,y,yaw)      #激光雷达slam的tf 调试用转化到base_link坐标系
         #发布轮式偏移的tf
         
-        self.tf_publish("odom_transform", self.odom_frame, x_diff, y_diff, yaw_diff)
+        self.tf_publish('base_init', self.odom_frame, x_diff, y_diff, yaw_diff) #距离上电原点的偏移
         if self.odom_x == 0.0 and self.odom_y == 0.0 and self.odom_yaw == 0.0:
-            self.tf_publish(self.odom_frame, self.publish_tf_name, 0.0, 0.0, 0.0)
+            self.tf_publish(self.odom_frame, self.base_frame, 0.0, 0.0, 0.0)
     def odom_callback(self, msg:Vector3Stamped):
         self.odom_x = msg.vector.x
         self.odom_y = -msg.vector.y
         self.odom_yaw = msg.vector.z
-        self.tf_publish(self.odom_frame, self.publish_tf_name, self.odom_x, self.odom_y, self.odom_yaw)
+        self.tf_publish(self.odom_frame, self.base_frame, self.odom_x, self.odom_y, self.odom_yaw)
         #发布轮式里程计的tf
     def sick_callback(self, msg: String):
         """处理激光雷达数据"""
@@ -172,7 +174,38 @@ class fusion_node_t(Node):
         transform.transform.rotation.y = 0.0
         transform.transform.rotation.z = z
         self.tf_broadcaster.sendTransform(transform)
-
+    def tf_static_publish(self, base_frame: str, child_frame: str, x: float, y: float, yaw: float):
+        """发布静态tf"""
+        transform = TransformStamped()
+        w = math.cos(yaw / 2)
+        z = math.sin(yaw / 2)
+        transform.header.stamp = self.get_clock().now().to_msg()
+        transform.header.frame_id = base_frame
+        transform.child_frame_id = child_frame
+        transform.transform.translation.x = x
+        transform.transform.translation.y = y
+        transform.transform.translation.z = z
+        transform.transform.rotation.w = w
+        transform.transform.rotation.x = 0.0
+        transform.transform.rotation.y = 0.0
+        transform.transform.rotation.z = 0.0
+        self.static_tf_broadcaster.sendTransform(transform)
+    def tf_manage(self):
+        """初始化静态tf"""
+        self.tf_publish(
+            'odom', 'odom_transform',0.0,8.0,0.0
+        ) # 从地图右下角到地图左下角
+        laser_to_base = self.get_parameter('lidar_to_base').value
+        self.tf_publish(
+            'base_link','laser_base_link',
+            laser_to_base[0], laser_to_base[1],laser_to_base[2] 
+        )# 激光雷达到base_link的偏移
+        base_link_to_map = self.get_parameter('base_link_to_map').value
+        self.tf_publish(
+            'odom_transform', 'base_init',
+            base_link_to_map[0], base_link_to_map[1], base_link_to_map[2]
+        )
+        # 初始化全场的tf
 def main(args=None):
     from rclpy.executors import MultiThreadedExecutor
 
