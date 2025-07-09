@@ -142,10 +142,12 @@ class Communicate_t(Node):
             self.sick_handler.handle_data(data)  # 处理sick数据
             # 校验通过,表示数据帧没有损坏
             if data[1] == '0x40':
+                if not rclpy.ok():
+                    rclpy.init(args=args)
                 # 校验数据类型，0x40表示fuck_slam的值需更改
-                rclpy.init(args=args)
                 node=FuckSlam()
-                rclpy.spin(node)
+                node.robot_service(String(data=json.dumps({"reset_slam": True})))
+                node.destroy_node()
                 print("Reset Slam_docker !!!")
 
             if data[1] == '0x34':
