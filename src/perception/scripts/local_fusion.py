@@ -15,6 +15,7 @@ class fusion_node_t(Node):
         self.declare_parameter('odom_frame','odom_wheel')  #轮式里程计坐标
         self.declare_parameter('laser_base_frame', 'laser_base_link')  #激光雷达坐标
         self.declare_parameter('base_frame', 'base_link')
+        self.declare_parameter('slam_to_laser_init_frame','slam_to_laser_init') #slam原点到激光雷达原点的偏移
         self.declare_parameter('fusion_hz', 10)    #修正频率
         self.declare_parameter('map_frame_vec',['camera_init']) # 被监听的tf地图坐标 
         self.declare_parameter('base_frame_vec',['body','aft_mapped'])  # 被监听的tf基座坐标
@@ -23,10 +24,11 @@ class fusion_node_t(Node):
         self.declare_parameter('slam_debug', True)  # 是否开启slam调试
         self.declare_parameter('base_link_to_map',[0.39,-0.357,0.0]) #base_link到map 左下角的偏移  右手系
         self.declare_parameter('base_to_laser', [-0.13255, 0.3288, 0.0])  # 激光雷达到base_link的偏移 右手系
-        self.declare_parameter('loc_to_map',[0,0,0])
+        self.declare_parameter('loc_to_map',[0.0,0.0,-0.048953])
         self.odom_topic = self.get_parameter('odom_topic').value
         self.odom_frame = self.get_parameter('odom_frame').value #轮式里程计坐标
         self.base_frame = self.get_parameter('base_frame').value #发布的base_link坐标
+        self.slam_to_laser_init_frame = self.get_parameter('slam_to_laser_init_frame').value  #slam原点到激光雷达原点的偏移
         self.laser_base_frame = self.get_parameter('laser_base_frame').value  #激光雷达坐标
         self.fusion_hz = self.get_parameter('fusion_hz').value
         # self.map_frame = self.get_parameter('map_frame')
@@ -59,6 +61,7 @@ class fusion_node_t(Node):
             self.odom_frame='odom_wheel_debug'
             self.base_frame='base_link_debug'
             self.laser_base_frame='laser_base_link_debug'
+            self.slam_to_laser_init_frame='slam_to_laser_init_debug'
     def slam_tf_callback(self):
         transform=TransformStamped()
         if len(self.map_frame_vec) >0 and len(self.base_frame_vec) > 0:
@@ -111,10 +114,8 @@ class fusion_node_t(Node):
             #从w z 算出yaw
             # yaw = 2*math.atan2(z, w)
             yaw = mean_yaw  # 使用均值yaw
-            #将激光雷达发布
-            self.tf_publish('laser_base_init', self.laser_base_frame, laser_odom_x, laser_odom_y, yaw)
-            # 激光雷达相对于车体的偏移（假设yaw_bias已知）
-            #获得base_link的原点在地图下的坐标
+            #将激光雷达发布到slam原点的tf
+            self.tf_publish(self.slam_to_laser_init_frame, self.laser_base_frame, laser_odom_x, laser_odom_y, yaw)
             try:
                 base_link_tf= self.tf_buffer.lookup_transform('map_left_corner', self.base_frame, rclpy.time.Time())
             except Exception as e:
@@ -213,6 +214,12 @@ class fusion_node_t(Node):
         self.tf_publish(
             'base_init', 'laser_base_init',
             -laser_to_base[0], -laser_to_base[1], laser_to_base[2]
+        )
+        slam_to_laser_init =self.get_parameter('loc_to_map').value
+        # 发布slam原点到激光雷达原点的偏移
+        self.tf_publish(
+            'laser_base_init', self.slam_to_laser_init_frame,
+            slam_to_laser_init[0], slam_to_laser_init[1], slam_to_laser_init[2]
         )
         # 初始化全场的tf
 def main(args=None):
