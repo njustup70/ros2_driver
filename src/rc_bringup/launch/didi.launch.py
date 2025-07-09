@@ -64,6 +64,18 @@ def generate_launch_description():
              }
         ]
     )
+    #启动fuck_slam
+    fuck_slam_node=Node(
+        package='my_driver',
+        executable='fuck_slam.py',
+        name='fuck_slam',
+        output='screen',
+        emulate_tty=True,
+        parameters=[
+            {'docker_name':'voxel_slam_container'
+            }
+        ]
+    )
     #启动ms200
     ms200_launch=IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -164,5 +176,6 @@ def generate_launch_description():
     ld.add_action(communicate_node)
     # ld.add_action(ms200_launch)
     ld.add_action(ros_bag_action)
+    ld.add_action(fuck_slam_node)
     return ld
      
