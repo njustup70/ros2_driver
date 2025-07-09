@@ -25,7 +25,8 @@ class fusion_node_t(Node):
         self.declare_parameter('slam_debug', True)  # 是否开启slam调试
         # self.declare_parameter('base_link_to_map',[0.39,-0.357,0.0]) #base_link到map 左下角的偏移  右手系
         self.declare_parameter('base_to_laser', [-0.13255, 0.3288, 0.0])  # 激光雷达到base_link的偏移 右手系
-        self.declare_parameter('loc_to_map',[0.4938,-0.6706,-0.0141955])
+        self.declare_parameter('loc_to_map',[0.4938,-0.6706,-0.0141955]) # slam原点到地图左下角的偏移 右手系
+        self.declare_parameter('loc_to_map_2'[0,0,0])# 第二个地图的偏移
         self.declare_parameter('map_num',1) #地图编号
         self.laser_frame= self.get_parameter('laser_frame').value  #激光初始点下的激光雷达坐标
         self.odom_topic = self.get_parameter('odom_topic').value
@@ -211,11 +212,23 @@ class fusion_node_t(Node):
             self.laser_frame,self.laser_base_frame,
             laser_to_base[0], laser_to_base[1],laser_to_base[2] 
         )# 激光雷达到base_link的偏移
-        slam_to_laser_init =self.get_parameter('loc_to_map').value
-        # slam原点到地图左下角偏移
+        #选择地图1还是地图2
+        if self.map_num==1:
+            slam_to_laser_init =self.get_parameter('loc_to_map').value
+        elif self.map_num==3:
+            slam_to_laser_init = self.get_parameter('loc_to_map_2').value
+        #选择地图左下角还是右上角
+        if self.map_num == 2 or self.map_num == 4:  # 奇数地图编号
+            x_bias=15.0+slam_to_laser_init[0]  # 偶数地图编号，x轴偏移
+            y_bias=slam_to_laser_init[1]
+            yaw_bias=slam_to_laser_init[2]+ math.pi  # 偶数地图编号，yaw偏移180度
+        else:
+            x_bias=slam_to_laser_init[0]
+            y_bias=slam_to_laser_init[1]
+            yaw_bias=slam_to_laser_init[2]  # 奇数地图编号，
         self.tf_publish(
             'map_left_corner', self.slam_to_map_left_frame,
-            slam_to_laser_init[0], slam_to_laser_init[1], slam_to_laser_init[2]
+           x_bias, y_bias, yaw_bias
         )
         # 初始化全场的tf
     def robot_state_callback(self, msg: String):
