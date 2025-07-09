@@ -26,7 +26,7 @@ class fusion_node_t(Node):
         # self.declare_parameter('base_link_to_map',[0.39,-0.357,0.0]) #base_link到map 左下角的偏移  右手系
         self.declare_parameter('base_to_laser', [-0.13255, 0.3288, 0.0])  # 激光雷达到base_link的偏移 右手系
         self.declare_parameter('loc_to_map',[0.4938,-0.6706,-0.0141955]) # slam原点到地图左下角的偏移 右手系
-        self.declare_parameter('loc_to_map_2'[0,0,0])# 第二个地图的偏移
+        self.declare_parameter('loc_to_map_2',[0,0,0])# 第二个地图的偏移
         self.declare_parameter('map_num',1) #地图编号
         self.laser_frame= self.get_parameter('laser_frame').value  #激光初始点下的激光雷达坐标
         self.odom_topic = self.get_parameter('odom_topic').value
