@@ -98,7 +98,7 @@ start_voxel_slam() {
     pushd "${VOXEL_SLAM_DIR}" >/dev/null || { log "❌ 无法进入目录: ${VOXEL_SLAM_DIR}"; return 1; }
     
     # 后台启动容器并记录日志
-    docker start  voxel_slam_container>> "${LOG_FILE}" 2>&1
+    docker compose up -d >> "${LOG_FILE}" 2>&1
     
     # 等待容器启动（最长30秒）
     local timeout=30
@@ -126,7 +126,7 @@ start_ros2_driver() {
     pushd "${ROS2_DRIVER_DIR}" >/dev/null || { log "❌ 无法进入目录: ${ROS2_DRIVER_DIR}"; return 1; }
     
     # 后台启动容器并记录日志
-    docker start ros2driver-container >> "${LOG_FILE}" 2>&1
+    docker compose up -d >> "${LOG_FILE}" 2>&1
     
     # 等待容器启动（最长30秒）
     local timeout=30
@@ -189,7 +189,7 @@ start() {
     log "🔒 创建锁文件: $$ > ${LOCK_FILE}"
     echo $$ > "${LOCK_FILE}"
     
-    # clean_containers
+    clean_containers
     start_ros2_driver || return 1
     sleep 5 
     start_ros2_launch || return 1
