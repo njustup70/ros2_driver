@@ -24,7 +24,7 @@ class Communicate_t(Node):
     def __init__(self):
         super().__init__('communicate_t')
         self.declare_parameter('cmd_vel_topic', '/cmd_vel')
-        self.declare_parameter('serial_port', '/dev/serial_ch340')
+        self.declare_parameter('serial_port', '/dev/serial_qh')
         self.declare_parameter('serial_baudrate', 230400)
         self.sub=self.create_subscription(Twist,
         self.get_parameter('cmd_vel_topic').value,
@@ -141,14 +141,14 @@ class Communicate_t(Node):
         if checksum == databag[-1] and checksum == databag[0]: 
             self.sick_handler.handle_data(data)  # 处理sick数据
             # 校验通过,表示数据帧没有损坏
-            if data[1] == '0x40':
+            if data[1] == 0x40:
                 json_data={
                     'reset_slam': True
                 }
                 self.robot_state_pub.publish(String(data=json.dumps(json_data)))
                 print("Reset Slam_docker !!!")
 
-            if data[1] == '0x34':
+            if data[1] == 0x34:
                 # 校验数据类型,0x34表示类型为射击参数
                 logger = DataSimulator(port='/dev/serial_ch340',baudrate=230400)
                 parsed = logger.parse_laser_frame(data)
