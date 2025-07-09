@@ -13,8 +13,9 @@ class fusion_node_t(Node):
     def __init__(self):
         super().__init__('fusion_node')
         self.declare_parameter('odom_frame','odom_wheel')  #轮式里程计坐标
+        self.declare_parameter('laser_frame', 'laser_link')  #激光初始点下的激光雷达坐标
         self.declare_parameter('laser_base_frame', 'laser_base_link')  #激光雷达坐标
-        self.declare_parameter('base_frame', 'base_link')
+        self.declare_parameter('base_frame', 'base_link') # 地图坐标系下的base_link坐标
         self.declare_parameter('slam_to_laser_init_frame','slam_to_laser_init') #slam原点到激光雷达原点的偏移
         self.declare_parameter('fusion_hz', 10)    #修正频率
         self.declare_parameter('map_frame_vec',['camera_init']) # 被监听的tf地图坐标 
@@ -24,7 +25,8 @@ class fusion_node_t(Node):
         self.declare_parameter('slam_debug', True)  # 是否开启slam调试
         self.declare_parameter('base_link_to_map',[0.39,-0.357,0.0]) #base_link到map 左下角的偏移  右手系
         self.declare_parameter('base_to_laser', [-0.13255, 0.3288, 0.0])  # 激光雷达到base_link的偏移 右手系
-        self.declare_parameter('loc_to_map',[0.0,0.0,-0.048953])
+        self.declare_parameter('loc_to_map',[0.0,0.0,0.048953])
+        self.laser_frame= self.get_parameter('laser_frame').value  #激光初始点下的激光雷达坐标
         self.odom_topic = self.get_parameter('odom_topic').value
         self.odom_frame = self.get_parameter('odom_frame').value #轮式里程计坐标
         self.base_frame = self.get_parameter('base_frame').value #发布的base_link坐标
@@ -60,6 +62,7 @@ class fusion_node_t(Node):
         if self.get_parameter('slam_debug').value:
             self.odom_frame='odom_wheel_debug'
             self.base_frame='base_link_debug'
+            self.laser_frame='laser_link_debug'
             self.laser_base_frame='laser_base_link_debug'
             self.slam_to_laser_init_frame='slam_to_laser_init_debug'
     def slam_tf_callback(self):
@@ -115,9 +118,9 @@ class fusion_node_t(Node):
             # yaw = 2*math.atan2(z, w)
             yaw = mean_yaw  # 使用均值yaw
             #将激光雷达发布到slam原点的tf
-            self.tf_publish(self.slam_to_laser_init_frame, self.laser_base_frame, laser_odom_x, laser_odom_y, yaw)
+            self.tf_publish(self.slam_to_laser_init_frame, self.laser_frame, laser_odom_x, laser_odom_y, yaw)
             try:
-                base_link_tf= self.tf_buffer.lookup_transform('map_left_corner', self.base_frame, rclpy.time.Time())
+                base_link_tf= self.tf_buffer.lookup_transform('map_left_corner', self.laser_base_frame, rclpy.time.Time())
             except Exception as e:
                 return
             x_base_slam = base_link_tf.transform.translation.x
@@ -143,15 +146,15 @@ class fusion_node_t(Node):
             # self.tf_publish("map","laser_odom",x,y,yaw)      #激光雷达slam的tf 调试用转化到base_link坐标系
         #发布轮式偏移的tf
         
-        # self.tf_publish('base_init', self.odom_frame, x_diff, y_diff, yaw_diff) #距离上电原点的偏移
+        self.tf_publish('base_init', self.odom_frame, x_diff, y_diff, yaw_diff) #距离上电原点的偏
         if self.odom_x == 0.0 and self.odom_y == 0.0 and self.odom_yaw == 0.0:
-            # self.tf_publish(self.odom_frame, self.base_frame, 0.0, 0.0, 0.0)
+            self.tf_publish(self.odom_frame, self.base_frame, 0.0, 0.0, 0.0)
             return
     def odom_callback(self, msg:Vector3Stamped):
         self.odom_x = msg.vector.x
         self.odom_y = -msg.vector.y
         self.odom_yaw = msg.vector.z
-        # self.tf_publish(self.odom_frame, self.base_frame, self.odom_x, self.odom_y, self.odom_yaw)
+        self.tf_publish(self.odom_frame, self.base_frame, self.odom_x, self.odom_y, self.odom_yaw)
         #发布轮式里程计的tf
     def sick_callback(self, msg: String):
         """处理激光雷达数据"""
@@ -203,7 +206,7 @@ class fusion_node_t(Node):
         ) # 从地图右下角到地图左下角
         laser_to_base = self.get_parameter('base_to_laser').value
         self.tf_publish(
-            self.laser_base_frame,self.base_frame,
+            self.laser_frame,self.laser_base_frame,
             laser_to_base[0], laser_to_base[1],laser_to_base[2] 
         )# 激光雷达到base_link的偏移
         base_link_to_map = self.get_parameter('base_link_to_map').value
