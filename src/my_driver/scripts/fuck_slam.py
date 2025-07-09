@@ -38,7 +38,7 @@ class FuckSlam(Node):
                     print(result)
                 except subprocess.CalledProcessError as e:
                     print(e.output.decode())
-                print("SLAM重置中...")
+                print(f"\033[91mSLAM重置中...\033[0m")
                 try:
                     result = subprocess.check_output(
                         ["sudo", "docker", "start", self.docker_name],
@@ -47,7 +47,7 @@ class FuckSlam(Node):
                     print(result)
                 except subprocess.CalledProcessError as e:
                     print(e.output.decode())
-                self.get_logger().info("SLAM重置成功")
+                print(f"\033[92mSLAM重置完成\033[0m")
                 
 def main(args=None):
     rclpy.init(args=args)

@@ -72,8 +72,7 @@ def generate_launch_description():
         output='screen',
         emulate_tty=True,
         parameters=[
-            {'serial_port':'/dev/serial_qh',
-             'serial_baudrate':230400,
+            {'docker_name':'voxel_slam_container'
             }
         ]
     )
