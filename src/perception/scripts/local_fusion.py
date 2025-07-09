@@ -17,6 +17,7 @@ class fusion_node_t(Node):
         self.declare_parameter('laser_base_frame', 'laser_base_link')  #激光雷达坐标
         self.declare_parameter('base_frame', 'base_link') # 地图坐标系下的base_link坐标
         self.declare_parameter('slam_to_laser_init_frame','slam_to_laser_init') #slam原点到激光雷达原点的偏移
+        self.declare_parameter('base_map_frame', 'map_base')  #地图坐标系下的base_link坐标
         self.declare_parameter('fusion_hz', 10)    #修正频率
         self.declare_parameter('map_frame_vec',['camera_init']) # 被监听的tf地图坐标 
         self.declare_parameter('base_frame_vec',['body','aft_mapped'])  # 被监听的tf基座坐标
@@ -29,6 +30,7 @@ class fusion_node_t(Node):
         self.laser_frame= self.get_parameter('laser_frame').value  #激光初始点下的激光雷达坐标
         self.odom_topic = self.get_parameter('odom_topic').value
         self.odom_frame = self.get_parameter('odom_frame').value #轮式里程计坐标
+        self.map_base_frame = self.get_parameter('base_map_frame').value  #地图坐标系下的base_link坐标
         self.base_frame = self.get_parameter('base_frame').value #发布的base_link坐标
         self.slam_to_laser_init_frame = self.get_parameter('slam_to_laser_init_frame').value  #slam原点到激光雷达原点的偏移
         self.laser_base_frame = self.get_parameter('laser_base_frame').value  #激光雷达坐标
@@ -65,6 +67,7 @@ class fusion_node_t(Node):
             self.laser_frame='laser_link_debug'
             self.laser_base_frame='laser_base_link_debug'
             self.slam_to_laser_init_frame='slam_to_laser_init_debug'
+            self.map_base_frame = 'map_base_debug'  #地图坐标系下的base_link坐标
     def slam_tf_callback(self):
         transform=TransformStamped()
         if len(self.map_frame_vec) >0 and len(self.base_frame_vec) > 0:
@@ -141,7 +144,7 @@ class fusion_node_t(Node):
             x_diff=x_base_slam-(self.odom_x*math.cos(dyaw)-self.odom_y*math.sin(dyaw))
             y_diff=y_base_slam-(self.odom_x*math.sin(dyaw)+self.odom_y*math.cos(dyaw))
             yaw_diff=dyaw
-            
+            self.tf_publish('map_left_corner',self.map_base_frame, x_base_slam,y_base_slam,yaw_base_slam)  # 发布地图左下角到地图基座的偏移
 
             # self.tf_publish("map","laser_odom",x,y,yaw)      #激光雷达slam的tf 调试用转化到base_link坐标系
         #发布轮式偏移的tf
