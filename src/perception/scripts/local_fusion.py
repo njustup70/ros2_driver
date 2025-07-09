@@ -221,9 +221,12 @@ class fusion_node_t(Node):
         if self.map_num==1 or self.map_num==2:  # 偶数地图编号
             slam_to_laser_init =self.get_parameter('loc_to_map').value
             if self.map_num==2:
-                x_bias=15.0+slam_to_laser_init[0]  # 偶数地图编号，x轴偏移
-                y_bias=-8.0+slam_to_laser_init[1]
-                yaw_bias=slam_to_laser_init[2]+ math.pi  # 偶数
+                x_bias, y_bias, yaw_bias =self.transform_left_lower_to_right_upper(
+                slam_to_laser_init[0],
+                slam_to_laser_init[1],
+                slam_to_laser_init[2],
+                15.0, -8.0, math.pi
+        )
             else:
                 x_bias=slam_to_laser_init[0]
                 y_bias=slam_to_laser_init[1]
@@ -231,9 +234,11 @@ class fusion_node_t(Node):
         elif self.map_num==3 or self.map_num==4:  # 奇数地图编号
             slam_to_laser_init = self.get_parameter('loc_to_map_2').value
             if self.map_num==4:
-                x_bias=15.0+slam_to_laser_init[0]
-                y_bias=-8.0+slam_to_laser_init[1]
-                yaw_bias=slam_to_laser_init[2]+ math.pi  # 奇数地图
+                x_bias, y_bias, yaw_bias =self.transform_left_lower_to_right_upper(
+                slam_to_laser_init[0],
+                slam_to_laser_init[1],
+                slam_to_laser_init[2],
+                15.0, -8.0, math.pi)
             else:
                 x_bias=slam_to_laser_init[0]
                 y_bias=slam_to_laser_init[1]
@@ -250,6 +255,20 @@ class fusion_node_t(Node):
         if 'map_num' in data:
             self.map_num = data['map_num']
             print(f"\033[92m 地图编号改为{self.map_num} \033[0m")
+    import math
+
+    def transform_left_lower_to_right_upper(x, y, yaw, dx, dy, dyaw):
+        # 先旋转
+        x_rot = math.cos(dyaw) * x - math.sin(dyaw) * y
+        y_rot = math.sin(dyaw) * x + math.cos(dyaw) * y
+
+        # 再平移
+        x_new = dx + x_rot
+        y_new = dy + y_rot
+
+        yaw_new = yaw + dyaw
+
+        return x_new, y_new, yaw_new
 def main(args=None):
     from rclpy.executors import MultiThreadedExecutor
 
