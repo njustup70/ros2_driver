@@ -64,7 +64,7 @@ class fusion_node_t(Node):
             self.base_frame='base_link_debug'
             self.laser_frame='laser_link_debug'
             self.laser_base_frame='laser_base_link_debug'
-            self.slam_to_laser_init_frame='slam_to_map_debug'
+            self.slam_to_map_left_frame='slam_to_map_debug'
     def slam_tf_callback(self):
         transform=TransformStamped()
         if len(self.map_frame_vec) >0 and len(self.base_frame_vec) > 0:
@@ -118,7 +118,7 @@ class fusion_node_t(Node):
             # yaw = 2*math.atan2(z, w)
             yaw = mean_yaw  # 使用均值yaw
             #将激光雷达发布到slam原点的tf
-            self.tf_publish(self.slam_to_laser_init_frame, self.laser_frame, laser_odom_x, laser_odom_y, yaw)
+            self.tf_publish(self.slam_to_map_left_frame, self.laser_frame, laser_odom_x, laser_odom_y, yaw)
             try:
                 base_link_tf= self.tf_buffer.lookup_transform('map_left_corner', self.laser_base_frame, rclpy.time.Time())
             except Exception as e:
@@ -211,7 +211,7 @@ class fusion_node_t(Node):
         slam_to_laser_init =self.get_parameter('loc_to_map').value
         # slam原点到地图左下角偏移
         self.tf_publish(
-            'map_left_corner', self.slam_to_laser_init_frame,
+            'map_left_corner', self.slam_to_map_left_frame,
             slam_to_laser_init[0], slam_to_laser_init[1], slam_to_laser_init[2]
         )
         # 初始化全场的tf
