@@ -25,7 +25,7 @@ class fusion_node_t(Node):
         self.declare_parameter('slam_debug', True)  # 是否开启slam调试
         # self.declare_parameter('base_link_to_map',[0.39,-0.357,0.0]) #base_link到map 左下角的偏移  右手系
         self.declare_parameter('base_to_laser', [-0.13255, 0.3288, 0.0])  # 激光雷达到base_link的偏移 右手系
-        self.declare_parameter('loc_to_map',[0.0,0.0,-0.00875776])
+        self.declare_parameter('loc_to_map',[0.4938,-0.6706,-0.0141955])
         self.laser_frame= self.get_parameter('laser_frame').value  #激光初始点下的激光雷达坐标
         self.odom_topic = self.get_parameter('odom_topic').value
         self.odom_frame = self.get_parameter('odom_frame').value #轮式里程计坐标
@@ -145,7 +145,7 @@ class fusion_node_t(Node):
             # self.tf_publish("map","laser_odom",x,y,yaw)      #激光雷达slam的tf 调试用转化到base_link坐标系
         #发布轮式偏移的tf
         
-        self.tf_publish('base_init', self.odom_frame, x_diff, y_diff, yaw_diff) #距离上电原点的偏
+        self.tf_publish('map_left_corner', self.odom_frame, x_diff, y_diff, yaw_diff) #距离上电原点的偏
         if self.odom_x == 0.0 and self.odom_y == 0.0 and self.odom_yaw == 0.0:
             self.tf_publish(self.odom_frame, self.base_frame, 0.0, 0.0, 0.0)
             return
