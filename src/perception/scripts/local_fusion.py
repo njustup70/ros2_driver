@@ -12,18 +12,18 @@ from itertools import product
 class fusion_node_t(Node):
     def __init__(self):
         super().__init__('fusion_node')
-        self.declare_parameter('odom_frame','odom_wheel')  #轮式里程计坐标
-        self.declare_parameter('laser_frame', 'laser_link')  #激光初始点下的激光雷达坐标
-        self.declare_parameter('laser_base_frame', 'laser_base_link')  #激光雷达坐标
-        self.declare_parameter('base_frame', 'base_link') # 地图坐标系下的base_link坐标
-        self.declare_parameter('slam_to_map_left_frame','slam_to_map') #slam原点到激光雷达原点的偏移
+        self.declare_parameter('odom_frame','odom_wheel')  #地图坐标系下轮式里程计坐标
+        self.declare_parameter('laser_frame', 'laser_link')  #地图坐标系下的激光雷达坐标
+        self.declare_parameter('laser_base_frame', 'laser_base_link')  #地图坐标系下slam 的base_link坐标
+        self.declare_parameter('base_frame', 'base_link') # 地图坐标系下融合码盘的base_link坐标
+        self.declare_parameter('slam_to_map_left_frame','slam_to_map') #slam原点地图左下角的偏移
         self.declare_parameter('fusion_hz', 10)    #修正频率
         self.declare_parameter('map_frame_vec',['camera_init']) # 被监听的tf地图坐标 
         self.declare_parameter('base_frame_vec',['body','aft_mapped'])  # 被监听的tf基座坐标
         self.declare_parameter('slam_hz', 200)              # 被监听的tf频率
         self.declare_parameter('odom_topic','/odom')   #轮式里程计
         self.declare_parameter('slam_debug', True)  # 是否开启slam调试
-        self.declare_parameter('base_link_to_map',[0.39,-0.357,0.0]) #base_link到map 左下角的偏移  右手系
+        # self.declare_parameter('base_link_to_map',[0.39,-0.357,0.0]) #base_link到map 左下角的偏移  右手系
         self.declare_parameter('base_to_laser', [-0.13255, 0.3288, 0.0])  # 激光雷达到base_link的偏移 右手系
         self.declare_parameter('loc_to_map',[0.0,0.0,-0.00875776])
         self.laser_frame= self.get_parameter('laser_frame').value  #激光初始点下的激光雷达坐标
