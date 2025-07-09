@@ -22,7 +22,7 @@ class fusion_node_t(Node):
         self.declare_parameter('odom_topic','/odom')   #轮式里程计
         self.declare_parameter('slam_debug', True)  # 是否开启slam调试
         self.declare_parameter('base_link_to_map',[0.39,-0.357,0.0]) #base_link到map 左下角的偏移  右手系
-        self.declare_parameter('lidar_to_base', [0.13255, -0.3288, 0.0])  # 激光雷达到base_link的偏移 右手系
+        self.declare_parameter('base_to_laser', [-0.13255, 0.3288, 0.0])  # 激光雷达到base_link的偏移 右手系
         self.declare_parameter('loc_to_map',[0,0,0])
         self.odom_topic = self.get_parameter('odom_topic').value
         self.odom_frame = self.get_parameter('odom_frame').value #轮式里程计坐标
@@ -112,11 +112,11 @@ class fusion_node_t(Node):
             # yaw = 2*math.atan2(z, w)
             yaw = mean_yaw  # 使用均值yaw
             #将激光雷达发布
-            # self.tf_publish('base_init', self.laser_base_frame, laser_odom_x, laser_odom_y, yaw)
+            # self.tf_publish('laser_base_init', self.laser_base_frame, laser_odom_x, laser_odom_y, yaw)
             # 激光雷达相对于车体的偏移（假设yaw_bias已知）
             #获得base_link的原点在地图下的坐标
             try:
-                base_link_tf= self.tf_buffer.lookup_transform('base_init', self.base_frame, rclpy.time.Time())
+                base_link_tf= self.tf_buffer.lookup_transform('odom_transform', self.base_frame, rclpy.time.Time())
             except Exception as e:
                 return
             x_base_slam = base_link_tf.transform.translation.x
@@ -200,15 +200,19 @@ class fusion_node_t(Node):
         self.tf_publish(
             'odom', 'odom_transform',0.0,8.0,0.0
         ) # 从地图右下角到地图左下角
-        laser_to_base = self.get_parameter('lidar_to_base').value
+        laser_to_base = self.get_parameter('base_to_laser').value
         self.tf_publish(
-            self.base_frame,self.laser_base_frame,
+            self.laser_base_frame,self.base_frame,
             laser_to_base[0], laser_to_base[1],laser_to_base[2] 
         )# 激光雷达到base_link的偏移
         base_link_to_map = self.get_parameter('base_link_to_map').value
         self.tf_publish(
             'odom_transform', 'base_init',
             base_link_to_map[0], base_link_to_map[1], base_link_to_map[2]
+        )
+        self.tf_publish(
+            'base_init', 'laser_base_init',
+            laser_to_base[0], laser_to_base[1], laser_to_base[2]
         )
         # 初始化全场的tf
 def main(args=None):
