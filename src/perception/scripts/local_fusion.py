@@ -26,6 +26,7 @@ class fusion_node_t(Node):
         # self.declare_parameter('base_link_to_map',[0.39,-0.357,0.0]) #base_link到map 左下角的偏移  右手系
         self.declare_parameter('base_to_laser', [-0.13255, 0.3288, 0.0])  # 激光雷达到base_link的偏移 右手系
         self.declare_parameter('loc_to_map',[0.4938,-0.6706,-0.0141955])
+        self.declare_parameter('map_num',1) #地图编号
         self.laser_frame= self.get_parameter('laser_frame').value  #激光初始点下的激光雷达坐标
         self.odom_topic = self.get_parameter('odom_topic').value
         self.odom_frame = self.get_parameter('odom_frame').value #轮式里程计坐标
@@ -45,7 +46,9 @@ class fusion_node_t(Node):
         self.timer = self.create_timer(1.0/self.tf_hz,self.slam_tf_callback)
         self.fusion_timer = self.create_timer(1.0/self.fusion_hz, self.fusion_callback)
         self.tf_publish_timer = self.create_timer(0.5, self.tf_manage)
+        self.map_num = self.get_parameter('map_num').value  # 地图编号
         self.odom_sub=self.create_subscription(Vector3Stamped, self.odom_topic, self.odom_callback, 10)
+        self.robot_sub= self.create_subscription(String, 'robot_state', self.robot_state_callback, 1)
         #创建均值滤波器
         self.tf_overage_x = []
         self.tf_overage_y = []
@@ -215,6 +218,13 @@ class fusion_node_t(Node):
             slam_to_laser_init[0], slam_to_laser_init[1], slam_to_laser_init[2]
         )
         # 初始化全场的tf
+    def robot_state_callback(self, msg: String):
+        """处理机器人状态消息"""
+        
+        data = json.loads(msg.data)
+        if 'map_num' in data:
+            self.map_num = data['map_num']
+            print(f"\033[92m 地图编号改为{self.map_num} \033[0m")
 def main(args=None):
     from rclpy.executors import MultiThreadedExecutor
 
