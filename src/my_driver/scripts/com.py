@@ -128,6 +128,7 @@ class Communicate_t(Node):
         # print(f"Received data: {data}")
         # 这里可以添加对接收到数据的处理逻辑
         # 例如解析数据，更新状态等   
+        print(f"收到数据：{[hex(b) for b in data]}")
         databag = data.rstrip(b'\x00')
         if len(data) < 2:
             return False
@@ -137,11 +138,17 @@ class Communicate_t(Node):
             checksum += byte
         checksum &= 0xFF  # 保留低8位
         assert checksum < 256, "Checksum must be less than 256"
+       # print(f"收到数据：{[hex(b) for b in databag]}")
 
         if checksum == databag[-1] and checksum == databag[0]: 
+           # print("校验通过 校验通过 ")
             self.sick_handler.handle_data(data)  # 处理sick数据
+           # print(f"数据帧type:{databag[1]}")
+           # print("数据帧如下")
+           # print([hex(b) for b in databag])
             # 校验通过,表示数据帧没有损坏
-            if data[1] == '0x40':
+            if databag[1] == '0x40':
+                print("收到fuck 收到fuck")
                 if not rclpy.ok():
                     rclpy.init(args=args)
                 # 校验数据类型，0x40表示fuck_slam的值需更改
@@ -150,7 +157,7 @@ class Communicate_t(Node):
                 node.destroy_node()
                 print("Reset Slam_docker !!!")
 
-            if data[1] == '0x34':
+            if databag[1] == '0x34':
                 # 校验数据类型,0x34表示类型为射击参数
                 logger = DataSimulator(port='/dev/serial_ch340',baudrate=230400)
                 parsed = logger.parse_laser_frame(data)
