@@ -192,6 +192,7 @@ class fusion_node_t(Node):
         self.static_tf_broadcaster.sendTransform(transform)
     def tf_manage(self):
         """初始化静态tf"""
+        self.tf_broadcaster('map','odom',0.0,0.0,0.0) #地图坐标系到轮式里程计坐标系
         self.tf_publish(
             'odom', 'odom_transform',0.0,8.0,0.0
         ) # 从地图右下角到地图左下角
