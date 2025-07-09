@@ -105,6 +105,7 @@ def generate_launch_description():
         executable='local_fusion.py',
         name='fusion_node',
         output='screen',
+        emulate_tty=True,
         parameters=[
             {'base_to_laser': [-0.13255, 0.3288, 0.0]}, #车体到激光雷达的偏移
             {'loc_to_map': [0.4938,-0.6706,-0.0141955]}, # slam原点到地图左下角的偏移

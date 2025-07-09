@@ -213,19 +213,27 @@ class fusion_node_t(Node):
             laser_to_base[0], laser_to_base[1],laser_to_base[2] 
         )# 激光雷达到base_link的偏移
         #选择地图1还是地图2
-        if self.map_num==1:
+        x_bias, y_bias, yaw_bias = 0.0, 0.0, 0.0
+        if self.map_num==1 or self.map_num==2:  # 偶数地图编号
             slam_to_laser_init =self.get_parameter('loc_to_map').value
-        elif self.map_num==3:
+            if self.map_num==2:
+                x_bias=15.0+slam_to_laser_init[0]  # 偶数地图编号，x轴偏移
+                y_bias=-8.0+slam_to_laser_init[1]
+                yaw_bias=slam_to_laser_init[2]+ math.pi  # 偶数
+            else:
+                x_bias=slam_to_laser_init[0]
+                y_bias=slam_to_laser_init[1]
+                yaw_bias=slam_to_laser_init[2]                
+        elif self.map_num==3 or self.map_num==4:  # 奇数地图编号
             slam_to_laser_init = self.get_parameter('loc_to_map_2').value
-        #选择地图左下角还是右上角
-        if self.map_num == 2 or self.map_num == 4:  # 奇数地图编号
-            x_bias=15.0+slam_to_laser_init[0]  # 偶数地图编号，x轴偏移
-            y_bias=slam_to_laser_init[1]
-            yaw_bias=slam_to_laser_init[2]+ math.pi  # 偶数地图编号，yaw偏移180度
-        else:
-            x_bias=slam_to_laser_init[0]
-            y_bias=slam_to_laser_init[1]
-            yaw_bias=slam_to_laser_init[2]  # 奇数地图编号，
+            if self.map_num==4:
+                x_bias=15.0+slam_to_laser_init[0]
+                y_bias=-8.0+slam_to_laser_init[1]
+                yaw_bias=slam_to_laser_init[2]+ math.pi  # 奇数地图
+            else:
+                x_bias=slam_to_laser_init[0]
+                y_bias=slam_to_laser_init[1]
+                yaw_bias=slam_to_laser_init[2]
         self.tf_publish(
             'map_left_corner', self.slam_to_map_left_frame,
            x_bias, y_bias, yaw_bias
