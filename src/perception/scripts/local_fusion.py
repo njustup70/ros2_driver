@@ -48,6 +48,7 @@ class fusion_node_t(Node):
         self.fusion_timer = self.create_timer(1.0/self.fusion_hz, self.fusion_callback)
         self.tf_publish_timer = self.create_timer(0.5, self.tf_manage)
         self.map_num = self.get_parameter('map_num').value  # 地图编号
+        self.odom_pub= self.create_publisher(Vector3Stamped, 'base_link_odom', 10)  # 发布最终车体位置
         self.odom_sub=self.create_subscription(Vector3Stamped, self.odom_topic, self.odom_callback, 10)
         self.robot_sub= self.create_subscription(String, 'robot_state', self.robot_state_callback, 1)
         #创建均值滤波器
@@ -152,7 +153,18 @@ class fusion_node_t(Node):
         self.tf_publish('map_left_corner', self.odom_frame, x_diff, y_diff, yaw_diff) #距离上电原点的偏
         if self.odom_x == 0.0 and self.odom_y == 0.0 and self.odom_yaw == 0.0:
             self.tf_publish(self.odom_frame, self.base_frame, 0.0, 0.0, 0.0)
+        try:
+            base_link_tf = self.tf_buffer.lookup_transform('map_left_corner', self.base_frame, rclpy.time.Time())
+            base_link_odom= Vector3Stamped()
+            base_link_odom.header.stamp = self.get_clock().now().to_msg()
+            base_link_odom.header.frame_id = self.odom_frame
+            base_link_odom.vector.x = base_link_tf.transform.translation.x + x_diff
+            base_link_odom.vector.y = base_link_tf.transform.translation.y + y_diff
+            base_link_odom.vector.z = yaw_diff
+            self.odom_pub.publish(base_link_odom)  # 发布最终车体位置
+        except Exception as e:
             return
+        
     def odom_callback(self, msg:Vector3Stamped):
         self.odom_x = msg.vector.x
         self.odom_y = -msg.vector.y
