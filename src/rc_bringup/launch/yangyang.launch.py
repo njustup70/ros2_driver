@@ -168,7 +168,7 @@ def generate_launch_description():
         output='screen',
         emulate_tty=True,
     )
-    # ld.add_action(compose_node)
+    ld.add_action(compose_node)
     ld.add_action(fusion_node)
     ld.add_action(mid360_launch)
     ld.add_action(imu_transform_launch)
