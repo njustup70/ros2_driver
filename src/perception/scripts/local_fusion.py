@@ -158,9 +158,9 @@ class fusion_node_t(Node):
             base_link_odom= Vector3Stamped()
             base_link_odom.header.stamp = self.get_clock().now().to_msg()
             base_link_odom.header.frame_id = self.odom_frame
-            base_link_odom.vector.x = base_link_tf.transform.translation.x + x_diff
-            base_link_odom.vector.y = base_link_tf.transform.translation.y + y_diff
-            base_link_odom.vector.z = yaw_diff
+            base_link_odom.vector.x = base_link_tf.transform.translation.x
+            base_link_odom.vector.y = base_link_tf.transform.translation.y 
+            base_link_odom.vector.z = 2 * math.atan2(base_link_tf.transform.rotation.z, base_link_tf.transform.rotation.w)  # 计算yaw
             self.odom_pub.publish(base_link_odom)  # 发布最终车体位置
         except Exception as e:
             return
