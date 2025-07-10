@@ -19,7 +19,7 @@ lidar:
 
 
       min_distance: 0.2            #  Minimum distance of point cloud
-      max_distance: 200            #  Maximum distance of point cloud
+      max_distance: 80           #  Maximum distance of point cloud
       use_lidar_clock: true        #  true--Use the lidar clock as the message timestamp
                                    #  false-- Use the system clock as the timestamp
       dense_points: true          #  true: discard NAN points; false: reserve NAN points
@@ -41,4 +41,4 @@ lidar:
       ros_send_packet_topic: /rslidar_packets          #Topic used to send lidar packets through ROS
       ros_send_imu_data_topic: /rslidar_imu_data         #Topic used to send imu data through ROS
       ros_send_point_cloud_topic: /rslidar_points      #Topic used to send point cloud through ROS
-      ros_queue_length: 100                            #Topic QoS history depth
+      ros_queue_length: 10                            #Topic QoS history depth
