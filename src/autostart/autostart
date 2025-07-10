@@ -99,6 +99,8 @@ start_voxel_slam() {
     
     # 后台启动容器并记录日志
     docker compose -f ./loc.yaml up -d >> "${LOG_FILE}" 2>&1
+    # docker compose up -d >> "${LOG_FILE}" 2>&1
+
     
     # 等待容器启动（最长30秒）
     local timeout=30
