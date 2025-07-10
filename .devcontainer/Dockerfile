@@ -65,8 +65,10 @@ RUN . /opt/ros/humble/setup.sh && cd ./ros_ws && colcon build
 RUN apt-get update && apt-get install -y  libpcap-dev \
     && cd /home/${USERNAME}/packages/ros_ws/src \
     && git clone --recurse-submodules https://github.com/RoboSense-LiDAR/rslidar_sdk.git \
-    && git clone https://github.com/RoboSense-LiDAR/rslidar_msg.git \
-    && . /opt/ros/humble/setup.sh && cd ../ && colcon build 
+    && git clone https://github.com/RoboSense-LiDAR/rslidar_msg.git 
+#覆盖CMakeLists.txt
+COPY  ./packages/rslidar_airy/CMakeLists.txt /home/${USERNAME}/packages/ros_ws/src/rslidar_sdk/CMakeLists.txt 
+RUN  cd /home/${USERNAME}/packages/ros_ws && . /opt/ros/humble/setup.sh  && colcon build 
 RUN  echo 'export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH' >> /home/${USERNAME}/.bashrc \
     #&& echo 'source ~/docker/ros2/packages/ros-humble-ros1-bridge/install/setup.bash'>> /home/${USERNAME}/.bashrc \
     && echo 'source /opt/ros/humble/setup.bash' >> /home/$USERNAME/.bashrc \ 
