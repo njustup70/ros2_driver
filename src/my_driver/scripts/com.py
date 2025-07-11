@@ -15,7 +15,7 @@ from protocol_lib.myserial import AsyncSerial_t
 from protocol_lib.get_log_shootdata_local import DataSimulator
 from rclpy.time import Time
 import struct
-from tf2_ros import TransformListener,Buffer
+from tf2_ros import TransformListener,Buffer,Duration
 from std_msgs.msg import String
 from sick_com import SickHandler
 from fuck_slam import FuckSlam
@@ -198,7 +198,7 @@ class Communicate_t(Node):
                 self.serial.write(self.ValidationData(data))
                 time.sleep(0.02)  # 20ms间隔
         try:
-            transform=self.buffer.lookup_transform('map', 'base_link', time=Time())
+            transform=self.buffer.lookup_transform('map', 'base_link', time=Time(),Duration=Duration(seconds=0.2))
         except Exception as e:
             # print(f"TF lookup failed: {e}")
             return
