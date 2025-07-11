@@ -148,8 +148,8 @@ class fusion_node_t(Node):
 
             # self.tf_publish("map","laser_odom",x,y,yaw)      #激光雷达slam的tf 调试用转化到base_link坐标系
         #发布轮式偏移的tf
-        
-        self.tf_publish('map_left_corner', self.odom_frame, x_diff, y_diff, yaw_diff) #距离上电原点的偏
+            if laser_odom_x != 0.0 and laser_odom_y != 0.0:
+                self.tf_publish('map_left_corner', self.odom_frame, x_diff, y_diff, yaw_diff)
         if self.odom_x == 0.0 and self.odom_y == 0.0 and self.odom_yaw == 0.0:
             self.tf_publish(self.odom_frame, self.base_frame, 0.0, 0.0, 0.0)
         try:
