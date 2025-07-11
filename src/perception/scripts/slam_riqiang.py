@@ -241,15 +241,17 @@ class fusion_node_t(Node):
         if 'riqiang' in data:
             if data['riqiang'] == True:
                 tf_now=TransformStamped()
+                tf_init= TransformStamped()
                 try:
-                    tf_now=self.tf_buffer.lookup_transform('map_left_corner', self.laser_frame, rclpy.time.Time())
+                    tf_now=self.tf_buffer.lookup_transform(self.slam_to_map_left_frame, self.laser_frame, rclpy.time.Time())
+                    tf_init=self.tf_buffer.lookup_transform('map_left_corner', self.slam_to_map_left_frame, rclpy.time.Time())
                 except Exception as e:
                     self.get_logger().error(f"Failed to lookup transform for riqiang: {e}")
                     return
                 #通过y 的误差算出来yaw 的偏移
-                x=tf_now.transform.translation.x
-                dy=-tf_now.transform.translation.y+ self.get_parameter('riqiang_y').value
-                self.tf_yaw_diff+= math.atan2(dy, x)
+                x=tf_now.transform.translation.x- tf_init.transform.translation.x
+                dy=-tf_now.transform.translation.y+ self.get_parameter('riqiang_y').value- tf_init.transform.translation.y
+                self.tf_yaw_diff= math.atan2(dy, x)
                 print(f"\033[95m日墙角度误差:{self.tf_yaw_diff}\033[0m")
         if 'reset_slam' in data:
             if data['reset_slam'] == True:
