@@ -249,10 +249,9 @@ class fusion_node_t(Node):
                     self.get_logger().error(f"Failed to lookup transform for riqiang: {e}")
                     return
                 #通过y 的误差算出来yaw 的偏移
-                x=tf_now.transform.translation.x- tf_init.transform.translation.x
-                y= -tf_now.transform.translation.y- tf_init.transform.translation.y
-                dy=y+self.get_parameter('riqiang_y').value
-                self.tf_yaw_diff= math.atan2(dy, x)-math.atan2(y,x)
+                x=tf_now.transform.translation.x
+                y= self.get_parameter('riqiang_y').value-tf_init.transform.translation.y
+                self.tf_yaw_diff= math.atan2(y,x)-math.atan2(tf_now.transform.translation.y, x)
                 print(f"\033[95m日墙角度误差:{self.tf_yaw_diff}\033[0m")
         if 'reset_slam' in data:
             if data['reset_slam'] == True:
