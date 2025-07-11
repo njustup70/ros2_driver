@@ -105,6 +105,7 @@ def generate_launch_description():
         executable='slam_riqiang.py',
         name='fusion_node',
         output='screen',
+        emulate_tty=True,
         parameters=[
             { 'loc_to_map':[0.46876+0.26775,-0.08475-0.0815,0.0]},  # slam原点到地图左下角的偏移 右手系
             {'base_to_laser': [-0.23751, -0.24275, 0.0]},  # 激光雷达到base_link的偏移 右手系

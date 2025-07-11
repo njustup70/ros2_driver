@@ -252,6 +252,7 @@ class fusion_node_t(Node):
                 x=tf_now.transform.translation.x
                 y= self.get_parameter('riqiang_y').value-tf_init.transform.translation.y
                 self.tf_yaw_diff= math.atan2(y,x)-math.atan2(tf_now.transform.translation.y, x)
+                print(f"slam 坐标系yaw 当前值{tf_now.transform.translation.y} 理论值{y}")
                 print(f"\033[95m日墙角度误差:{self.tf_yaw_diff}\033[0m")
         if 'reset_slam' in data:
             if data['reset_slam'] == True:
