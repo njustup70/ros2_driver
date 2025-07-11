@@ -17,7 +17,7 @@ class fusion_node_t(Node):
         self.declare_parameter('laser_base_frame', 'laser_base_link')  #地图坐标系下slam 的base_link坐标
         self.declare_parameter('base_frame', 'base_link') # 地图坐标系下融合码盘的base_link坐标
         self.declare_parameter('slam_to_map_left_frame','slam_to_map') #slam原点地图左下角的偏移
-        self.declare_parameter('fusion_hz', 10)    #修正频率
+        self.declare_parameter('fusion_hz', 100)    #修正频率
         self.declare_parameter('map_frame_vec',['camera_init']) # 被监听的tf地图坐标 
         self.declare_parameter('base_frame_vec',['body','aft_mapped'])  # 被监听的tf基座坐标
         self.declare_parameter('slam_hz', 200)              # 被监听的tf频率
