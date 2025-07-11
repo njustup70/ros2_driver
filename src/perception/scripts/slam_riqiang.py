@@ -249,7 +249,7 @@ class fusion_node_t(Node):
                 #通过y 的误差算出来yaw 的偏移
                 x=tf_now.transform.translation.x
                 dy=-tf_now.transform.translation.y+ self.get_parameter('riqiang_y').value
-                self.tf_yaw_diff= math.atan2(dy, x)
+                self.tf_yaw_diff+= math.atan2(dy, x)
                 
 def main(args=None):
     from rclpy.executors import MultiThreadedExecutor
