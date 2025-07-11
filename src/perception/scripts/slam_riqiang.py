@@ -218,18 +218,18 @@ class fusion_node_t(Node):
         self.static_tf_broadcaster.sendTransform(transform)
     def tf_manage(self):
         """初始化静态tf"""
-        self.tf_publish('map','odom',0.0,0.0,0.0) #地图坐标系到轮式里程计坐标系
-        self.tf_publish(
+        self.tf_static_publish('map','odom',0.0,0.0,0.0) #地图坐标系到轮式里程计坐标系
+        self.tf_static_publish(
             'odom', 'map_left_corner',0.0,8.0,0.0
         ) # 从地图右下角到地图左下角
         laser_to_base = self.get_parameter('base_to_laser').value
-        self.tf_publish(
+        self.tf_static_publish(
             self.laser_frame,self.laser_base_frame,
             laser_to_base[0], laser_to_base[1],laser_to_base[2] 
         )# 激光雷达到base_link的偏移
         #选择地图1还是地图2
         bias= self.get_parameter('loc_to_map').value
-        self.tf_publish(
+        self.tf_static_publish(
             'map_left_corner', self.slam_to_map_left_frame,
            bias[0], bias[1], self.tf_yaw_diff  # slam原点到地图左下角的偏移
         )
