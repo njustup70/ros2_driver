@@ -159,7 +159,9 @@ class Communicate_t(Node):
                     f"DeltaRpm_Down={parsed['DeltaRpm_Down']}, "
                     f"Velo={parsed['Velo']}")
                 logger.save_to_json(parsed)
-
+            if data[1] == 0x91:
+                json_data={'riqiang': True}
+                self.robot_state_pub.publish(String(data=json.dumps(json_data)))
         if data==b'\x34\x33\x00\x20': #如果是0x34 0x33 0x0 0x20
             json_data={
                 "nav_state":"IDLE"
