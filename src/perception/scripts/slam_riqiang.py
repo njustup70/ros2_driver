@@ -251,6 +251,9 @@ class fusion_node_t(Node):
                 dy=-tf_now.transform.translation.y+ self.get_parameter('riqiang_y').value
                 self.tf_yaw_diff+= math.atan2(dy, x)
                 print(f"\033[95m日墙角度误差:{self.tf_yaw_diff}\033[0m")
+        if 'reset_slam' in data:
+            if data['reset_slam'] == True:
+                self.tf_yaw_diff = 0.0
                 
 def main(args=None):
     from rclpy.executors import MultiThreadedExecutor
