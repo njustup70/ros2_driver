@@ -198,7 +198,7 @@ class Communicate_t(Node):
                 self.serial.write(self.ValidationData(data))
                 time.sleep(0.02)  # 20ms间隔
         try:
-            transform=self.buffer.lookup_transform('map', 'base_link', time=Time(),Duration=Duration(seconds=0.2))
+            transform=self.buffer.lookup_transform('map', 'base_link', time=Time(),timeout=Duration(seconds=0.2))
         except Exception as e:
             # print(f"TF lookup failed: {e}")
             return
