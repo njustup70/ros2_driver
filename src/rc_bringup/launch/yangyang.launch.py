@@ -108,7 +108,8 @@ def generate_launch_description():
         emulate_tty=True,
         parameters=[
             { 'loc_to_map':[0.46876+0.26775,-0.08475-0.0815,0.0]},  # slam原点到地图左下角的偏移 右手系
-            {'base_to_laser': [-0.23751, -0.24275, 0.05]},  # 激光雷达到base_link的偏移 右手系
+            # {'base_to_laser': [-0.23751, -0.24275, 0.05]},  # 激光雷达到base_link的偏移 右手系
+            {'base_to_laser':[-0.24934,-0.23057,0.05]}, #加上旋转偏移
             {'riqiang_y':  -0.10975},  # 日墙时候的y偏移
             {'slam_debug': False},  # 是否开启slam调试
         ])
