@@ -250,8 +250,9 @@ class fusion_node_t(Node):
                     return
                 #通过y 的误差算出来yaw 的偏移
                 x=tf_now.transform.translation.x- tf_init.transform.translation.x
-                dy=-tf_now.transform.translation.y+ self.get_parameter('riqiang_y').value- tf_init.transform.translation.y
-                self.tf_yaw_diff= math.atan2(dy, x)
+                y= -tf_now.transform.translation.y- tf_init.transform.translation.y
+                dy=y+self.get_parameter('riqiang_y').value
+                self.tf_yaw_diff= math.atan2(dy, x)-math.atan2(y,x)
                 print(f"\033[95m日墙角度误差:{self.tf_yaw_diff}\033[0m")
         if 'reset_slam' in data:
             if data['reset_slam'] == True:
