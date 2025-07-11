@@ -39,3 +39,38 @@ Error response from daemon: No such container: point_lio_container
 [2025-07-08 12:43:51] ✅ 容器已成功移除
 [2025-07-08 12:43:51] 🔓 移除锁文件
 [2025-07-08 12:43:51] ✅ 所有服务已停止
+[2025-07-12 02:50:29] 🔒 创建锁文件: 666 > /home/up70/ros2_driver/src/autostart/startlog.lock
+[2025-07-12 02:50:29] 🧹 清理现有容器...
+ros2driver-container
+Error response from daemon: No such container: lio_sam_container
+voxel_slam_container
+Error response from daemon: No such container: point_lio_container
+[2025-07-12 02:50:37] ✅ 容器已成功移除
+[2025-07-12 02:50:37] 🚀 启动ROS2 Driver容器...
+time="2025-07-12T02:50:37+08:00" level=warning msg="The \"DISPLAY\" variable is not set. Defaulting to a blank string."
+time="2025-07-12T02:50:37+08:00" level=warning msg="/home/up70/ros2_driver/.devcontainer/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2025-07-12T02:50:37+08:00" level=warning msg="Found orphan containers ([visual-container]) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
+ Container ros2driver-container  Creating
+ Container ros2driver-container  Created
+ Container ros2driver-container  Starting
+ Container ros2driver-container  Started
+[2025-07-12 02:50:38] ✅ ROS2 Driver容器已启动
+[2025-07-12 02:50:38] 📌 容器ID: 77d52cdbd4ea
+[2025-07-12 02:50:43] ⏳ 验证ROS2 Driver容器状态...
+[2025-07-12 02:50:44] 🧹 清理可能存在的旧ROS2应用进程...
+[2025-07-12 02:50:46] 🚀 执行: ros2 launch rc_bringup yangyang.launch.py
+[2025-07-12 02:50:50] ✅ ROS2应用已启动 (PID: 2622
+2729
+2997)
+[2025-07-12 02:50:50] 📋 应用日志位置: /tmp/ros2_launch.log
+[2025-07-12 02:50:56] 🚀 启动VoxelSlam容器...
+time="2025-07-12T02:50:56+08:00" level=warning msg="The \"DISPLAY\" variable is not set. Defaulting to a blank string."
+time="2025-07-12T02:50:56+08:00" level=warning msg="/home/up70/slam_docker/VoxelSlam/.devcontainer/docker-compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+time="2025-07-12T02:50:56+08:00" level=warning msg="Found orphan containers ([ros2driver-container visual-container]) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
+ Container voxel_slam_container  Creating
+ Container voxel_slam_container  Created
+ Container voxel_slam_container  Starting
+ Container voxel_slam_container  Started
+[2025-07-12 02:50:56] ✅ VoxelSlam容器已启动
+[2025-07-12 02:50:56] 📌 容器ID: eee2b4a0f525
+[2025-07-12 02:50:56] ✅ 所有服务已启动完成
