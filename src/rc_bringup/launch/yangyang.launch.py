@@ -102,14 +102,13 @@ def generate_launch_description():
     )
     fusion_node=Node(
         package='perception',
-        executable='fusion.py',
+        executable='slam_riqiang.py',
         name='fusion_node',
         output='screen',
         parameters=[
-            {'lidar_x_bias': 0.23751}, #odom到激光雷达的偏移,odom是子坐标系，激光雷达是父坐标系
-            {'lidar_y_bias': 0.24275},
-           { 'use_sick': False},  # 使用点云数据
-            {'slam_debug': False},  # 是否开启slam调试
+            { 'loc_to_map':[0.46876,-0.08475,0.0]},  # slam原点到地图左下角的偏移 右手系
+            {'base_to_laser': [-0.23751, -0.24275, 0.0]},  # 激光雷达到base_link的偏移 右手系
+            {'riqiang_y': -0.24275},  # 日墙时候的y偏移
         ])
     xacro_file_path:str= os.path.join(get_package_share_directory('my_tf_tree'),'urdf','dd.urdf.xacro')
     robot_description = Command([
@@ -168,7 +167,7 @@ def generate_launch_description():
         output='screen',
         emulate_tty=True,
     )
-    ld.add_action(compose_node)
+    # ld.add_action(compose_node)
     ld.add_action(fusion_node)
     ld.add_action(mid360_launch)
     ld.add_action(imu_transform_launch)
