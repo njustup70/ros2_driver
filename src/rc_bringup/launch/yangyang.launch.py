@@ -108,10 +108,10 @@ def generate_launch_description():
         emulate_tty=True,
         parameters=[
             # { 'loc_to_map':[0.46876+0.26775,-0.08475-0.0815,0.0]},  # slam原点到地图左下角的偏移 右手系
-            { 'loc_to_map':[0.46876,-0.08475-0.025,-0.017453292]},  # slam原点到地图左下角的偏移 右手系
-            {'base_to_laser': [-0.23751, -0.24275, 0.017453292] },  # 激光雷达到base_link的偏移 右手系
+            { 'loc_to_map':[0.45375,-0.1375-0.025,-0.017453292]},  # slam原点到地图左下角的偏移 右手系
+            {'base_to_laser': [-0.2225, -0.19, 0.017453292] },  # 激光雷达到base_link的偏移 右手系
             # {'base_to_laser':[-0.21934,-0.26057,0.05]}, #加上旋转偏移
-            {'riqiang_y':  -0.10975},  # 日墙时候的y偏移
+            {'riqiang_y':  -0.1625},  # 日墙时候的y偏移
             {'slam_debug': False},  # 是否开启slam调试
         ])#0.59525靠底边 0.409靠侧边（限位后）
     xacro_file_path:str= os.path.join(get_package_share_directory('my_tf_tree'),'urdf','dd.urdf.xacro')
@@ -120,7 +120,7 @@ def generate_launch_description():
         ' ',  # 确保命令和路径之间有空格
         xacro_file_path  # 传入 xacro 文件路径
     ])
-
+ 
     # 机器人状态发布节点
     robot_state_publisher_node = ComposableNode(
         package='robot_state_publisher',
