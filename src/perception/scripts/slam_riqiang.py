@@ -55,7 +55,7 @@ class fusion_node_t(Node):
         self.tf_overage_w=[]
         self.tf_overage_z=[]
         self.tf_overage_yaw=np.array([], dtype=np.float32)  # 用于存储yaw的均值滤波
-        self.tf_yaw_diff =self.get_parameter('slam_to_map_left_frame').value[2] # 用于存储yaw的均值滤波
+        self.tf_yaw_diff =self.get_parameter('loc_to_map').value[2] # 用于存储yaw的均值滤波
         #轮式里程计相关
         self.odom_x=0.0
         self.odom_y=0.0
