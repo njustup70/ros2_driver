@@ -256,6 +256,7 @@ class fusion_node_t(Node):
         if 'reset_slam' in data:
             if data['reset_slam'] == True:
                 self.tf_yaw_diff = 0.0
+                self.tf_yaw_diff =self.get_parameter('loc_to_map').value[2] # 用于存储yaw的均值滤波
                 
 def main(args=None):
     from rclpy.executors import MultiThreadedExecutor
