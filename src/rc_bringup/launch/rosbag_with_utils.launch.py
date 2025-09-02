@@ -17,8 +17,8 @@ from launch.conditions import LaunchConfigurationEquals
 def generate_launch_description():
     ld=LaunchDescription()
     ld.add_action(DeclareLaunchArgument('use_rosbag_record', default_value='false', description='Record rosbag if use is True'))
-    ld.add_action(DeclareLaunchArgument('use_tf_publish',default_value='true',description='Publish tf tree if use is True'))
-    ld.add_action(DeclareLaunchArgument('use_fast_lio_tf',default_value='true',description='提供fast_lio的tf树'))
+    ld.add_action(DeclareLaunchArgument('use_tf_publish',default_value='false',description='Publish tf tree if use is True'))
+    ld.add_action(DeclareLaunchArgument('use_fast_lio_tf',default_value='false',description='提供fast_lio的tf树'))
     ld.add_action(DeclareLaunchArgument('rate',default_value='1',description='rate of rosbag play'))
     ld.add_action(DeclareLaunchArgument('loop',default_value='false',description='loop of rosbag play'))
     ld.add_action(DeclareLaunchArgument('image_topic',default_value='/camera/color/image_raw/compressed',description='image topic'))
@@ -49,13 +49,28 @@ def generate_launch_description():
         output='screen',
         condition=IfCondition(LaunchConfiguration('loop'))
     )
-
+    ros_bag_node=Node(
+        package='python_pkg',
+        executable='bag_play',
+        name='bag_play_node',
+        parameters=[{'loop': LaunchConfiguration('loop'),
+                     'rate': LaunchConfiguration('rate')}],
+        output='screen',
+        emulate_tty=True,
+    )
     #启动utils
     utils_launch=IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(get_package_share_directory('rc_bringup'),'launch','utils_bringup.launch.py')
         ),
         
+    )
+    odomtransform_tf_node = Node(
+        condition=IfCondition(LaunchConfiguration('use_tf_publish')),
+        package='tf2_ros',
+        executable="static_transform_publisher",
+        name='odom_transform',
+        arguments=['0.35','7.65','0','0','0','0','odom','odom_transform']  # 发布静态变换
     )
     #启动image_bridge
     image_bridge_node=Node(
@@ -67,8 +82,10 @@ def generate_launch_description():
         emulate_tty=True,
     )
     ld.add_action(utils_launch)
-    ld.add_action(ros_bag_exe)
-    ld.add_action(ros_bag_loop_exe)
-    ld.add_action(image_bridge_node)
+    ld.add_action(ros_bag_node)
+    # ld.add_action(odomtransform_tf_node)
+    # ld.add_action(ros_bag_exe)
+    # ld.add_action(ros_bag_loop_exe)
+    # ld.add_action(image_bridge_node)
     return ld
      

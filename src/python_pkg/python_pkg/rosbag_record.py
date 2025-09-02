@@ -14,8 +14,9 @@ class SmartBagRecorder(Node):
         super().__init__('smart_bag_recorder')
 
         # Declare ROS parameters with default values
-        self.declare_parameter('max_size_gb', 2.0) # 2GB
-        self.declare_parameter('max_folder_num', 5)
+        self.declare_parameter('max_size_gb', 10.0) # 2GB
+        self.declare_parameter('max_folder_num', 10)
+        self.declare_parameter('mcap', True) # 是否使用mcap格式
         self.declare_parameter('record_images', False)
         self.declare_parameter('record_imu', True)
         self.declare_parameter('record_lidar', True)
@@ -30,10 +31,18 @@ class SmartBagRecorder(Node):
 
         # 初始化 writer
         self.writer = SequentialWriter()
-        storage_options = StorageOptions(uri=self.bag_path, storage_id='sqlite3')
-        converter_options = ConverterOptions('', '')
-        self.writer.open(storage_options, converter_options)
-
+        
+        if self.get_parameter('mcap').value:
+            storage_options = StorageOptions(uri=self.bag_path, storage_id='mcap')
+            converter_options = ConverterOptions('cdr', 'cdr')
+            self.writer.open(storage_options, converter_options)
+            # self.writer.set_storage_options(StorageOptions(uri=self.bag_path, storage_id='mcap'))
+            print(f'\033[95m📦 Using MCAP format for recording\033[0m')
+        else:
+            storage_options = StorageOptions(uri=self.bag_path, storage_id='sqlite3')
+            converter_options = ConverterOptions('', '')
+            self.writer.open(storage_options, converter_options)
+            print(f'\033[95m📦 Using SQLite3 format for recording\033[0m')
         # 获取当前活跃话题并订阅
         topic_names_and_types = self.get_topic_names_and_types()
         self.subscribers = []
@@ -117,7 +126,12 @@ class SmartBagRecorder(Node):
             'geometry_msgs/msg/Twist',
             'geometry_msgs/msg/TwistStamped',
             'geometry_msgs/msg/PoseStamped',
-            # 'tf2_msgs/msg/TFMessage',
+            'tf2_msgs/msg/TFMessage',
+            'sensor_msgs/msg/Imu',
+            'sensor_msgs/msg/PointCloud2',
+            'sensor_msgs/msg/LaserScan',
+            'geometry_msgs/msg/Vector3Stamped',
+            'std_msgs/msg/String',
             'nav_msgs/msg/Path',
             'nav_msgs/msg/OccupancyGrid'
         ]
