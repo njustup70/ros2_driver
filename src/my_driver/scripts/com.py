@@ -15,7 +15,7 @@ from protocol_lib.myserial import AsyncSerial_t
 from protocol_lib.get_log_shootdata_local import DataSimulator
 from rclpy.time import Time
 import struct
-from tf2_ros import TransformListener,Buffer
+from tf2_ros import TransformListener,Buffer,Duration
 from std_msgs.msg import String
 from sick_com import SickHandler
 from fuck_slam import FuckSlam
@@ -160,9 +160,7 @@ class Communicate_t(Node):
                     f"Velo={parsed['Velo']}")
                 logger.save_to_json(parsed)
             if data[1] == 0x91:
-                json_data={
-                    'map_num': data[2],
-                }
+                json_data={'riqiang': True}
                 self.robot_state_pub.publish(String(data=json.dumps(json_data)))
         if data==b'\x34\x33\x00\x20': #如果是0x34 0x33 0x0 0x20
             json_data={
@@ -200,7 +198,7 @@ class Communicate_t(Node):
                 self.serial.write(self.ValidationData(data))
                 time.sleep(0.02)  # 20ms间隔
         try:
-            transform=self.buffer.lookup_transform('map', 'base_link', time=Time())
+            transform=self.buffer.lookup_transform('map', 'base_link', time=Time(),timeout=Duration(seconds=0.2))
         except Exception as e:
             # print(f"TF lookup failed: {e}")
             return
