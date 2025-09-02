@@ -41,32 +41,32 @@ clean_containers() {
     fi
 }
 
-# # 启动LIO-SAM容器
-# start_lio_sam() {
-#     log "🚀 启动LIO-SAM容器..."
-#     pushd "${LIO_SAM_DIR}" >/dev/null || { log "❌ 无法进入目录: ${LIO_SAM_DIR}"; return 1; }
+# 启动LIO-SAM容器
+start_lio_sam() {
+    log "🚀 启动LIO-SAM容器..."
+    pushd "${LIO_SAM_DIR}" >/dev/null || { log "❌ 无法进入目录: ${LIO_SAM_DIR}"; return 1; }
     
-#     # 后台启动容器并记录日志
-#     docker compose up -d >> "${LOG_FILE}" 2>&1
+    # 后台启动容器并记录日志
+    docker compose up -d >> "${LOG_FILE}" 2>&1
     
-#     # 等待容器启动（最长30秒）
-#     local timeout=30
-#     while (( timeout-- > 0 )); do
-#         if docker ps --filter "name=lio_sam_container" --format "{{.Status}}" | grep -q "Up"; then
-#             log "✅ LIO-SAM容器已启动"
-#             LIO_CONTAINER_ID=$(docker ps -qf "name=lio_sam_container")
-#             log "📌 容器ID: ${LIO_CONTAINER_ID}"
-#             popd >/dev/null
-#             return 0
-#         fi
-#         sleep 1
-#     done
+    # 等待容器启动（最长30秒）
+    local timeout=30
+    while (( timeout-- > 0 )); do
+        if docker ps --filter "name=lio_sam_container" --format "{{.Status}}" | grep -q "Up"; then
+            log "✅ LIO-SAM容器已启动"
+            LIO_CONTAINER_ID=$(docker ps -qf "name=lio_sam_container")
+            log "📌 容器ID: ${LIO_CONTAINER_ID}"
+            popd >/dev/null
+            return 0
+        fi
+        sleep 1
+    done
     
-#     log "❌ LIO-SAM容器启动超时，查看日志: docker compose logs"
-#     docker compose logs >> "${LOG_FILE}" 2>&1
-#     popd >/dev/null
-#     return 1
-# }
+    log "❌ LIO-SAM容器启动超时，查看日志: docker compose logs"
+    docker compose logs >> "${LOG_FILE}" 2>&1
+    popd >/dev/null
+    return 1
+}
 
 # 启动Point LIO容器
 start_point_lio() {
@@ -101,7 +101,6 @@ start_voxel_slam() {
     docker compose -f ./loc.yaml up -d >> "${LOG_FILE}" 2>&1
     # docker compose up -d >> "${LOG_FILE}" 2>&1
 
-    
     # 等待容器启动（最长30秒）
     local timeout=30
     while (( timeout-- > 0 )); do
@@ -169,16 +168,16 @@ start_ros2_launch() {
 
     # 清理可能存在的旧ROS2应用进程
     log "🧹 清理可能存在的旧ROS2应用进程..."
-    docker exec ros2driver-container fish -c "pkill -f 'ros2 launch rc_bringup didi.launch.py'" 2>/dev/null
+    docker exec ros2driver-container fish -c "pkill -f 'ros2 launch rc_bringup yangyang.launch.py'" 2>/dev/null
     sleep 1  # 确保进程完全终止
     
-    log "🚀 执行: ros2 launch rc_bringup didi.launch.py"
-    docker exec -d ros2driver-container fish -c "ros2 launch rc_bringup didi.launch.py > /tmp/ros2_launch.log 2>&1"
+    log "🚀 执行: ros2 launch rc_bringup yangyang.launch.py"
+    docker exec -d ros2driver-container fish -c "ros2 launch rc_bringup yangyang.launch.py > /tmp/ros2_launch.log 2>&1"
         
     # 验证应用是否启动
     sleep 3  # 等待进程启动
-    if docker exec ros2driver-container pgrep -f "ros2 launch rc_bringup didi.launch.py" >/dev/null; then
-        log "✅ ROS2应用已启动 (PID: $(docker exec ros2driver-container pgrep -f 'ros2 launch rc_bringup didi.launch.py'))"
+    if docker exec ros2driver-container pgrep -f "ros2 launch rc_bringup yangyang.launch.py" >/dev/null; then
+        log "✅ ROS2应用已启动 (PID: $(docker exec ros2driver-container pgrep -f 'ros2 launch rc_bringup yangyang.launch.py'))"
         log "📋 应用日志位置: /tmp/ros2_launch.log"
     else
         log "❌ ROS2应用启动失败，查看日志: docker exec ros2driver-container cat /tmp/ros2_launch.log"

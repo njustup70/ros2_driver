@@ -33,7 +33,7 @@ class Communicate_t(Node):
         self.serial=AsyncSerial_t(
                 self.get_parameter('serial_port').value,
                 self.get_parameter('serial_baudrate').value)
-        self.serial.startListening(self.data_callback,wait_time=0.01)#监听线程还开启自动重连
+        self.serial.startListening(self.data_callback)#监听线程还开启自动重连
         # 看门狗相关变量
         self.last_msg_time = time.time()
         self.watchdog_timeout = 0.5 #0.5秒超时
