@@ -105,9 +105,10 @@ def generate_launch_description():
         executable='local_fusion.py',
         name='fusion_node',
         output='screen',
+        emulate_tty=True,
         parameters=[
             {'base_to_laser': [-0.13255, 0.3288, 0.0]}, #车体到激光雷达的偏移
-            {'loc_to_map': [0.4938,-0.6706,-0.0141955]}, # slam原点到地图左下角的偏移
+            {'loc_to_map': [0.5238,-0.6841,-0.01193947]}, # slam原点到地图左下角的偏移
             {'slam_debug': False},  # 是否开启slam调试
         ])
     xacro_file_path:str= os.path.join(get_package_share_directory('my_tf_tree'),'urdf','dd.urdf.xacro')
