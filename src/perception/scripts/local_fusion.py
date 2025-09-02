@@ -25,7 +25,9 @@ class fusion_node_t(Node):
         self.declare_parameter('slam_debug', True)  # 是否开启slam调试
         # self.declare_parameter('base_link_to_map',[0.39,-0.357,0.0]) #base_link到map 左下角的偏移  右手系
         self.declare_parameter('base_to_laser', [-0.13255, 0.3288, 0.0])  # 激光雷达到base_link的偏移 右手系
-        self.declare_parameter('loc_to_map',[0.4938,-0.6706,-0.0141955])
+        self.declare_parameter('loc_to_map',[0.4938,-0.6706,-0.0141955]) # slam原点到地图左下角的偏移 右手系
+        self.declare_parameter('loc_to_map_2',[0.0,0.0,0.0])# 第二个地图的偏移
+        self.declare_parameter('map_num',1) #地图编号
         self.laser_frame= self.get_parameter('laser_frame').value  #激光初始点下的激光雷达坐标
         self.odom_topic = self.get_parameter('odom_topic').value
         self.odom_frame = self.get_parameter('odom_frame').value #轮式里程计坐标
@@ -45,7 +47,10 @@ class fusion_node_t(Node):
         self.timer = self.create_timer(1.0/self.tf_hz,self.slam_tf_callback)
         self.fusion_timer = self.create_timer(1.0/self.fusion_hz, self.fusion_callback)
         self.tf_publish_timer = self.create_timer(0.5, self.tf_manage)
+        self.map_num = self.get_parameter('map_num').value  # 地图编号
+        self.odom_pub= self.create_publisher(Vector3Stamped, 'base_link_odom', 10)  # 发布最终车体位置
         self.odom_sub=self.create_subscription(Vector3Stamped, self.odom_topic, self.odom_callback, 10)
+        self.robot_sub= self.create_subscription(String, 'robot_state', self.robot_state_callback, 1)
         #创建均值滤波器
         self.tf_overage_x = []
         self.tf_overage_y = []
@@ -148,7 +153,18 @@ class fusion_node_t(Node):
         self.tf_publish('map_left_corner', self.odom_frame, x_diff, y_diff, yaw_diff) #距离上电原点的偏
         if self.odom_x == 0.0 and self.odom_y == 0.0 and self.odom_yaw == 0.0:
             self.tf_publish(self.odom_frame, self.base_frame, 0.0, 0.0, 0.0)
+        try:
+            base_link_tf = self.tf_buffer.lookup_transform('map_left_corner', self.base_frame, rclpy.time.Time())
+            base_link_odom= Vector3Stamped()
+            base_link_odom.header.stamp = self.get_clock().now().to_msg()
+            base_link_odom.header.frame_id = self.odom_frame
+            base_link_odom.vector.x = base_link_tf.transform.translation.x
+            base_link_odom.vector.y = base_link_tf.transform.translation.y 
+            base_link_odom.vector.z = 2 * math.atan2(base_link_tf.transform.rotation.z, base_link_tf.transform.rotation.w)  # 计算yaw
+            self.odom_pub.publish(base_link_odom)  # 发布最终车体位置
+        except Exception as e:
             return
+        
     def odom_callback(self, msg:Vector3Stamped):
         self.odom_x = msg.vector.x
         self.odom_y = -msg.vector.y
@@ -180,7 +196,11 @@ class fusion_node_t(Node):
         transform.transform.rotation.x = 0.0
         transform.transform.rotation.y = 0.0
         transform.transform.rotation.z = z
-        self.tf_broadcaster.sendTransform(transform)
+        try:
+            self.tf_broadcaster.sendTransform(transform)
+        except Exception as e:
+            self.get_logger().error(f"Failed to publish transform from {base_frame} to {child_frame}: {e}")
+            return
     def tf_static_publish(self, base_frame: str, child_frame: str, x: float, y: float, yaw: float):
         """发布静态tf"""
         transform = TransformStamped()
@@ -208,13 +228,59 @@ class fusion_node_t(Node):
             self.laser_frame,self.laser_base_frame,
             laser_to_base[0], laser_to_base[1],laser_to_base[2] 
         )# 激光雷达到base_link的偏移
-        slam_to_laser_init =self.get_parameter('loc_to_map').value
-        # slam原点到地图左下角偏移
+        #选择地图1还是地图2
+        x_bias, y_bias, yaw_bias = 0.0, 0.0, 0.0
+        if self.map_num==1 or self.map_num==2:  # 偶数地图编号
+            slam_to_laser_init =self.get_parameter('loc_to_map').value
+            if self.map_num==2:
+                x_bias, y_bias, yaw_bias =self.transform_left_lower_to_right_upper(
+                slam_to_laser_init[0],
+                slam_to_laser_init[1],
+                slam_to_laser_init[2],
+                15.0, -8.0, math.pi
+        )
+            else:
+                x_bias=slam_to_laser_init[0]
+                y_bias=slam_to_laser_init[1]
+                yaw_bias=slam_to_laser_init[2]                
+        elif self.map_num==3 or self.map_num==4:  # 奇数地图编号
+            slam_to_laser_init = self.get_parameter('loc_to_map_2').value
+            if self.map_num==4:
+                x_bias, y_bias, yaw_bias =self.transform_left_lower_to_right_upper(
+                slam_to_laser_init[0],
+                slam_to_laser_init[1],
+                slam_to_laser_init[2],
+                15.0, -8.0, math.pi)
+            else:
+                x_bias=slam_to_laser_init[0]
+                y_bias=slam_to_laser_init[1]
+                yaw_bias=slam_to_laser_init[2]
         self.tf_publish(
             'map_left_corner', self.slam_to_map_left_frame,
-            slam_to_laser_init[0], slam_to_laser_init[1], slam_to_laser_init[2]
+           x_bias, y_bias, yaw_bias
         )
         # 初始化全场的tf
+    def robot_state_callback(self, msg: String):
+        """处理机器人状态消息"""
+        
+        data = json.loads(msg.data)
+        if 'map_num' in data:
+            self.map_num = data['map_num']
+            print(f"\033[92m 地图编号改为{self.map_num} \033[0m")
+    import math
+
+    def transform_left_lower_to_right_upper(sefl,x, y, yaw, dx, dy, dyaw):
+        # 先旋转
+        x_rot = math.cos(dyaw) * x - math.sin(dyaw) * y
+        y_rot = math.sin(dyaw) * x + math.cos(dyaw) * y
+
+        # 再平移
+        x_new = dx + x_rot
+        y_new = dy + y_rot
+
+        yaw_new = yaw + dyaw
+
+        return x_new, y_new, yaw_new
 def main(args=None):
     from rclpy.executors import MultiThreadedExecutor
 

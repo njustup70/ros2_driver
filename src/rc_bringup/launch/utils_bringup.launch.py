@@ -14,6 +14,8 @@ from launch.substitutions import LaunchConfiguration
 from launch_ros.descriptions import ComposableNode
 from launch_ros.actions import ComposableNodeContainer, Node
 from launch.substitutions import Command, PathJoinSubstitution, FindExecutable
+from launch.actions import RegisterEventHandler, Shutdown
+from launch.event_handlers import OnShutdown
 def generate_launch_description():
     local_path=os.path.join(get_package_share_directory('rc_bringup'))
     ld=LaunchDescription()
@@ -34,9 +36,23 @@ def generate_launch_description():
                     {'ros__arguments': ['--log-level', 'fatal']}
         ]
         )
+    ros_master_rm=ExecuteProcess(
+        condition=IfCondition(LaunchConfiguration('use_ros1_bridge')),
+        cmd=["bash","-c","sudo docker rm ros-noetic-full"]
+    )
     ros_master_exe=ExecuteProcess(
         condition=IfCondition(LaunchConfiguration('use_ros1_bridge')),
-        cmd=["bash","-c","cd ~/ros2_driver/packages/roscore && sudo docker-compose up"]
+        cmd=["bash","-c","cd ~/ros2_driver/packages/roscore && sudo docker-compose up -d"]
+    )
+    shutdown_docker= RegisterEventHandler(
+        OnShutdown(
+            on_shutdown=[
+                ExecuteProcess(
+                    cmd=["bash", "-c", "cd ~/ros2_driver/packages/roscore && sudo docker-compose down"],
+                    output='screen'
+                )
+            ]
+        )
     )
     ros_bridge_exe=ExecuteProcess(
         condition=IfCondition(LaunchConfiguration('use_ros1_bridge')),
@@ -130,9 +146,11 @@ def generate_launch_description():
         cmd=["bash","-c","ros2 launch rosbridge_server rosbridge_websocket_launch.xml"],
        
     )
+    ld.add_action(ros_master_rm)
     ld.add_action(ros_master_exe)
     ld.add_action(ros_bridge_exe)
     # ld.add_action(ros_bag_exe)
+    ld.add_action(shutdown_docker)
     # ld.add_action(ros_bag_action)
     ld.add_action(compose_container)
     ld.add_action(websocket_bridge)
