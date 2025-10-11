@@ -21,8 +21,8 @@ class SecondaryIMUTransformer(Node):
         super().__init__('secondary_imu_transformer')
         
         # 声明节点参数（可在启动时重映射）
-        self.declare_parameter('input_topic', '/imu/data_transformed')
-        self.declare_parameter('output_topic', '/imu/data_final')
+        self.declare_parameter('input_topic', '/rsimu')
+        self.declare_parameter('output_topic', '/livox/imu')
         self.declare_parameter('output_frame_id', 'imu_link_final')
         
         # 获取参数值

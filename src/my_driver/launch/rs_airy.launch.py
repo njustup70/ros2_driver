@@ -27,6 +27,12 @@ def generate_launch_description():
         parameters=[{'config_path': config_file}],
         namespace='rslidar_sdk'
     )
+    official_imu_to_lidar = Node(
+        package='perception',
+        executable='official_to_lidar.py',
+        name='official_imu_to_lidar'
+    )
     ld.add_action(rslidar_sdk_node)
     ld.add_action(rviz_node)
+    ld.add_action(official_imu_to_lidar)
     return ld

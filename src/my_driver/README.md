@@ -18,3 +18,8 @@ ros2 launch my_driver mid360_bringup.launch.py
 ![pic](doc/image2.png)
 ![pic](doc/image3.png)
 ![pic](doc/image4.png)
+
+
+
+- 下面的ip指的是airy雷达需要配置本机的ip
+![alt text](airy_ip.png)
