@@ -72,7 +72,7 @@ ros2 launch my_driver realsense_bringup.launch.py
 ## robosense airy
 
 **必选项** 下面的ip指的是airy雷达需要配置本机的ip，否则接收不到雷达的消息
-![alt text](airy_ip.png)
+![alt text](pictures/airy_ip.png)
 启动robosense并且启动一个imu坐标系转换节点，**本质是把imu的六轴数据转换到lidar坐标系下，跟tf没关系**
 
 ## d435i
@@ -80,7 +80,7 @@ ros2 launch my_driver realsense_bringup.launch.py
 ```
 ros2 launch my_driver usb_cam.launch.py
 ```
-**源文件在![alt text](image-3.png)，注意config文件里的设备名以及格式**
+**源文件在![alt text](pictures/image-3.png)，注意config文件里的设备名以及格式**
 
 ## wheel_imu
 启动命令：
