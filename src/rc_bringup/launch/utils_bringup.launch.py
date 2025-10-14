@@ -86,43 +86,7 @@ def generate_launch_description():
         name='robot_state_publisher',
         parameters=[{'robot_description': robot_description}],
     )
-    # fast lio tf支持(不需要)
-    fast_lio_tf_node=ComposableNode(
-        condition=IfCondition(LaunchConfiguration('use_fast_lio_tf')),
-        package='tf2_ros',
-        plugin='tf2_ros::StaticTransformBroadcasterNode',
-        name='tf_broadcaster',
-        parameters=[{
-        'child_frame_id': 'base_link',
-        'frame_id': 'body',
-        'translation': {'x': 0.0, 'y': 0.0, 'z': 0.0}, 
-        'rotation': [0.0, 0.0, 0.0]
-    }],
-    )
-    fast_lio_tf_node2 = ComposableNode(
-        condition=IfCondition(LaunchConfiguration('use_fast_lio_tf')),
-        package='tf2_ros',
-        plugin='tf2_ros::StaticTransformBroadcasterNode',
-        name='tf_broadcaster1',
-        parameters=[{
-            'child_frame_id': 'camera_init',  # 旋转后坐标系
-            'frame_id': 'odom',  # 参考坐标系
-            'translation': {'x': 0.0, 'y': 0.0, 'z': 0.0}, 
-            'rotation': {'x':0.0, 'y':0.0, 'z':0.7071, 'w':-0.7071}  # 四元数表示的 90 度旋转（绕 Z 轴）
-        }],
-    )
-    map_to_odom_tf_node = ComposableNode(
-        condition=IfCondition(LaunchConfiguration('use_tf_publish')),
-        package='tf2_ros',
-        plugin='tf2_ros::StaticTransformBroadcasterNode',
-        name='map_to_odom_tf_node',
-        parameters=[{
-            'child_frame_id': 'odom',  # 旋转后坐标系
-            'frame_id': 'map',  # 参考坐标系
-            'translation': {'x': 0.0, 'y': 0.0, 'z': 0.0}, 
-            'rotation': {'x':0.0, 'y':0.0, 'z':0.0, 'w':1.0}  # 四元数表示的 90 度旋转（绕 Z 轴）
-        }],
-    )
+   
 
 
     compose_container=ComposableNodeContainer(
@@ -130,7 +94,7 @@ def generate_launch_description():
         name='start_container',
         package='rclcpp_components',
         executable='component_container',
-        composable_node_descriptions=[foxglove_node,robot_state_publisher_node,fast_lio_tf_node2,map_to_odom_tf_node],
+        composable_node_descriptions=[foxglove_node,robot_state_publisher_node],
         arguments=['--ros-args', '--log-level', 'fatal'],
         output='screen',
         emulate_tty=True,

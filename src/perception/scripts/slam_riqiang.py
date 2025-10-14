@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+"""_summary_
+融合轮式里程计和激光里程计
+"""
 import rclpy
 from my_tf import MyTf
 from rclpy.node import Node
@@ -170,16 +173,6 @@ class fusion_node_t(Node):
         self.odom_yaw = msg.vector.z
         self.tf_publish(self.odom_frame, self.base_frame, self.odom_x, self.odom_y, self.odom_yaw)
         #发布轮式里程计的tf
-    def sick_callback(self, msg: String):
-        """处理激光雷达数据"""
-        # msg是8路float 数据的字符串表示
-        
-        laser_data = json.loads(msg.data)
-        if len(laser_data) != 8:
-            self.get_logger().warn("激光雷达数据长度不正确")
-            return
-        # 将激光数据转换为numpy数组
-        self.laser_array = np.array(laser_data, dtype=np.float32)
     def tf_publish(self,base_frame:str,child_frame:str,x,y,yaw):
         #先从yaw 算出w z
         w = math.cos(yaw / 2)
