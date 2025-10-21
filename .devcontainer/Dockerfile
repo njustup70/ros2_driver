@@ -62,7 +62,7 @@ RUN chmod +x -R /usr/local/bin
 COPY ./packages/ROS-TCP-Endpoint-ROS2v0.7.0 /home/${USERNAME}/packages/ros_ws/src/ROS-TCP-Endpoint-ROS2v0.7.0
 RUN . /opt/ros/humble/setup.sh && cd ./ros_ws && colcon build
 #安装robosense
-RUN apt-get update && apt-get install -y  libpcap-dev \
+RUN apt-get update && apt-get install -y  libpcap-dev ros-humble-rmw-zenoh-cpp\
     && cd /home/${USERNAME}/packages/ros_ws/src \
     && git clone --recurse-submodules https://github.com/RoboSense-LiDAR/rslidar_sdk.git \
     && git clone https://github.com/RoboSense-LiDAR/rslidar_msg.git 
