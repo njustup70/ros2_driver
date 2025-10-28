@@ -19,8 +19,7 @@ def generate_launch_description():
     ld.add_action(DeclareLaunchArgument('use_imu_transform',default_value='true',description='Start imu transform node if use is True'))
     ld.add_action(DeclareLaunchArgument('record_lidar',default_value='true',description='Record lidar data if use is True'))
     ld.add_action(DeclareLaunchArgument('record_imu',default_value='true',description='Record imu data if use is True'))
-    ld.add_action(DeclareLaunchArgument('record_images',default_value='false',description='Record images if use is True'))
-    ld.add_action(DeclareLaunchArgument('record_nav',default_value='true',description='Record nav data if use is True'))
+    # ld.add_action(DeclareLaunchArgument('topic_blacklist',default_value=['*/compressed*']))
     get_package_share_directory('my_driver')
     get_package_share_directory('rc_bringup')
     #启动mid360
@@ -90,10 +89,8 @@ def generate_launch_description():
                     output='screen',
                     emulate_tty=True,
                     parameters=[
-                        {'record_lidar': LaunchConfiguration('record_lidar')},
-                        {'record_imu': LaunchConfiguration('record_imu')},
-                        {'record_images': LaunchConfiguration('record_images')},
-                        {'record_nav': LaunchConfiguration('record_nav')}
+                        # {'topic_blacklist':LaunchConfiguration("topic_blacklist")}
+                        {'topic_blacklist':['*/compressed*']}
                     ]
                 )
     ros_bag_action=TimerAction(
