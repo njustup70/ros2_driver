@@ -20,7 +20,6 @@ find_package(ament_cmake_auto REQUIRED)
 ament_auto_find_build_dependencies()
 set(Mid360Bridge "Mid360Bridge")
 ament_auto_add_library(${Mid360Bridge} SHARED src/mid360_bridge.cpp)
-
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
