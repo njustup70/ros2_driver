@@ -16,7 +16,7 @@ class Protocol:
     def __init__(self):
         self.crc8 = mkCrcFun('crc-8')
         self.crc16 = mkCrcFun('crc-16')
-
+ 
     def construct_frame(self, command, data_bytes):
         """
             构造数据帧
