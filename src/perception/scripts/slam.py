@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 import rclpy
-from my_tf import MyTf
 from rclpy.node import Node
-from tf2_ros import TransformBroadcaster, TransformListener, Buffer,StaticTransformBroadcaster
+from tf2_ros import TransformBroadcaster, Buffer
 from geometry_msgs.msg import TransformStamped,Vector3Stamped
 import json,os,math,numpy as np
 import rclpy.time
-from sensor_msgs.msg import PointCloud2
 from std_msgs.msg import String
 from itertools import product
 from nav_msgs.msg import Odometry
@@ -16,25 +14,23 @@ class fusion_node_t(Node):
         super().__init__('fusion_node')
         self.declare_parameter('odom_frame','odom_wheel')  #地图坐标系下轮式里程计坐标,也就是根据slam融合纠正过累积误差的坐标
         self.declare_parameter('base_frame', 'base_link') # 地图坐标系下融合码盘的base_link坐标
-        self.declare_parameter('improved_slam_hz', 100)    #修正频率
         self.declare_parameter('slam_odom',['camera_init']) # 被监听的tf地图坐标 
         self.declare_parameter('slam_base_link',['body','aft_mapped'])  # 被监听的tf基座坐标
-        self.declare_parameter('slam_hz', 200)              # 被监听的tf频率
         self.declare_parameter('odom_topic','/odom')   #轮式里程计
         self.declare_parameter('base_to_laser', [-0.23751, -0.24275, 0.0])  # 激光雷达到base_link的偏移 右手系
         self.declare_parameter('riqiang_y', -0.10975) #日墙时候的雷达y偏移
         self.declare_parameter('slam_to_map',[0.46876+0.26775,-0.08475-0.0815,0.0])
+
         self.odom_topic = self.get_parameter('odom_topic').value
         self.odom_frame = self.get_parameter('odom_frame').value #轮式里程计坐标
         self.base_frame = self.get_parameter('base_frame').value #发布的base_link坐标
-        self.improved_slam_hz = self.get_parameter('improved_slam_hz').value
+        self.slam_to_map = self.get_parameter('slam_to_map').value
+        self.base_to_laser = self.get_parameter('base_to_laser').value  # [x_offset, y_offset, yaw_offset]
         self.slam_odom = self.get_parameter('slam_odom').value  #被监听的tf地图坐标
         self.slam_base_link = self.get_parameter('slam_base_link').value  #被监听
-        self.slam_hz = self.get_parameter('slam_hz').value
+
         self.tf_buffer = Buffer()
-        self.tf_listener = TransformListener(self.tf_buffer, self)
         self.tf_broadcaster = TransformBroadcaster(self)
-        self.static_tf_broadcaster = StaticTransformBroadcaster(self)
         
         #创建均值滤波器 主要用于slam_tf_callback(self)函数
         self.tf_overage_x = []
@@ -54,13 +50,13 @@ class fusion_node_t(Node):
         self.odom_yaw=0.0
 
         #两个定时器回调和两个订阅者回调
-        self.slam_timer = self.create_timer(1.0/self.slam_hz,self.slam_tf_callback)
-        self.improved_slam_timer = self.create_timer(1.0/self.improved_slam_hz, self.publish_improved_slam)
+        self.slam_timer = self.create_timer(200.0,self.slam_tf_callback)
+        self.improved_slam_timer = self.create_timer(100.0, self.publish_improved_slam)
         self.slam_odom_pub = self.create_publisher(Odometry,'slam_improved',10)
         self.improved_slam_sub  = self.create_subscription(Odometry,'/slam_improved',self.improved_slam_callback,10)
         self.odom_sub = self.create_subscription(Vector3Stamped,self.odom_topic,self.fuse_callback,10)
         self.odom_pub= self.create_publisher(Vector3Stamped, 'base_link_odom', 10)
-        
+        self.robot_sub= self.create_subscription(String, 'robot_state', self.robot_state_callback, 1)
 
     def slam_tf_callback(self):
         """功能描述:这个函数是一个定时器回调函数,频率200hz,执行寻找特定某段tf的功能,如果找到了特定的tf,就记录下来x,y,w,z和yaw"""
@@ -98,8 +94,6 @@ class fusion_node_t(Node):
                 self.get_logger().error(f"Failed to get transform: {e}")
                 return
         self.tf_overage_x.append(transform.transform.translation.x)
-        # print(f'最新添加的X值: {transform.transform.translation.x:.6f}')
-        # print(f'当前tf_overage_x列表: {self.tf_overage_x}')
         self.tf_overage_y.append(transform.transform.translation.y)
         self.tf_overage_w.append(transform.transform.rotation.w)
         self.tf_overage_z.append(transform.transform.rotation.z)
@@ -110,21 +104,14 @@ class fusion_node_t(Node):
         """功能描述:这个函数是一个定时器函数,频率为100hz,把在slam_tf_callback()函数里存储下来的x,y,z,w,yaw进行一个均值滤波之后通过一个话题发布(100hz发布)"""
         """
             参数说明：
-            base_to_laser 因为从slam那段tf获得的xyzwyaw是基于雷达的位置的,所以如果想获得车体的位置，需要雷达到车体的转换
-            slam_to_map 同上，我们最终需要的是车体在地图中的位置，所以还需要车体到地图起点的转换
             x_list 之前tf的x数据是缓存了，所以这个变量是把缓存的x数据copy过来，其余类似参数同理，这个变量只是局部变量，所以不需要手动清除
             laser_odom_x 均值滤波之后的x
         """
 
-        base_to_laser = self.get_parameter('base_to_laser').value  # [x_offset, y_offset, yaw_offset]
-        slam_to_map = self.get_parameter('slam_to_map').value  # [map_origin_x, map_origin_y]
-        
-
-        
         if len(self.tf_overage_x) == 0:
             return
             
-        # 创建数据的本地副本，以便在锁外进行计算 [3](@ref)
+        # 创建数据的本地副本，以便在锁外进行计算
         x_list = self.tf_overage_x.copy()
         # print(f'{x_list}')
         y_list = self.tf_overage_y.copy()
@@ -132,7 +119,7 @@ class fusion_node_t(Node):
         z_list = self.tf_overage_z.copy()
         yaw_list = self.tf_overage_yaw.copy()
             
-            # 清空缓存，为下一轮数据采集做准备
+        # 清空缓存，为下一轮数据采集做准备
         self.tf_overage_x.clear()
         self.tf_overage_y.clear()
         self.tf_overage_w.clear()
@@ -251,6 +238,31 @@ class fusion_node_t(Node):
         except Exception as e:
             self.get_logger().error(f"Failed to publish transform from {base_frame} to {child_frame}: {e}")
             return
+        
+    def robot_state_callback(self, msg: String):
+        """功能描述：ros2的订阅者的回调函数,接收到消息的时候进行解析，有两个状态，'日墙'就去计算slam的坐标系和真实坐标系的一个yaw角的偏差，'reset_slam就认为yaw没有偏差'"""
+        """
+            参数声明：
+        """
+        data = json.loads(msg.data)
+        if 'riqiang' in data:
+            if data['riqiang'] == True:
+                tf_now=TransformStamped()
+                try:
+                    tf_now=self.tf_buffer.lookup_transform('camera_init', 'aft_mapped', rclpy.time.Time())
+                except Exception as e:
+                    self.get_logger().error(f"Failed to lookup transform for riqiang: {e}")
+                    return
+                #通过y 的误差算出来yaw 的偏移
+                x=tf_now.transform.translation.x
+                y= self.get_parameter('riqiang_y').value-self.get_parameter('slam_to_map').value[1]
+                self.tf_yaw_diff= math.atan2(y,x)-math.atan2(tf_now.transform.translation.y, x)
+                print(f"slam 坐标系yaw 当前值{tf_now.transform.translation.y} 理论值{y}")
+                print(f"\033[95m日墙角度误差:{self.tf_yaw_diff}\033[0m")
+        if 'reset_slam' in data:
+            if data['reset_slam'] == True:
+                self.tf_yaw_diff = 0.0
+                self.tf_yaw_diff =self.get_parameter('loc_to_map').value[2] # 用于存储yaw的均值滤波
 
 def main(args=None):
     from rclpy.executors import MultiThreadedExecutor
