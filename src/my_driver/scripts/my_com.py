@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import rclpy
 import struct
-from std_msgs.msg import Float32MultiArray
+from geometry_msgs.msg import Vector3Stamped
 from rclpy.node import Node
 from std_msgs.msg import String
 import time
@@ -23,7 +23,7 @@ class SerialReceiver(Node):
 
         self.serial.startListening(self.data_callback)
 
-        self.publisher = self.create_publisher(Float32MultiArray, 'serial_data', 10)
+        self.publisher = self.create_publisher(Vector3Stamped, 'odom', 10)
 
         self.get_logger().info(f"串口监听已启动: {port} @ {baud}bps")
 
@@ -49,18 +49,19 @@ class SerialReceiver(Node):
             return
 
         try:
-            # 按C++ float(4字节小端)解析三组数据
             x, y, yaw = struct.unpack('<fff', packet[1:13])
-
-            # 发布为 ROS2 Float32MultiArray
-            msg = Float32MultiArray()
-            msg.data = [x, y, yaw]
+            # 构造 Vector3Stamped 消息
+            msg = Vector3Stamped()
+            msg.header.stamp = self.get_clock().now().to_msg()
+            msg.header.frame_id = 'odom'  # 可根据需求改为 base_link / map 等
+            msg.vector.x = x
+            msg.vector.y = y
+            msg.vector.z = yaw  # 将 yaw 存入 z 分量
             self.publisher.publish(msg)
-
             self.get_logger().info(f"收到位姿: x={x:.3f}, y={y:.3f}, yaw={yaw:.3f}")
 
-        except struct.error:
-            self.get_logger().warn("数据解析失败，丢弃帧")
+        except struct.error as e:
+            self.get_logger().error(f"数据解析错误: {e}")
             return
 
 def main(args=None):
