@@ -64,6 +64,15 @@ def generate_launch_description():
              }
         ]
     )
+    test_car_node=Node(
+        package='my_driver',
+        executable='test_car_com.py',
+        name='test_car_com',
+        output='screen',
+        emulate_tty=True,
+        parameters=[
+            {'serial_port': '/dev/serial_qh',
+                'serial_baudrate':115200,}])
     #启动fuck_slam
     fuck_slam_node=Node(
         package='my_driver',
@@ -115,7 +124,8 @@ def generate_launch_description():
     ld.add_action(imu_transform_launch)
     ld.add_action(utils_launch)
     ld.add_action(joy_launch)
-    ld.add_action(communicate_node)
+    # ld.add_action(communicate_node)
+    ld.add_action(test_car_node)
     # ld.add_action(ms200_launch)
     ld.add_action(ros_bag_action)
     ld.add_action(fuck_slam_node)
