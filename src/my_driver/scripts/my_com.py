@@ -1,3 +1,7 @@
+'''
+已经并入test_car_com.py
+仅作备用
+'''
 #!/usr/bin/env python3
 import rclpy
 import struct
@@ -15,7 +19,7 @@ class SerialReceiver(Node):
     def __init__(self):
         super().__init__('serial_receiver')
 
-        self.declare_parameter('serial_port', '/dev/ttyUSB0')
+        self.declare_parameter('serial_port', '/dev/ttyACM0')
         self.declare_parameter('serial_baudrate', 115200)
         port = self.get_parameter('serial_port').value
         baud = self.get_parameter('serial_baudrate').value

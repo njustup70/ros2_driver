@@ -26,7 +26,7 @@ def generate_launch_description():
     #启动mid360
     mid360_launch=IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(get_package_share_directory('my_driver'),'launch','mid360_bringup.launch.py')
+            os.path.join(get_package_share_directory('my_driver'),'launch','rs_airy.launch.py')
         ),
         launch_arguments={
             'use_rviz': 'false',  #不启动rviz
@@ -71,7 +71,7 @@ def generate_launch_description():
         output='screen',
         emulate_tty=True,
         parameters=[
-            {'serial_port': '/dev/serial_qh',
+            {'serial_port': '/dev/serial_sick',
                 'serial_baudrate':115200,}])
     #启动fuck_slam
     fuck_slam_node=Node(
@@ -100,7 +100,7 @@ def generate_launch_description():
                     emulate_tty=True,
                     parameters=[
                         # {'topic_blacklist':LaunchConfiguration("topic_blacklist")}
-                        {'topic_blacklist':['*/compressed*']}
+                        {'topic_blacklist':['*/compressed*','/livox/lidar','livox/imu']}
                     ]
                 )
     ros_bag_action=TimerAction(
@@ -119,9 +119,9 @@ def generate_launch_description():
             {'slam_debug': False},  # 是否开启slam调试
         ])
     # ld.add_action(compose_node)
-    ld.add_action(fusion_node)
+    # ld.add_action(fusion_node)
     ld.add_action(mid360_launch)
-    ld.add_action(imu_transform_launch)
+    # ld.add_action(imu_transform_launch)
     ld.add_action(utils_launch)
     ld.add_action(joy_launch)
     # ld.add_action(communicate_node)

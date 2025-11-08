@@ -8,8 +8,8 @@ def generate_launch_description():
     ld=LaunchDescription()
     ld.add_action(DeclareLaunchArgument('joy_topic', default_value='/joy'))
     ld.add_action(DeclareLaunchArgument('cmd_vel_topic', default_value='/cmd_vel'))
-    ld.add_action(DeclareLaunchArgument('linear_scale', default_value='1.0'))
-    ld.add_action(DeclareLaunchArgument('angular_scale', default_value='3.14'))
+    ld.add_action(DeclareLaunchArgument('linear_scale', default_value='0.1'))
+    ld.add_action(DeclareLaunchArgument('angular_scale', default_value='0.3'))
     joy_driver = Node(
         package='joy',
         executable='joy_node',
