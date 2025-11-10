@@ -17,7 +17,7 @@ class fusion_node_t(Node):
         self.declare_parameter('slam_odom',['camera_init']) # 被监听的tf地图坐标 
         self.declare_parameter('slam_base_link',['body','aft_mapped'])  # 被监听的tf基座坐标
         self.declare_parameter('odom_topic','/odom')   #轮式里程计
-        self.declare_parameter('base_to_laser', [3.0,4.0, 0.0])  # 激光雷达到base_link的偏移 右手系
+        self.declare_parameter('base_to_laser', [0.085,0.095, 0.0])  # 激光雷达到base_link的偏移 右手系
         self.declare_parameter('riqiang_y', -0.10975) #日墙时候的雷达y偏移
         self.declare_parameter('slam_to_map',[0.46876+0.26775,-0.08475-0.0815,0.0])
         self.declare_parameter('map_frame_vec',['camera_init']) # 被监听的tf地图坐标 
@@ -53,7 +53,7 @@ class fusion_node_t(Node):
         self.base_link_x=0.0
         self.base_link_y=0.0
         self.r = math.sqrt(self.base_to_laser[0]**2 + self.base_to_laser[1]**2)
-        self.laser_angle = math.atan2(self.base_to_laser[0], self.base_to_laser[1])
+        self.laser_angle = math.atan2(self.base_to_laser[1], self.base_to_laser[0])
         #两个定时器回调和两个订阅者回调
         self.slam_timer = self.create_timer(0.005,self.slam_tf_callback)
         self.improved_slam_timer = self.create_timer(0.01, self.publish_improved_slam)
@@ -64,17 +64,17 @@ class fusion_node_t(Node):
         self.robot_sub= self.create_subscription(String, 'robot_state', self.robot_state_callback, 1)
 
     def slam_tf_callback(self):
-        print(f'{self.r},{self.laser_angle}')
+        # print(f'{self.r},{self.laser_angle}')
         transform=TransformStamped()
         if len(self.slam_odom) >0 and len(self.slam_base_link) > 0:
             #尝试找出其中能用的tf
             for map_frame, base_frame in product(self.slam_odom, self.slam_base_link): #遍历所有frame组合
                 try:
                     if not self.tf_buffer.can_transform(map_frame, base_frame, rclpy.time.Time()):
-                        self.get_logger().warn(f"Transform from {map_frame} to {base_frame} not available")
+                        # self.get_logger().warn(f"Transform from {map_frame} to {base_frame} not available")
                         continue
                     transform = self.tf_buffer.lookup_transform(map_frame, base_frame, rclpy.time.Time())
-                    self.get_logger().info(f"Transform from {map_frame} to {base_frame} not available")
+                    # self.get_logger().info(f"Transform from {map_frame} to {base_frame} not available")
                     break  # 找到一个可用的就退出循环
                 except Exception as e:
                     self.get_logger().error(f"Failed to get transform from {map_frame} to {base_frame}: {e}")
@@ -170,8 +170,8 @@ class fusion_node_t(Node):
             self.slam_x 用于记录最新一次话题的数据，其他同理
         """
         try:
-            self.slam_x = msg.pose.pose.position.y
-            self.slam_y = -msg.pose.pose.position.x
+            self.slam_x = msg.pose.pose.position.y 
+            self.slam_y = -msg.pose.pose.position.x 
             orientation = msg.pose.pose.orientation
             siny_cosp = 2.0 * (orientation.w * orientation.z + orientation.x * orientation.y)
             cosy_cosp = 1.0 - 2.0 * (orientation.y * orientation.y + orientation.z * orientation.z)
@@ -190,7 +190,7 @@ class fusion_node_t(Node):
         """
         x_diff,y_diff,yaw_diff = 0.0,0.0,0.0
         self.odom_x = msg.vector.x
-        self.odom_y = -msg.vector.y
+        self.odom_y = msg.vector.y
         self.odom_yaw = msg.vector.z
         self.tf_publish(self.odom_frame, self.base_frame, self.odom_x, self.odom_y, self.odom_yaw)
         dyaw= self.slam_yaw - self.odom_yaw
@@ -198,9 +198,15 @@ class fusion_node_t(Node):
             dyaw -= 2 * math.pi
         elif dyaw < -math.pi:
             dyaw += 2 * math.pi
-        self.base_link_x=self.slam_x - self.r*math.cos(self.laser_angle + self.slam_yaw)
-        self.base_link_y=self.slam_y - self.r*math.cos(self.laser_angle + self.slam_yaw)
-        x_diff= self.base_link_x-(self.odom_x*math.cos(dyaw)-self.odom_y*math.sin(dyaw))
+        self.base_link_x=self.slam_x - self.r*math.sin(self.laser_angle + self.slam_yaw) +0.095
+        self.base_link_y=self.slam_y + self.r*math.cos(self.laser_angle + self.slam_yaw) -0.085
+        # print(f'{self.base_to_laser.value[1]}')
+        # print(f'{self.r}')
+        # print(f'{self.slam_x}  ({self.slam_y})')
+        print(f'{self.base_link_x} ({self.base_link_y})')
+        # print(f'{self.base_link_y}')
+        # print(f'123{self.r},{self.laser_angle}')
+        x_diff= self.base_link_x-(self.odom_x*math.cos(dyaw)-self.odom_y*math.sin(dyaw)) 
         y_diff= self.base_link_y-(self.odom_x*math.sin(dyaw)+self.odom_y*math.cos(dyaw))
         yaw_diff=dyaw
         if self.slam_x != 0.0 and self.slam_y != 0.0:
