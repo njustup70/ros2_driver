@@ -8,7 +8,7 @@ import rclpy.time
 from std_msgs.msg import String
 from itertools import product
 from nav_msgs.msg import Odometry
-
+from tf2_ros import TransformBroadcaster, TransformListener, Buffer,StaticTransformBroadcaster
 class fusion_node_t(Node):
     def __init__(self):
         super().__init__('fusion_node')
@@ -17,10 +17,11 @@ class fusion_node_t(Node):
         self.declare_parameter('slam_odom',['camera_init']) # 被监听的tf地图坐标 
         self.declare_parameter('slam_base_link',['body','aft_mapped'])  # 被监听的tf基座坐标
         self.declare_parameter('odom_topic','/odom')   #轮式里程计
-        self.declare_parameter('base_to_laser', [-0.23751, -0.24275, 0.0])  # 激光雷达到base_link的偏移 右手系
+        self.declare_parameter('base_to_laser', [0.085,0.095, 0.0])  # 激光雷达到base_link的偏移 右手系
         self.declare_parameter('riqiang_y', -0.10975) #日墙时候的雷达y偏移
         self.declare_parameter('slam_to_map',[0.46876+0.26775,-0.08475-0.0815,0.0])
-
+        self.declare_parameter('map_frame_vec',['camera_init']) # 被监听的tf地图坐标 
+        self.declare_parameter('base_frame_vec',['body','aft_mapped'])  # 被监听的tf基座坐标
         self.odom_topic = self.get_parameter('odom_topic').value
         self.odom_frame = self.get_parameter('odom_frame').value #轮式里程计坐标
         self.base_frame = self.get_parameter('base_frame').value #发布的base_link坐标
@@ -28,10 +29,11 @@ class fusion_node_t(Node):
         self.base_to_laser = self.get_parameter('base_to_laser').value  # [x_offset, y_offset, yaw_offset]
         self.slam_odom = self.get_parameter('slam_odom').value  #被监听的tf地图坐标
         self.slam_base_link = self.get_parameter('slam_base_link').value  #被监听
-
+        self.map_frame_vec = self.get_parameter('map_frame_vec').value  #被监听的tf地图坐标
+        self.base_frame_vec = self.get_parameter('base_frame_vec').value  #被监听
         self.tf_buffer = Buffer()
         self.tf_broadcaster = TransformBroadcaster(self)
-        
+        self.tf_listener = TransformListener(self.tf_buffer, self)
         #创建均值滤波器 主要用于slam_tf_callback(self)函数
         self.tf_overage_x = []
         self.tf_overage_y = []
@@ -48,10 +50,13 @@ class fusion_node_t(Node):
         self.odom_x=0.0
         self.odom_y=0.0
         self.odom_yaw=0.0
-
+        self.base_link_x=0.0
+        self.base_link_y=0.0
+        self.r = math.sqrt(self.base_to_laser[0]**2 + self.base_to_laser[1]**2)
+        self.laser_angle = math.atan2(self.base_to_laser[1], self.base_to_laser[0])
         #两个定时器回调和两个订阅者回调
-        self.slam_timer = self.create_timer(200.0,self.slam_tf_callback)
-        self.improved_slam_timer = self.create_timer(100.0, self.publish_improved_slam)
+        self.slam_timer = self.create_timer(0.005,self.slam_tf_callback)
+        self.improved_slam_timer = self.create_timer(0.01, self.publish_improved_slam)
         self.slam_odom_pub = self.create_publisher(Odometry,'slam_improved',10)
         self.improved_slam_sub  = self.create_subscription(Odometry,'/slam_improved',self.improved_slam_callback,10)
         self.odom_sub = self.create_subscription(Vector3Stamped,self.odom_topic,self.fuse_callback,10)
@@ -59,17 +64,7 @@ class fusion_node_t(Node):
         self.robot_sub= self.create_subscription(String, 'robot_state', self.robot_state_callback, 1)
 
     def slam_tf_callback(self):
-        """功能描述:这个函数是一个定时器回调函数,频率200hz,执行寻找特定某段tf的功能,如果找到了特定的tf,就记录下来x,y,w,z和yaw"""
-        """
-            参数声明:
-            self.slam_odom 这是slam的发布的里程计
-            self.slam_base_link 这是slam发布的车体(也就是lidar的坐标)
-            self.tf_overage_x slam发布的那段tf的x
-            self.tf_overage_y slam发布的那段tf的y
-            self.tf_overage_z slam发布的那段tf的w
-            self.tf_overage_w slam发布的那段tf的z
-            self.tf_overage_yaw slam发布的那段tf的yaw
-        """
+        # print(f'{self.r},{self.laser_angle}')
         transform=TransformStamped()
         if len(self.slam_odom) >0 and len(self.slam_base_link) > 0:
             #尝试找出其中能用的tf
@@ -77,10 +72,9 @@ class fusion_node_t(Node):
                 try:
                     if not self.tf_buffer.can_transform(map_frame, base_frame, rclpy.time.Time()):
                         # self.get_logger().warn(f"Transform from {map_frame} to {base_frame} not available")
-                        # print('找不到slam的tf')
                         continue
                     transform = self.tf_buffer.lookup_transform(map_frame, base_frame, rclpy.time.Time())
-                    # print('找到slam的tf')
+                    # self.get_logger().info(f"Transform from {map_frame} to {base_frame} not available")
                     break  # 找到一个可用的就退出循环
                 except Exception as e:
                     self.get_logger().error(f"Failed to get transform from {map_frame} to {base_frame}: {e}")
@@ -93,6 +87,7 @@ class fusion_node_t(Node):
             except Exception as e:
                 self.get_logger().error(f"Failed to get transform: {e}")
                 return
+        # self.tf_overage_buffer.append(transform)
         self.tf_overage_x.append(transform.transform.translation.x)
         self.tf_overage_y.append(transform.transform.translation.y)
         self.tf_overage_w.append(transform.transform.rotation.w)
@@ -107,7 +102,7 @@ class fusion_node_t(Node):
             x_list 之前tf的x数据是缓存了，所以这个变量是把缓存的x数据copy过来，其余类似参数同理，这个变量只是局部变量，所以不需要手动清除
             laser_odom_x 均值滤波之后的x
         """
-
+        # print('1')
         if len(self.tf_overage_x) == 0:
             return
             
@@ -133,6 +128,7 @@ class fusion_node_t(Node):
         z = sum(z_list) / len(z_list)
         
         # 计算角度均值（正确处理角度环绕）
+        # 将yaw转换为四元数
         sin_sum = np.sum(np.sin(yaw_list))
         cos_sum = np.sum(np.cos(yaw_list))
         mean_yaw = math.atan2(sin_sum, cos_sum)  # 计算均值yaw
@@ -174,8 +170,8 @@ class fusion_node_t(Node):
             self.slam_x 用于记录最新一次话题的数据，其他同理
         """
         try:
-            self.slam_x = msg.pose.pose.position.x
-            self.slam_y = msg.pose.pose.position.y
+            self.slam_x = msg.pose.pose.position.y 
+            self.slam_y = -msg.pose.pose.position.x 
             orientation = msg.pose.pose.orientation
             siny_cosp = 2.0 * (orientation.w * orientation.z + orientation.x * orientation.y)
             cosy_cosp = 1.0 - 2.0 * (orientation.y * orientation.y + orientation.z * orientation.z)
@@ -194,7 +190,7 @@ class fusion_node_t(Node):
         """
         x_diff,y_diff,yaw_diff = 0.0,0.0,0.0
         self.odom_x = msg.vector.x
-        self.odom_y = -msg.vector.y
+        self.odom_y = msg.vector.y
         self.odom_yaw = msg.vector.z
         self.tf_publish(self.odom_frame, self.base_frame, self.odom_x, self.odom_y, self.odom_yaw)
         dyaw= self.slam_yaw - self.odom_yaw
@@ -202,8 +198,16 @@ class fusion_node_t(Node):
             dyaw -= 2 * math.pi
         elif dyaw < -math.pi:
             dyaw += 2 * math.pi
-        x_diff=self.slam_x-(self.odom_x*math.cos(dyaw)-self.odom_y*math.sin(dyaw))
-        y_diff=self.slam_y-(self.odom_x*math.sin(dyaw)+self.odom_y*math.cos(dyaw))
+        self.base_link_x=self.slam_x - self.r*math.sin(self.laser_angle + self.slam_yaw) +0.095
+        self.base_link_y=self.slam_y + self.r*math.cos(self.laser_angle + self.slam_yaw) -0.085
+        # print(f'{self.base_to_laser.value[1]}')
+        # print(f'{self.r}')
+        # print(f'{self.slam_x}  ({self.slam_y})')
+        print(f'{self.base_link_x} ({self.base_link_y})')
+        # print(f'{self.base_link_y}')
+        # print(f'123{self.r},{self.laser_angle}')
+        x_diff= self.base_link_x-(self.odom_x*math.cos(dyaw)-self.odom_y*math.sin(dyaw)) 
+        y_diff= self.base_link_y-(self.odom_x*math.sin(dyaw)+self.odom_y*math.cos(dyaw))
         yaw_diff=dyaw
         if self.slam_x != 0.0 and self.slam_y != 0.0:
             self.tf_publish('map_left_corner', self.odom_frame, x_diff, y_diff, yaw_diff)      

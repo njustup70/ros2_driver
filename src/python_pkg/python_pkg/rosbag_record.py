@@ -25,6 +25,7 @@ class SmartBagRecorder(Node):
             "*/compressed_image*",# 匹配任何层级下的compressed_image开头话题
             "/camera/*",          # 精确匹配/camera/下的所有子话题
             "depth_image*",       # 匹配任何depth_image开头的话题
+            
         ])
 
         # 参数解析

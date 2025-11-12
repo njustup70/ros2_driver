@@ -7,6 +7,7 @@ from rclpy.node import Node
 from geometry_msgs.msg import Twist
 sys.path.append('/home/Elaina/ros2_driver/src') 
 # print(sys.path)
+from geometry_msgs.msg import Vector3Stamped
 from protocol_lib.myserial import AsyncSerial_t
 from protocol_lib.get_log_shootdata_local import DataSimulator
 from rclpy.time import Time
@@ -34,7 +35,7 @@ class Communicate_t(Node):
         linear_y=velCmd.linear.y
         dataBytes=b'\xFF'+struct.pack('<fff',linear_x,linear_y,angular_z)+b'\xFE'
         self.serial.write(dataBytes)
-        
+
     def data_callback(self, data: bytes):
         """
         串口数据回调函数 — 当收到下位机数据时触发
@@ -66,12 +67,12 @@ class Communicate_t(Node):
             msg.vector.y = y
             msg.vector.z = yaw  # 将 yaw 存入 z 分量
             self.publisher.publish(msg)
-            self.get_logger().info(f"收到位姿: x={x:.3f}, y={y:.3f}, yaw={yaw:.3f}")
+            # self.get_logger().info(f"收到位姿: x={x:.3f}, y={y:.3f}, yaw={yaw:.3f}")
 
         except struct.error as e:
             self.get_logger().error(f"数据解析错误: {e}")
             return
-        
+
 def main(args=None):
     rclpy.init(args=args)
     node=Communicate_t()
