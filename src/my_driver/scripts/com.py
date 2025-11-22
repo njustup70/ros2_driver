@@ -17,7 +17,6 @@ from rclpy.time import Time
 import struct
 from tf2_ros import TransformListener,Buffer,Duration
 from std_msgs.msg import String
-from sick_com import SickHandler
 from fuck_slam import FuckSlam
 
 class Communicate_t(Node):
@@ -53,7 +52,7 @@ class Communicate_t(Node):
         self.serial_queue = []  # 用于存储串口数据
         self.serial_publish_timer = self.create_timer(0.002, self.publish_serial_data)  #500hz 定时器
         # sick数据处理
-        self.sick_handler = SickHandler(self)
+        # self.sick_handler = SickHandler(self)
     def cmd_topic_callback(self, msg:Twist):
         '''
         速度指令发送

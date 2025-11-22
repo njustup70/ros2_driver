@@ -1,7 +1,9 @@
 # RC_BRINGUP
 
 ROS2 的 launch 集合包，用于统一启动驱动、播放包与辅助功能。
-
+---
+所有最终的生效参数都取决于你所开启的首个launch文件里面给的参数值
+---
 ---
 
 ## utils_bringup.launch.py
@@ -52,3 +54,11 @@ use_tf_publish = false
 use_rosbag_record = true
 use_tf_publish = true
 ```
+
+## sim_with_utils.launch.py 
+### 功能描述 这个launch(应该不会再用上)
+ - 启动手柄和ros2与unity交互的节点
+
+## mcap_filter.launch.py
+### 功能描述
+ - 启动一个过滤节点，可通过传入的参数选择性过滤
