@@ -107,18 +107,6 @@ def generate_launch_description():
         period=5.0,  # Delay in seconds
         actions=[ros_bag_node]
     )
-    fusion_node=Node(
-        package='perception',
-        executable='slam_riqiang.py',
-        name='fusion_node',
-        output='screen',
-        emulate_tty=True,
-        parameters=[
-            {'base_to_laser': [-0.13255, 0.3288, 0.0]}, #车体到激光雷达的偏移
-            {'loc_to_map': [0.5238,-0.6841,-0.01193947]}, # slam原点到地图左下角的偏移
-            {'slam_debug': False},  # 是否开启slam调试
-        ])
-    # ld.add_action(compose_node)
     # ld.add_action(fusion_node)
     ld.add_action(mid360_launch)
     # ld.add_action(imu_transform_launch)
