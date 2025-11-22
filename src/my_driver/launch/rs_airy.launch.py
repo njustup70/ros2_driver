@@ -7,7 +7,7 @@ from launch.conditions import IfCondition
 import os
 def generate_launch_description():
     ld=LaunchDescription()
-    ld.add_action(DeclareLaunchArgument('rviz', default_value='true', description='Start rviz if use is True'))
+    ld.add_action(DeclareLaunchArgument('use_rviz', default_value='true', description='Start rviz if use is True'))
     my_pacakge_path = get_package_share_directory('my_driver')
     rviz_config=get_package_share_directory('rslidar_sdk')+'/rviz/rviz2.rviz'
     rviz_node= Node(
@@ -16,7 +16,7 @@ def generate_launch_description():
         name='rviz2',
         output='screen',
         arguments=['-d', rviz_config],
-        condition=IfCondition(LaunchConfiguration('rviz'))
+        condition=IfCondition(LaunchConfiguration('use_rviz'))
     )
     config_file = os.path.join(my_pacakge_path, 'config', 'rs_airy.yaml')
     rslidar_sdk_node = Node(

@@ -18,7 +18,7 @@ class Communicate_t(Node):
         self.declare_parameter('cmd_vel_topic', '/cmd_vel')
         self.declare_parameter('serial_port', '/dev/ttyACM0')
         self.declare_parameter('serial_baudrate', 115200)
-        self.sub=self.create_subscription(Twist,self.get_parameter("cmd_vel_topic").value,
+        self.sub=self.create_subscription(Twist,str(self.get_parameter("cmd_vel_topic").value),
         self.cmd_topic_callback,10)
         self.publisher = self.create_publisher(Vector3Stamped, 'odom', 10)
         self.serial=AsyncSerial_t(self.get_parameter("serial_port").value,self.get_parameter("serial_baudrate").value)
